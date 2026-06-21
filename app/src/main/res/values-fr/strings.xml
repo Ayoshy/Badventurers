@@ -22,7 +22,7 @@
     <string name="new_loot_status">Nouveau</string>
     <string name="guild_upgrade_status">Guilde</string>
     <string name="completed_quest_title">Caverne des Petits Regrets</string>
-    <string name="completed_quest_summary">Termine. Le groupe revient avec du butin, de la boue, et un rapport que personne n'a signe.</string>
+    <string name="completed_quest_summary">Termine. Le groupe revient avec du butin, de la boue, et un rapport que personne n\'a signe.</string>
     <string name="recommended_title">Recommande</string>
     <string name="recommended_upgrade">Ameliorer le panneau des quetes pour gagner plus de recompenses.</string>
     <string name="quest_card_title">Bureau Fiscal des Bandits</string>
@@ -30,9 +30,9 @@
     <string name="loot_item_title">Bottes de Retraite Strategique</string>
     <string name="loot_item_summary">Rare. Elles ne rendent pas plus rapide. Elles rendent la fuite plus justifiable.</string>
     <string name="next_unlock_title">Prochain deblocage</string>
-    <string name="next_unlock_summary">Bureau d'assurance a Reputation 20.</string>
-    <string name="journal_01">Brugg a tente la diplomatie. La porte n'a pas ete convaincue.</string>
+    <string name="next_unlock_summary">Bureau d\'assurance a Reputation 20.</string>
+    <string name="journal_01">Brugg a tente la diplomatie. La porte n\'a pas ete convaincue.</string>
     <string name="journal_02">Mira a trouve une bague. Elle jugeait deja tout le monde.</string>
-    <string name="journal_03">Le soigneur a soigne le moral. Personne n'a remarque.</string>
+    <string name="journal_03">Le soigneur a soigne le moral. Personne n\'a remarque.</string>
 </resources>
 

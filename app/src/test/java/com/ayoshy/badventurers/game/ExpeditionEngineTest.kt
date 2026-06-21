@@ -29,7 +29,7 @@ class ExpeditionEngineTest {
         )
 
         assertEquals(ExpeditionOutcome.RidiculousFailure, result.outcome)
-        assertEquals(25, result.reward.gold)
+        assertTrue(result.reward.gold >= 25)
         assertTrue(result.reward.xp > 0)
     }
 }

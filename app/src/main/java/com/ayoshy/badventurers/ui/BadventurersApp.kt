@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -286,7 +287,7 @@ private fun UpgradesScreen(onBuy: () -> Unit) {
 }
 
 @Composable
-private fun ScreenScaffold(title: String, status: String, content: @Composable Column.() -> Unit) {
+private fun ScreenScaffold(title: String, status: String, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -307,7 +308,7 @@ private fun ScreenScaffold(title: String, status: String, content: @Composable C
 }
 
 @Composable
-private fun DarkPanel(title: String, body: String, footer: @Composable Column.() -> Unit = {}) {
+private fun DarkPanel(title: String, body: String, footer: @Composable ColumnScope.() -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -325,7 +326,7 @@ private fun DarkPanel(title: String, body: String, footer: @Composable Column.()
 }
 
 @Composable
-private fun PaperPanel(title: String, body: String, footer: @Composable Column.() -> Unit = {}) {
+private fun PaperPanel(title: String, body: String, footer: @Composable ColumnScope.() -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
