@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Badventurers Visual Prototype</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #141512;
+      --panel: rgba(35, 34, 29, .88);
+      --panel-strong: rgba(22, 22, 18, .94);
+      --paper: #f1dfad;
+      --paper-2: #fff1bf;
+      --ink: #211f1a;
+      --muted: #756b54;
+      --line: #c4a765;
+      --line-dark: #4d4431;
+      --moss: #2f695c;
+      --moss-dark: #1c463e;
+      --ruby: #903d45;
+      --gold: #d0a24a;
+      --blue: #486b85;
+      --white: #f8f1d8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at top, rgba(208, 162, 74, .12), transparent 36rem),
+        var(--page);
+      color: var(--white);
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .wrap {
+      width: min(1120px, calc(100% - 28px));
+      display: grid;
+      grid-template-columns: 300px minmax(330px, 430px) 300px;
+      gap: 22px;
+      align-items: center;
+      padding: 24px 0;
+    }
+
+    .rail {
+      align-self: stretch;
+      border: 1px solid var(--line-dark);
+      border-radius: 8px;
+      background: rgba(28, 29, 25, .88);
+      padding: 16px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 24px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      color: #e8cf87;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    p,
+    li {
+      color: #d8cba5;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .screen-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .screen-link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line-dark);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #24251f;
+      color: var(--white);
+      cursor: pointer;
+      text-align: left;
+      font-weight: 800;
+    }
+
+    .screen-link:hover,
+    .screen-link.active {
+      border-color: var(--line);
+      background: #343124;
+    }
+
+    .pill {
+      min-width: 34px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: var(--moss);
+      color: var(--white);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .phone {
+      width: min(420px, 100%);
+      aspect-ratio: 9 / 19.5;
+      border: 12px solid #080907;
+      border-radius: 34px;
+      overflow: hidden;
+      box-shadow: 0 34px 90px rgba(0, 0, 0, .55);
+      background: #141512;
+    }
+
+    .status {
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      background: #0f100d;
+      color: #f7efd2;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .app {
+      position: relative;
+      height: calc(100% - 26px);
+      overflow: hidden;
+      background: #171813;
+    }
+
+    .bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to bottom, rgba(10, 11, 8, .22), rgba(10, 11, 8, .5)),
+        url("../art/batch-01/guild-home-background.png");
+      background-position: center;
+      background-size: cover;
+      filter: saturate(1.04) contrast(1.02);
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top {
+      padding: 13px 14px 10px;
+      background: linear-gradient(to bottom, rgba(19, 20, 16, .95), rgba(19, 20, 16, .72));
+      border-bottom: 1px solid rgba(221, 183, 91, .46);
+      color: var(--white);
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .brand {
+      font-size: 21px;
+      line-height: 1;
+      font-weight: 950;
+      color: #fff3c6;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+    }
+
+    .icon-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .square {
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(212, 173, 86, .7);
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      background: rgba(45, 45, 37, .88);
+      color: #f7e8b5;
+      cursor: pointer;
+      font-weight: 950;
+    }
+
+    .resources {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .resource {
+      min-height: 38px;
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(221, 183, 91, .4);
+      border-radius: 7px;
+      padding: 5px 7px;
+      background: rgba(255, 241, 191, .92);
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .resource .mini {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background-image: url("../art/batch-01/resource-ui-icons-sheet.png");
+      background-size: 400% 300%;
+      background-repeat: no-repeat;
+    }
+
+    .gold-icon {
+      background-position: 0% 0%;
+    }
+
+    .rep-icon {
+      background-position: 33.333% 0%;
+    }
+
+    .xp-icon {
+      background-position: 66.666% 0%;
+    }
+
+    .resource strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .screens {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: var(--white);
+      text-shadow: 0 2px 0 rgba(0, 0, 0, .4);
+    }
+
+    .title-row h2 {
+      margin: 0;
+      color: #fff0bd;
+      font-size: 18px;
+      text-transform: none;
+    }
+
+    .title-row small {
+      color: #e2cf93;
+      font-weight: 900;
+    }
+
+    .card {
+      border: 1px solid rgba(222, 187, 99, .72);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: rgba(255, 241, 191, .94);
+      color: var(--ink);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .26);
+    }
+
+    .card.dark {
+      background: var(--panel);
+      color: var(--white);
+      border-color: rgba(222, 187, 99, .52);
+    }
+
+    .card p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .card.dark p {
+      color: #ded0a2;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .primary,
+    .secondary {
+      flex: 1;
+      min-height: 40px;
+      border: 0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 950;
+    }
+
+    .primary {
+      background: var(--moss);
+      color: var(--white);
+    }
+
+    .secondary {
+      background: #dec777;
+      color: var(--ink);
+    }
+
+    .quest-img,
+    .heroes-img,
+    .loot-img {
+      width: 100%;
+      border: 1px solid rgba(222, 187, 99, .55);
+      border-radius: 8px;
+      display: block;
+      background: #171813;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .28);
+    }
+
+    .quest-img {
+      max-height: 280px;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .heroes-img,
+    .loot-img {
+      max-height: 320px;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(196, 167, 101, .6);
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: rgba(255, 241, 191, .94);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .row strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .meter {
+      height: 9px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(80, 71, 47, .36);
+      margin-top: 8px;
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(to right, var(--moss), #7ca95c);
+    }
+
+    .journal {
+      display: grid;
+      gap: 7px;
+    }
+
+    .journal p {
+      margin: 0;
+      border-left: 4px solid var(--gold);
+      border-radius: 6px;
+      padding: 7px 8px;
+      background: rgba(255, 241, 191, .94);
+      color: #493f2b;
+      font-size: 12px;
+      line-height: 1.32;
+      font-weight: 750;
+    }
+
+    .bottom {
+      height: 63px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border-top: 1px solid rgba(222, 187, 99, .56);
+      background: rgba(21, 22, 18, .92);
+    }
+
+    .nav {
+      border: 0;
+      background: transparent;
+      color: #d7c891;
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      padding: 6px 2px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .nav span:first-child {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(222, 187, 99, .45);
+      border-radius: 7px;
+      background: rgba(255, 241, 191, .16);
+      color: #fff0bd;
+    }
+
+    .nav.active {
+      color: #fff0bd;
+    }
+
+    .nav.active span:first-child {
+      background: var(--moss);
+      color: var(--white);
+      border-color: #89b37b;
+    }
+
+    .callout {
+      border-left: 4px solid var(--moss);
+      padding: 10px 12px;
+      background: rgba(32, 33, 29, .9);
+      color: #d8cba5;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 1040px) {
+      .wrap {
+        grid-template-columns: 260px minmax(330px, 420px);
+      }
+
+      .rail:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        display: block;
+      }
+
+      .wrap {
+        width: min(430px, calc(100% - 20px));
+        grid-template-columns: 1fr;
+        margin: 0 auto;
+        padding: 12px 0 24px;
+      }
+
+      .rail {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <aside class="rail">
+      <h1>Visual Slice</h1>
+      <p>Art-integrated mockup for the first Android Compose pass.</p>
+
+      <div class="screen-list">
+        <button class="screen-link active" data-screen="guild">Guild <span class="pill">P0</span></button>
+        <button class="screen-link" data-screen="quests">Quests <span class="pill">P0</span></button>
+        <button class="screen-link" data-screen="heroes">Heroes <span class="pill">P0</span></button>
+        <button class="screen-link" data-screen="loot">Loot <span class="pill">P1</span></button>
+        <button class="screen-link" data-screen="upgrades">Upgrades <span class="pill">P1</span></button>
+      </div>
+    </aside>
+
+    <section class="phone" aria-label="Badventurers phone visual prototype">
+      <div class="status">
+        <span>16:42</span>
+        <span>LTE 84%</span>
+      </div>
+
+      <div class="app">
+        <div class="bg"></div>
+        <div class="app-shell">
+          <header class="top">
+            <div class="topline">
+              <div class="brand">Badventurers</div>
+              <div class="icon-buttons">
+                <button class="square" data-screen="loot" title="Loot">L</button>
+                <button class="square" data-screen="upgrades" title="Upgrades">U</button>
+              </div>
+            </div>
+
+            <div class="resources">
+              <div class="resource"><span class="mini gold-icon"></span><span>Gold<strong>1,284</strong></span></div>
+              <div class="resource"><span class="mini rep-icon"></span><span>Rep<strong>17</strong></span></div>
+              <div class="resource"><span class="mini xp-icon"></span><span>Guild<strong>Lv. 3</strong></span></div>
+            </div>
+          </header>
+
+          <section class="screens">
+            <article class="screen active" id="guild">
+              <div class="title-row">
+                <h2>Guild Home</h2>
+                <small>Ready</small>
+              </div>
+
+              <div class="card dark">
+                <h3>Cave of Minor Regrets</h3>
+                <p>Finished. The party returned with loot, mud, and a report nobody signed.</p>
+                <div class="button-row">
+                  <button class="primary" data-screen="loot">Collect</button>
+                  <button class="secondary" data-screen="quests">Next quest</button>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Recommended</h3>
+                <p>Upgrade the Notice Board for better quest rewards.</p>
+                <div class="meter"><span style="width: 72%"></span></div>
+              </div>
+
+              <div class="journal">
+                <p>Brugg tried diplomacy. The door remained unconvinced.</p>
+                <p>Mira found a ring. It was already judging everyone.</p>
+                <p>The healer healed morale. Nobody noticed.</p>
+              </div>
+            </article>
+
+            <article class="screen" id="quests">
+              <div class="title-row">
+                <h2>Quests</h2>
+                <small>Pick trouble</small>
+              </div>
+
+              <img class="quest-img" src="../art/batch-01/quest-cards-sheet.png" alt="Quest card concepts">
+
+              <div class="card dark">
+                <h3>Bandit Tax Office</h3>
+                <p>3 min. Medium risk. High chance of paperwork-related loot.</p>
+                <div class="button-row">
+                  <button class="primary" data-screen="guild">Start</button>
+                  <button class="secondary" data-screen="heroes">Party</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="screen" id="heroes">
+              <div class="title-row">
+                <h2>Heroes</h2>
+                <small>Roster</small>
+              </div>
+
+              <img class="heroes-img" src="../art/batch-01/starter-heroes-sheet.png" alt="Starter heroes concept sheet">
+
+              <div class="row"><span><strong>Brugg</strong>Bruiser - Overconfident</span><span>42</span></div>
+              <div class="row"><span><strong>Mira</strong>Apprentice Mage - Reads Manual</span><span>37</span></div>
+              <div class="row"><span><strong>Nell</strong>Rogue-ish - Suspiciously Lucky</span><span>35</span></div>
+            </article>
+
+            <article class="screen" id="loot">
+              <div class="title-row">
+                <h2>Loot</h2>
+                <small>New</small>
+              </div>
+
+              <img class="loot-img" src="../art/batch-01/loot-icons-sheet.png" alt="Loot icon concept sheet">
+
+              <div class="card dark">
+                <h3>Boots Of Strategic Retreat</h3>
+                <p>Rare. They do not make you faster. They make leaving feel justified.</p>
+                <div class="button-row">
+                  <button class="primary" data-screen="heroes">Equip</button>
+                  <button class="secondary" data-screen="guild">Keep</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="screen" id="upgrades">
+              <div class="title-row">
+                <h2>Upgrades</h2>
+                <small>Guild</small>
+              </div>
+
+              <div class="row"><span><strong>Notice Board Lv. 2</strong>+8% quest rewards</span><span>600g</span></div>
+              <div class="row"><span><strong>Training Rug Lv. 1</strong>+5% hero XP</span><span>420g</span></div>
+              <div class="row"><span><strong>Accountant Stool Lv. 1</strong>-3% mysterious losses</span><span>500g</span></div>
+
+              <div class="card dark">
+                <h3>Next unlock</h3>
+                <p>Insurance Desk at Reputation 20.</p>
+                <div class="button-row">
+                  <button class="primary" data-screen="guild">Buy recommended</button>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <nav class="bottom" aria-label="Primary navigation">
+            <button class="nav active" data-screen="guild"><span>G</span><span>Guild</span></button>
+            <button class="nav" data-screen="quests"><span>Q</span><span>Quests</span></button>
+            <button class="nav" data-screen="heroes"><span>H</span><span>Heroes</span></button>
+            <button class="nav" data-screen="loot"><span>L</span><span>Loot</span></button>
+            <button class="nav" data-screen="upgrades"><span>U</span><span>Upgrade</span></button>
+          </nav>
+        </div>
+      </div>
+    </section>
+
+    <aside class="rail">
+      <h2>Prototype Notes</h2>
+      <p id="summary">Guild Home tests the main art problem: can a rich pixel-art background support readable mobile UI overlays?</p>
+
+      <div class="callout">
+        <p>Next production step: slice sheets into individual Android assets, then rebuild this layout in Compose.</p>
+      </div>
+
+      <h2 style="margin-top: 18px;">Watchpoints</h2>
+      <ul>
+        <li>UI contrast over the tavern background.</li>
+        <li>Hero portrait crop quality.</li>
+        <li>Quest card readability at small size.</li>
+        <li>Loot icon desirability in inventory.</li>
+      </ul>
+    </aside>
+  </main>
+
+  <script>
+    const summaries = {
+      guild: "Guild Home tests the main art problem: can a rich pixel-art background support readable mobile UI overlays?",
+      quests: "Quest cards need to carry location identity without relying on long localized titles.",
+      heroes: "Hero portraits need strong silhouettes and enough personality to make roster management feel collectible.",
+      loot: "Loot icons should feel funny and desirable before the player reads the stat block.",
+      upgrades: "Upgrade UI should stay quiet and economic, with clear gold sinks and long-term goals."
+    };
+
+    const screens = [...document.querySelectorAll(".screen")];
+    const navs = [...document.querySelectorAll(".nav")];
+    const links = [...document.querySelectorAll(".screen-link")];
+    const buttons = [...document.querySelectorAll("[data-screen]")];
+    const summary = document.getElementById("summary");
+
+    function setScreen(id) {
+      if (!document.getElementById(id)) return;
+      screens.forEach((screen) => screen.classList.toggle("active", screen.id === id));
+      navs.forEach((nav) => nav.classList.toggle("active", nav.dataset.screen === id));
+      links.forEach((link) => link.classList.toggle("active", link.dataset.screen === id));
+      summary.textContent = summaries[id] || summaries.guild;
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => setScreen(button.dataset.screen));
+    });
+  </script>
+</body>
+</html>
+
