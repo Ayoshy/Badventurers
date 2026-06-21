@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Badventurers Art Batch 01</title>
+  <style>
+    :root {
+      --bg: #181816;
+      --panel: #24251f;
+      --line: #4c4637;
+      --text: #f4ecd2;
+      --muted: #c9b98a;
+      --accent: #2f695c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 48px);
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    figure {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    figure.wide {
+      grid-column: 1 / -1;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: auto;
+      background: #10110f;
+    }
+
+    figcaption {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    small {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .note {
+      border-left: 4px solid var(--accent);
+      padding: 12px 14px;
+      margin: 22px 0;
+      background: #20211d;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Badventurers Art Batch 01</h1>
+      <p>Prototype art pack for the polished 16-bit pixel art direction.</p>
+    </header>
+
+    <div class="note">
+      These are direction targets. Final Android assets should be sliced, normalized, compressed, and tested in the real UI.
+    </div>
+
+    <section class="grid">
+      <figure class="wide">
+        <img src="guild-home-background.png" alt="Guild Home background concept">
+        <figcaption>
+          <span>Guild Home Background</span>
+          <small>screen identity</small>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="starter-heroes-sheet.png" alt="Starter hero portrait sheet">
+        <figcaption>
+          <span>Starter Heroes</span>
+          <small>4 portraits</small>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="quest-cards-sheet.png" alt="Quest card concept sheet">
+        <figcaption>
+          <span>Quest Cards</span>
+          <small>3 locations</small>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="loot-icons-sheet.png" alt="Loot icon concept sheet">
+        <figcaption>
+          <span>Loot Icons</span>
+          <small>10 items</small>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="resource-ui-icons-sheet.png" alt="Resource and UI icon concept sheet">
+        <figcaption>
+          <span>Resource UI Icons</span>
+          <small>12 icons</small>
+        </figcaption>
+      </figure>
+    </section>
+  </main>
+</body>
+</html>
+
