@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Badventurers - UX Flow Mockup</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #181816;
+      --panel: #f4ecd2;
+      --panel-2: #fff8e5;
+      --ink: #1e211f;
+      --muted: #6c665a;
+      --line: #c9b98a;
+      --moss: #2f695c;
+      --moss-dark: #1e4a41;
+      --ruby: #9a3f45;
+      --gold: #b4842c;
+      --violet: #6a5aa8;
+      --blue: #436f93;
+      --screen: #242522;
+      --screen-line: #444339;
+      --white: #f8f5ea;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--white);
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .page {
+      display: grid;
+      grid-template-columns: 320px minmax(360px, 1fr) 360px;
+      gap: 20px;
+      min-height: 100vh;
+      padding: 22px;
+    }
+
+    .side,
+    .notes {
+      border: 1px solid var(--screen-line);
+      background: #20211e;
+      border-radius: 8px;
+      padding: 16px;
+      align-self: start;
+      position: sticky;
+      top: 22px;
+      max-height: calc(100vh - 44px);
+      overflow: auto;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      color: #e5d7a6;
+      margin-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    p,
+    li {
+      color: #d4cfbf;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .flow-list {
+      display: grid;
+      gap: 8px;
+      margin: 14px 0 0;
+    }
+
+    .flow-button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--screen-line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--white);
+      background: #282922;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .flow-button:hover,
+    .flow-button.active {
+      border-color: var(--line);
+      background: #343124;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--moss);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .tag.p0 {
+      background: var(--ruby);
+    }
+
+    .tag.p1 {
+      background: var(--blue);
+    }
+
+    .stage {
+      display: grid;
+      place-items: center;
+      min-height: calc(100vh - 44px);
+    }
+
+    .phone-wrap {
+      width: min(390px, 100%);
+    }
+
+    .phone-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      color: #d9d1b5;
+      font-size: 13px;
+    }
+
+    .phone {
+      width: 100%;
+      aspect-ratio: 9 / 19.5;
+      border: 12px solid #0e0f0d;
+      border-radius: 34px;
+      background: var(--screen);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .status {
+      height: 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 18px;
+      color: #f6f1df;
+      font-size: 11px;
+      background: #171815;
+    }
+
+    .app {
+      height: calc(100% - 26px);
+      display: flex;
+      flex-direction: column;
+      background: #efe3bd;
+      color: var(--ink);
+    }
+
+    .topbar {
+      padding: 14px 16px 10px;
+      background: #25261f;
+      color: var(--white);
+      border-bottom: 3px solid var(--gold);
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .icon-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #5c5849;
+      border-radius: 6px;
+      background: #313329;
+      color: var(--white);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .resources {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .resource {
+      border: 1px solid #514b3d;
+      border-radius: 6px;
+      padding: 6px;
+      background: #34362e;
+      font-size: 11px;
+    }
+
+    .resource strong {
+      display: block;
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .content {
+      flex: 1;
+      padding: 12px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .content.active {
+      display: block;
+    }
+
+    .screen-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .screen-title h2 {
+      color: var(--ink);
+      font-size: 18px;
+      text-transform: none;
+      margin: 0;
+    }
+
+    .screen-title small {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-2);
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .card.dark {
+      background: #34362e;
+      color: var(--white);
+      border-color: #5f5b4e;
+    }
+
+    .card h3 {
+      color: inherit;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      color: var(--muted);
+      margin-bottom: 0;
+      font-size: 12px;
+    }
+
+    .card.dark p {
+      color: #ddd5bd;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .primary,
+    .secondary,
+    .danger {
+      min-height: 38px;
+      border: 0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 800;
+      flex: 1;
+    }
+
+    .primary {
+      background: var(--moss);
+      color: var(--white);
+    }
+
+    .secondary {
+      background: #d8c792;
+      color: var(--ink);
+    }
+
+    .danger {
+      background: var(--ruby);
+      color: var(--white);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .stat-row,
+    .loot-row,
+    .hero-row,
+    .quest-row,
+    .upgrade-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid #d0bf8f;
+      border-radius: 8px;
+      background: #f8f0d5;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .stat-row strong,
+    .loot-row strong,
+    .hero-row strong,
+    .quest-row strong,
+    .upgrade-row strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .meter {
+      height: 8px;
+      border-radius: 999px;
+      background: #d5c99f;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      background: var(--moss);
+    }
+
+    .journal {
+      display: grid;
+      gap: 7px;
+    }
+
+    .journal p {
+      border-left: 3px solid var(--gold);
+      background: #f8f0d5;
+      margin: 0;
+      padding: 7px 8px;
+      color: #4d4738;
+      font-size: 12px;
+    }
+
+    .bottom-nav {
+      height: 62px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border-top: 1px solid #c7b780;
+      background: #f7edce;
+    }
+
+    .nav-btn {
+      border: 0;
+      background: transparent;
+      color: #514b3d;
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      padding: 6px 2px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .nav-btn span:first-child {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: #e4d098;
+      color: var(--ink);
+      font-size: 11px;
+    }
+
+    .nav-btn.active {
+      color: var(--moss-dark);
+    }
+
+    .nav-btn.active span:first-child {
+      background: var(--moss);
+      color: var(--white);
+    }
+
+    .hidden-top {
+      display: none;
+    }
+
+    .note-block {
+      border-top: 1px solid var(--screen-line);
+      padding-top: 12px;
+      margin-top: 12px;
+    }
+
+    .note-block ul {
+      padding-left: 18px;
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 1120px) {
+      .page {
+        grid-template-columns: 280px minmax(320px, 1fr);
+      }
+
+      .notes {
+        grid-column: 1 / -1;
+        position: static;
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .page {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+
+      .side {
+        position: static;
+        max-height: none;
+      }
+
+      .stage {
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <aside class="side">
+      <h1>Badventurers UX Flow</h1>
+      <p>Maquette basse fidelite pour valider les ecrans, les priorites et les transitions du MVP Android.</p>
+
+      <h2>Parcours principal</h2>
+      <div class="flow-list">
+        <button class="flow-button active" data-screen="home">Guild Home <span class="tag p0">P0</span></button>
+        <button class="flow-button" data-screen="offline">Offline Summary <span class="tag p1">P1</span></button>
+        <button class="flow-button" data-screen="quests">Quest List <span class="tag p0">P0</span></button>
+        <button class="flow-button" data-screen="prep">Expedition Prep <span class="tag p0">P0</span></button>
+        <button class="flow-button" data-screen="active">Expedition Active <span class="tag p0">P0</span></button>
+        <button class="flow-button" data-screen="result">Quest Result <span class="tag p0">P0</span></button>
+        <button class="flow-button" data-screen="heroes">Heroes <span class="tag p0">P0</span></button>
+        <button class="flow-button" data-screen="hero-detail">Hero Detail <span class="tag p1">P1</span></button>
+        <button class="flow-button" data-screen="loot">Loot <span class="tag p1">P1</span></button>
+        <button class="flow-button" data-screen="item-detail">Item Detail <span class="tag p1">P1</span></button>
+        <button class="flow-button" data-screen="upgrades">Guild Upgrades <span class="tag p1">P1</span></button>
+        <button class="flow-button" data-screen="shop">Shop <span class="tag p1">P1</span></button>
+        <button class="flow-button" data-screen="settings">Settings <span class="tag p2">P2</span></button>
+      </div>
+    </aside>
+
+    <section class="stage" aria-label="Phone mockup">
+      <div class="phone-wrap">
+        <div class="phone-label">
+          <span id="screen-label">Guild Home</span>
+          <span>Android portrait</span>
+        </div>
+        <div class="phone">
+          <div class="status">
+            <span>16:42</span>
+            <span>LTE 84%</span>
+          </div>
+          <div class="app">
+            <header class="topbar" id="topbar">
+              <div class="topline">
+                <div class="brand">Badventurers</div>
+                <div class="icon-row">
+                  <button class="icon-btn" title="Shop" data-screen="shop">S</button>
+                  <button class="icon-btn" title="Settings" data-screen="settings">G</button>
+                </div>
+              </div>
+              <div class="resources">
+                <div class="resource">Gold<strong>1,284</strong></div>
+                <div class="resource">Rep<strong>17</strong></div>
+                <div class="resource">Guild<strong>Lv. 3</strong></div>
+              </div>
+            </header>
+
+            <section class="content active" id="home">
+              <div class="screen-title">
+                <h2>Guild Home</h2>
+                <small>retour</small>
+              </div>
+              <div class="card dark">
+                <h3>Cave of Minor Regrets</h3>
+                <p>Finished. The party returned with loot, mud, and a legally complex smell.</p>
+                <div class="button-row">
+                  <button class="primary" data-screen="result">Collect</button>
+                  <button class="secondary" data-screen="active">Details</button>
+                </div>
+              </div>
+              <div class="mini-grid">
+                <div class="card">
+                  <h3>Next best upgrade</h3>
+                  <p>Notice Board Lv. 2<br>+8% quest rewards</p>
+                </div>
+                <div class="card">
+                  <h3>Party mood</h3>
+                  <p>Confident for no documented reason.</p>
+                </div>
+              </div>
+              <div class="card">
+                <h3>Recent journal</h3>
+                <div class="journal">
+                  <p>Brugg tried diplomacy. The door remained unconvinced.</p>
+                  <p>Mira found a ring. It was already judging everyone.</p>
+                  <p>The healer healed morale. Nobody noticed.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="content" id="offline">
+              <div class="screen-title">
+                <h2>Offline Summary</h2>
+                <small>3h 12m</small>
+              </div>
+              <div class="card dark">
+                <h3>While you were away</h3>
+                <p>One expedition completed, one argument escalated, and the guild cat resigned.</p>
+              </div>
+              <div class="loot-row"><span><strong>Gold</strong>Expedition income</span><span>+620</span></div>
+              <div class="loot-row"><span><strong>Loot</strong>Helmet With A Plan</span><span>Rare</span></div>
+              <div class="loot-row"><span><strong>Incident</strong>Rogue-ish pocket audit</span><span>-12g</span></div>
+              <div class="button-row">
+                <button class="primary" data-screen="home">Continue</button>
+                <button class="secondary" data-screen="shop">Double</button>
+              </div>
+            </section>
+
+            <section class="content" id="quests">
+              <div class="screen-title">
+                <h2>Quests</h2>
+                <small>choose trouble</small>
+              </div>
+              <div class="quest-row" data-screen="prep">
+                <span><strong>Cave of Minor Regrets</strong>45 sec - Low risk - Slime</span>
+                <span class="tag">Best</span>
+              </div>
+              <div class="quest-row" data-screen="prep">
+                <span><strong>Bandit Tax Office</strong>3 min - Medium risk - Gold</span>
+                <span>Start</span>
+              </div>
+              <div class="quest-row" data-screen="prep">
+                <span><strong>Suspicious Pantry</strong>8 min - Food - Trap</span>
+                <span>Start</span>
+              </div>
+              <div class="card">
+                <h3>Locked</h3>
+                <p>Dungeon With Actual Paperwork requires Reputation 25.</p>
+              </div>
+            </section>
+
+            <section class="content" id="prep">
+              <div class="screen-title">
+                <h2>Expedition Prep</h2>
+                <small>party</small>
+              </div>
+              <div class="card">
+                <h3>Cave of Minor Regrets</h3>
+                <p>Duration: 45 sec. Expected reward: gold, common loot, possible regret.</p>
+                <div class="meter"><span style="width: 72%"></span></div>
+              </div>
+              <div class="hero-row"><span><strong>Brugg</strong>Bruiser - Overconfident</span><span>Power 32</span></div>
+              <div class="hero-row"><span><strong>Mira</strong>Apprentice Mage - Reads Manual</span><span>Power 28</span></div>
+              <div class="hero-row"><span><strong>Slot 3</strong>Add another mistake later</span><span>Locked</span></div>
+              <div class="button-row">
+                <button class="primary" data-screen="active">Start</button>
+                <button class="secondary" data-screen="quests">Back</button>
+              </div>
+            </section>
+
+            <section class="content" id="active">
+              <div class="screen-title">
+                <h2>Active Quest</h2>
+                <small>00:31</small>
+              </div>
+              <div class="card dark">
+                <h3>Cave of Minor Regrets</h3>
+                <p>The party is currently arguing about torch ownership.</p>
+                <div class="meter"><span style="width: 38%"></span></div>
+              </div>
+              <div class="card">
+                <h3>Current party</h3>
+                <p>Brugg, Mira. Estimated success: Fine-ish.</p>
+              </div>
+              <div class="button-row">
+                <button class="secondary" data-screen="shop">Speed up</button>
+                <button class="primary" data-screen="home">Return</button>
+              </div>
+            </section>
+
+            <section class="content" id="result">
+              <div class="screen-title">
+                <h2>Quest Result</h2>
+                <small>success-ish</small>
+              </div>
+              <div class="card dark">
+                <h3>Partial Success</h3>
+                <p>The cave was cleared. The cave strongly disagrees, but paperwork says cleared.</p>
+              </div>
+              <div class="loot-row"><span><strong>Gold</strong>Mostly clean coins</span><span>+320</span></div>
+              <div class="loot-row" data-screen="item-detail"><span><strong>Loot</strong>Boots Of Strategic Retreat</span><span>Rare</span></div>
+              <div class="loot-row"><span><strong>XP</strong>Two lessons learned</span><span>+18</span></div>
+              <div class="button-row">
+                <button class="primary" data-screen="home">Collect</button>
+                <button class="secondary" data-screen="shop">Double</button>
+              </div>
+            </section>
+
+            <section class="content" id="heroes">
+              <div class="screen-title">
+                <h2>Heroes</h2>
+                <small>roster</small>
+              </div>
+              <div class="hero-row" data-screen="hero-detail"><span><strong>Brugg</strong>Bruiser Lv. 3 - Overconfident</span><span>42</span></div>
+              <div class="hero-row" data-screen="hero-detail"><span><strong>Mira</strong>Mage Lv. 2 - Reads Manual</span><span>37</span></div>
+              <div class="hero-row" data-screen="hero-detail"><span><strong>Nell</strong>Rogue-ish Lv. 2 - Suspiciously Lucky</span><span>35</span></div>
+              <div class="card">
+                <h3>Recruitment</h3>
+                <p>New applicants arrive when reputation improves. Background checks optional.</p>
+              </div>
+            </section>
+
+            <section class="content" id="hero-detail">
+              <div class="screen-title">
+                <h2>Brugg</h2>
+                <small>Bruiser</small>
+              </div>
+              <div class="card dark">
+                <h3>Overconfident</h3>
+                <p>Higher critical success chance. Also higher furniture damage chance.</p>
+              </div>
+              <div class="stat-row"><span>Might</span><strong>18</strong></div>
+              <div class="stat-row"><span>Grit</span><strong>14</strong></div>
+              <div class="stat-row"><span>Ego</span><strong>22</strong></div>
+              <div class="loot-row" data-screen="loot"><span><strong>Weapon</strong>Bent Sword Of Intentions</span><span>Change</span></div>
+              <div class="loot-row" data-screen="loot"><span><strong>Trinket</strong>Empty slot</span><span>Equip</span></div>
+            </section>
+
+            <section class="content" id="loot">
+              <div class="screen-title">
+                <h2>Loot</h2>
+                <small>inventory</small>
+              </div>
+              <div class="loot-row" data-screen="item-detail"><span><strong>Boots Of Strategic Retreat</strong>Rare - Armor</span><span>New</span></div>
+              <div class="loot-row" data-screen="item-detail"><span><strong>Almost Invisible Ring</strong>Uncommon - Trinket</span><span>Equip</span></div>
+              <div class="loot-row" data-screen="item-detail"><span><strong>Staff Of Fire, Usually</strong>Rare - Weapon</span><span>Compare</span></div>
+              <div class="card">
+                <h3>Junk pile</h3>
+                <p>Sell 8 questionable items for 96 gold.</p>
+                <div class="button-row">
+                  <button class="secondary">Sell junk</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="content" id="item-detail">
+              <div class="screen-title">
+                <h2>Item Detail</h2>
+                <small>Rare</small>
+              </div>
+              <div class="card dark">
+                <h3>Boots Of Strategic Retreat</h3>
+                <p>They do not make you faster. They make leaving feel justified.</p>
+              </div>
+              <div class="stat-row"><span>Grit</span><strong>+3</strong></div>
+              <div class="stat-row"><span>Luck</span><strong>+2</strong></div>
+              <div class="stat-row"><span>Ego</span><strong>-1</strong></div>
+              <div class="button-row">
+                <button class="primary" data-screen="hero-detail">Equip</button>
+                <button class="secondary" data-screen="loot">Keep</button>
+                <button class="danger" data-screen="loot">Sell</button>
+              </div>
+            </section>
+
+            <section class="content" id="upgrades">
+              <div class="screen-title">
+                <h2>Upgrades</h2>
+                <small>guild</small>
+              </div>
+              <div class="upgrade-row"><span><strong>Notice Board Lv. 2</strong>+8% quest rewards</span><span>600g</span></div>
+              <div class="upgrade-row"><span><strong>Training Rug Lv. 1</strong>+5% hero XP</span><span>420g</span></div>
+              <div class="upgrade-row"><span><strong>Accountant Stool Lv. 1</strong>-3% mysterious losses</span><span>500g</span></div>
+              <div class="card">
+                <h3>Next unlock</h3>
+                <p>Insurance Desk at Reputation 20.</p>
+              </div>
+            </section>
+
+            <section class="content" id="shop">
+              <div class="screen-title">
+                <h2>Shop</h2>
+                <small>optional</small>
+              </div>
+              <div class="card dark">
+                <h3>Rewarded Ad</h3>
+                <p>Double the last quest reward or speed up active expedition.</p>
+                <div class="button-row">
+                  <button class="primary" data-screen="result">Claim mock reward</button>
+                </div>
+              </div>
+              <div class="upgrade-row"><span><strong>No Ads</strong>Keep rewarded bonuses optional</span><span>Later</span></div>
+              <div class="upgrade-row"><span><strong>Guild Theme</strong>Suspiciously clean tavern</span><span>Later</span></div>
+            </section>
+
+            <section class="content" id="settings">
+              <div class="screen-title">
+                <h2>Settings</h2>
+                <small>system</small>
+              </div>
+              <div class="upgrade-row"><span><strong>Language</strong>English / Francais</span><span>Change</span></div>
+              <div class="upgrade-row"><span><strong>Sound</strong>On</span><span>Toggle</span></div>
+              <div class="upgrade-row"><span><strong>Music</strong>Low</span><span>Toggle</span></div>
+              <div class="card">
+                <h3>Legal</h3>
+                <p>Privacy policy, restore purchases, credits.</p>
+              </div>
+            </section>
+
+            <nav class="bottom-nav" aria-label="Primary">
+              <button class="nav-btn active" data-screen="home"><span>G</span><span>Guild</span></button>
+              <button class="nav-btn" data-screen="quests"><span>Q</span><span>Quests</span></button>
+              <button class="nav-btn" data-screen="heroes"><span>H</span><span>Heroes</span></button>
+              <button class="nav-btn" data-screen="loot"><span>L</span><span>Loot</span></button>
+              <button class="nav-btn" data-screen="upgrades"><span>U</span><span>Upgrades</span></button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="notes">
+      <h2>Logique d'enchainement</h2>
+      <p id="screen-summary">Le Guild Home est le hub de retour. Il montre ce qui est fini, ce qui rapporte maintenant, et la prochaine amelioration evidente.</p>
+
+      <div class="note-block">
+        <h3>Regle UX</h3>
+        <p>Chaque ecran doit avoir une action principale claire. Le joueur ne doit jamais chercher longtemps comment relancer une expedition.</p>
+      </div>
+
+      <div class="note-block">
+        <h3>Navigation MVP</h3>
+        <ul>
+          <li>Guild pour collecter et comprendre l'etat actuel.</li>
+          <li>Quests pour relancer le timer idle.</li>
+          <li>Heroes et Loot pour optimiser.</li>
+          <li>Upgrades pour creer un objectif long terme.</li>
+        </ul>
+      </div>
+
+      <div class="note-block">
+        <h3>Ce que cette maquette valide</h3>
+        <ul>
+          <li>La boucle retour -> recompense -> optimisation -> nouvelle quete.</li>
+          <li>La place discrete de la monetisation.</li>
+          <li>Les ecrans indispensables avant le premier build Android.</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const summaries = {
+      "home": "Le Guild Home est le hub de retour. Il montre ce qui est fini, ce qui rapporte maintenant, et la prochaine amelioration evidente.",
+      "offline": "Offline Summary recompense le retour du joueur avant de le renvoyer vers le hub. Il doit etre court, satisfaisant, et collectable en un geste.",
+      "quests": "Quest List sert a choisir le prochain timer. Les cartes doivent afficher duree, risque, recompense et recommandation.",
+      "prep": "Expedition Prep confirme le choix de quete et de groupe. Le joueur doit comprendre les odds sans lire une feuille Excel.",
+      "active": "Expedition Active rassure le joueur: quelque chose travaille deja pour lui. L'action principale est de revenir au hub.",
+      "result": "Quest Result est le payoff: outcome, blague courte, loot, puis choix collecter ou bonus optionnel.",
+      "heroes": "Heroes permet de comprendre le roster en scan rapide: role, niveau, trait, puissance et etat.",
+      "hero-detail": "Hero Detail sert a optimiser un personnage sans perdre le ton absurde: stats claires, traits lisibles, equipement accessible.",
+      "loot": "Loot est l'inventaire actionnable. Equip, compare et sell doivent etre simples, surtout apres une expedition.",
+      "item-detail": "Item Detail donne la decision: equiper, garder ou vendre. Le texte de flavor vend l'identite du jeu.",
+      "upgrades": "Guild Upgrades transforme l'or en objectifs long terme. Une recommandation evite l'analyse par paralysie.",
+      "shop": "Shop reste secondaire. Les rewarded ads ameliorent une recompense, ils ne remplacent pas la progression normale.",
+      "settings": "Settings regroupe langue, son, legal et achats. C'est utile, mais jamais au centre de la boucle."
+    };
+
+    const labels = {
+      "home": "Guild Home",
+      "offline": "Offline Summary",
+      "quests": "Quest List",
+      "prep": "Expedition Prep",
+      "active": "Expedition Active",
+      "result": "Quest Result",
+      "heroes": "Heroes",
+      "hero-detail": "Hero Detail",
+      "loot": "Loot",
+      "item-detail": "Item Detail",
+      "upgrades": "Guild Upgrades",
+      "shop": "Shop",
+      "settings": "Settings"
+    };
+
+    const navScreens = new Set(["home", "quests", "heroes", "loot", "upgrades"]);
+    const screenEls = [...document.querySelectorAll(".content")];
+    const flowButtons = [...document.querySelectorAll(".flow-button")];
+    const navButtons = [...document.querySelectorAll(".nav-btn")];
+    const clickTargets = [...document.querySelectorAll("[data-screen]")];
+    const summary = document.getElementById("screen-summary");
+    const label = document.getElementById("screen-label");
+
+    function setScreen(id) {
+      if (!document.getElementById(id)) return;
+
+      screenEls.forEach((el) => el.classList.toggle("active", el.id === id));
+      flowButtons.forEach((el) => el.classList.toggle("active", el.dataset.screen === id));
+      navButtons.forEach((el) => el.classList.toggle("active", el.dataset.screen === id));
+      summary.textContent = summaries[id] || "";
+      label.textContent = labels[id] || id;
+    }
+
+    clickTargets.forEach((target) => {
+      target.addEventListener("click", () => setScreen(target.dataset.screen));
+    });
+  </script>
+</body>
+</html>
+
