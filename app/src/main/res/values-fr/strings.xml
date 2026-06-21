@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Badventurers</string>
+    <string name="gold_label">Or</string>
+    <string name="reputation_label">Rep</string>
+    <string name="guild_level_label">Guilde</string>
+    <string name="guild_home_title">Guilde</string>
+    <string name="quests_title">Quetes</string>
+    <string name="heroes_title">Heros</string>
+    <string name="loot_title">Butin</string>
+    <string name="upgrades_title">Ameliorations</string>
+    <string name="collect_action">Collecter</string>
+    <string name="next_quest_action">Quete suivante</string>
+    <string name="start_action">Lancer</string>
+    <string name="party_action">Equipe</string>
+    <string name="equip_action">Equiper</string>
+    <string name="keep_action">Garder</string>
+    <string name="buy_recommended_action">Acheter</string>
+    <string name="quest_ready_status">Pret</string>
+    <string name="quest_pick_trouble">Choisir les ennuis</string>
+    <string name="roster_status">Roster</string>
+    <string name="new_loot_status">Nouveau</string>
+    <string name="guild_upgrade_status">Guilde</string>
+    <string name="completed_quest_title">Caverne des Petits Regrets</string>
+    <string name="completed_quest_summary">Termine. Le groupe revient avec du butin, de la boue, et un rapport que personne n'a signe.</string>
+    <string name="recommended_title">Recommande</string>
+    <string name="recommended_upgrade">Ameliorer le panneau des quetes pour gagner plus de recompenses.</string>
+    <string name="quest_card_title">Bureau Fiscal des Bandits</string>
+    <string name="quest_card_summary">3 min. Risque moyen. Forte chance de butin administratif.</string>
+    <string name="loot_item_title">Bottes de Retraite Strategique</string>
+    <string name="loot_item_summary">Rare. Elles ne rendent pas plus rapide. Elles rendent la fuite plus justifiable.</string>
+    <string name="next_unlock_title">Prochain deblocage</string>
+    <string name="next_unlock_summary">Bureau d'assurance a Reputation 20.</string>
+    <string name="journal_01">Brugg a tente la diplomatie. La porte n'a pas ete convaincue.</string>
+    <string name="journal_02">Mira a trouve une bague. Elle jugeait deja tout le monde.</string>
+    <string name="journal_03">Le soigneur a soigne le moral. Personne n'a remarque.</string>
+</resources>
+

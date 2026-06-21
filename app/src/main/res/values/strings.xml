@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Badventurers</string>
+    <string name="gold_label">Gold</string>
+    <string name="reputation_label">Rep</string>
+    <string name="guild_level_label">Guild</string>
+    <string name="guild_home_title">Guild Home</string>
+    <string name="quests_title">Quests</string>
+    <string name="heroes_title">Heroes</string>
+    <string name="loot_title">Loot</string>
+    <string name="upgrades_title">Upgrades</string>
+    <string name="collect_action">Collect</string>
+    <string name="next_quest_action">Next quest</string>
+    <string name="start_action">Start</string>
+    <string name="party_action">Party</string>
+    <string name="equip_action">Equip</string>
+    <string name="keep_action">Keep</string>
+    <string name="buy_recommended_action">Buy recommended</string>
+    <string name="quest_ready_status">Ready</string>
+    <string name="quest_pick_trouble">Pick trouble</string>
+    <string name="roster_status">Roster</string>
+    <string name="new_loot_status">New</string>
+    <string name="guild_upgrade_status">Guild</string>
+    <string name="completed_quest_title">Cave of Minor Regrets</string>
+    <string name="completed_quest_summary">Finished. The party returned with loot, mud, and a report nobody signed.</string>
+    <string name="recommended_title">Recommended</string>
+    <string name="recommended_upgrade">Upgrade the Notice Board for better quest rewards.</string>
+    <string name="quest_card_title">Bandit Tax Office</string>
+    <string name="quest_card_summary">3 min. Medium risk. High chance of paperwork-related loot.</string>
+    <string name="loot_item_title">Boots Of Strategic Retreat</string>
+    <string name="loot_item_summary">Rare. They do not make you faster. They make leaving feel justified.</string>
+    <string name="next_unlock_title">Next unlock</string>
+    <string name="next_unlock_summary">Insurance Desk at Reputation 20.</string>
+    <string name="journal_01">Brugg tried diplomacy. The door remained unconvinced.</string>
+    <string name="journal_02">Mira found a ring. It was already judging everyone.</string>
+    <string name="journal_03">The healer healed morale. Nobody noticed.</string>
+</resources>
+
