@@ -48,6 +48,21 @@ data class PlaySessionState(
         return copy(expedition = run.copy(result = engine.resolve(party = party, quest = run.quest)))
     }
 
+    fun finishQuestNow(
+        engine: ExpeditionEngine,
+        party: List<Hero>,
+        roll: Int? = null,
+    ): PlaySessionState {
+        val run = expedition ?: return this
+        if (run.result != null) return this
+        val result = if (roll == null) {
+            engine.resolve(party = party, quest = run.quest)
+        } else {
+            engine.resolve(party = party, quest = run.quest, roll = roll)
+        }
+        return copy(expedition = run.copy(result = result))
+    }
+
     fun collectResult(party: List<Hero> = emptyList()): PlaySessionState {
         val run = expedition ?: return this
         val result = run.result ?: return this

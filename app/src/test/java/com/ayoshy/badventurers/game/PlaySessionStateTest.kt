@@ -128,4 +128,15 @@ class PlaySessionStateTest {
         assertTrue(collected.journalEntries.size >= 2)
         assertEquals(PlayPhase.Idle, collected.phase)
     }
+
+    @Test
+    fun finishQuestNowProducesResultBeforeEnd() {
+        val startedAt = 1_000L
+        val state = PlaySessionState.initial().startQuest(startedAt, SeedGame.firstQuest)
+        val finished = state.finishQuestNow(engine, party, roll = 100)
+
+        assertEquals(PlayPhase.ResultReady, finished.phase)
+        assertNotNull(finished.expedition?.result)
+        assertEquals(PlayPhase.Running, state.phase)
+    }
 }

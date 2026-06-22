@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.booleanResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -142,6 +143,10 @@ fun BadventurersApp() {
                                 selectedTab = GameTab.Loot
                             },
                             onNextQuest = { selectedTab = GameTab.Quests },
+                            onFinishQuestNow = {
+                                session = session.finishQuestNow(expeditionEngine, SeedGame.heroes)
+                                nowMillis = System.currentTimeMillis()
+                            },
                         )
                         GameTab.Quests -> QuestsScreen(
                             session = session,
@@ -241,6 +246,7 @@ private fun GuildScreen(
     nowMillis: Long,
     onCollect: () -> Unit,
     onNextQuest: () -> Unit,
+    onFinishQuestNow: () -> Unit,
 ) {
     ScreenScaffold(title = stringResource(R.string.guild_home_title), status = phaseStatus(session.phase)) {
         when (session.phase) {
@@ -261,6 +267,18 @@ private fun GuildScreen(
                     body = stringResource(R.string.running_quest_summary, secondsLeft),
                 ) {
                     ProgressBar(progress = session.progress(nowMillis).toFloat())
+                    if (booleanResource(R.bool.debug_tools_enabled)) {
+                        Button(
+                            onClick = onFinishQuestNow,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B5531)),
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            Text(stringResource(R.string.instant_quest_action), fontWeight = FontWeight.Black)
+                        }
+                    }
                 }
             }
             PlayPhase.ResultReady -> {

@@ -43,6 +43,7 @@
     <string name="result_quest_title">Expedition report</string>
     <string name="result_quest_summary">%1$s. +%2$d gold and +%3$d loot rolls.</string>
     <string name="quest_blocked_action">Busy</string>
+    <string name="instant_quest_action">Instant quest</string>
     <string name="loot_empty_title">No loot banked</string>
     <string name="loot_empty_summary">Start a quest, survive the paperwork, then come back here with something shiny.</string>
     <string name="loot_inventory_summary">%1$d loot rolls banked. The quartermaster is pretending this is organized.</string>
