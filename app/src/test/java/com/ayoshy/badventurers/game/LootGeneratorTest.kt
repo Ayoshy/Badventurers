@@ -37,4 +37,13 @@ class LootGeneratorTest {
         assertTrue(items.isNotEmpty())
         assertTrue(items.all { it.rarity in expected })
     }
+
+    @Test
+    fun generatedItemsHaveExpectedIcons() {
+        val expected = LootIcon.values().toSet()
+        val items = LootGenerator.generate(20, seed = 11)
+
+        assertTrue(items.isNotEmpty())
+        assertTrue(items.all { it.icon in expected })
+    }
 }

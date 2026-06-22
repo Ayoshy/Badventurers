@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import com.ayoshy.badventurers.R
 import com.ayoshy.badventurers.game.ExpeditionEngine
 import com.ayoshy.badventurers.game.ExpeditionOutcome
+import com.ayoshy.badventurers.game.LootIcon
 import com.ayoshy.badventurers.game.LootItem
 import com.ayoshy.badventurers.game.PartyPowerCalculator
 import com.ayoshy.badventurers.game.PlayPhase
@@ -364,7 +365,9 @@ private fun LootScreen(session: PlaySessionState, onEquip: () -> Unit) {
     }
 
     ScreenScaffold(title = stringResource(R.string.loot_title), status = stringResource(R.string.new_loot_status)) {
-        ArtSheet(resourceId = R.drawable.loot_icons_sheet, aspectRatio = 1f)
+        if (latestItem != null) {
+            LootIconPanel(item = latestItem)
+        }
         DarkPanel(title = title, body = body) {
             ActionRow(
                 primaryLabel = stringResource(R.string.equip_action),
@@ -419,6 +422,40 @@ private fun outcomeLabel(outcome: ExpeditionOutcome): String =
         ExpeditionOutcome.PartialSuccess -> stringResource(R.string.outcome_partial_success)
         ExpeditionOutcome.Failure -> stringResource(R.string.outcome_failure)
         ExpeditionOutcome.RidiculousFailure -> stringResource(R.string.outcome_ridiculous_failure)
+    }
+
+@Composable
+private fun LootIconPanel(item: LootItem) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .padding(bottom = 10.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xDD171813)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(lootIconResource(item.icon)),
+            contentDescription = item.name,
+            modifier = Modifier
+                .fillMaxWidth(0.88f)
+                .aspectRatio(1f),
+            contentScale = ContentScale.Fit,
+        )
+    }
+}
+
+private fun lootIconResource(icon: LootIcon): Int =
+    when (icon) {
+        LootIcon.Boots -> R.drawable.loot_icon_boots
+        LootIcon.Ring -> R.drawable.loot_icon_ring
+        LootIcon.Helmet -> R.drawable.loot_icon_helmet
+        LootIcon.Weapon -> R.drawable.loot_icon_weapon
+        LootIcon.Spoon -> R.drawable.loot_icon_spoon
+        LootIcon.Hood -> R.drawable.loot_icon_hood
+        LootIcon.Tankard -> R.drawable.loot_icon_tankard
+        LootIcon.Potion -> R.drawable.loot_icon_potion
     }
 
 @Composable
