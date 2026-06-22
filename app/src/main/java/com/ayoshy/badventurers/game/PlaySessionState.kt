@@ -6,6 +6,8 @@ data class PlaySessionState(
     val guildLevel: Int = 3,
     val noticeBoardLevel: Int = 1,
     val lootRolls: Int = 0,
+    val lootItems: List<LootItem> = emptyList(),
+    val journalEntries: List<JournalEntry> = emptyList(),
     val expedition: ExpeditionRun? = null,
 ) {
     val phase: PlayPhase
@@ -46,16 +48,23 @@ data class PlaySessionState(
         return copy(expedition = run.copy(result = engine.resolve(party = party, quest = run.quest)))
     }
 
-    fun collectResult(): PlaySessionState {
+    fun collectResult(party: List<Hero> = emptyList()): PlaySessionState {
         val run = expedition ?: return this
         val result = run.result ?: return this
         val noticeBoardBonus = result.reward.gold * (noticeBoardLevel - 1) / 10
+        val generatedLoot = LootGenerator.generate(result.reward.lootRolls, seed = lootSeed(result))
+        val generatedJournal = JournalGenerator.generate(result, party)
         return copy(
             gold = gold + result.reward.gold + noticeBoardBonus,
             lootRolls = lootRolls + result.reward.lootRolls,
+            lootItems = lootItems + generatedLoot,
+            journalEntries = (journalEntries + generatedJournal).takeLast(12),
             expedition = null,
         )
     }
+
+    private fun lootSeed(result: ExpeditionResult): Int =
+        gold + lootRolls * 31 + noticeBoardLevel * 101 + result.scoreMargin
 
     fun upgradeNoticeBoard(cost: Int = 600): PlaySessionState {
         if (gold < cost) return this

@@ -46,6 +46,7 @@
     <string name="loot_empty_title">Aucun butin en stock</string>
     <string name="loot_empty_summary">Lance une quete, survis a la paperasse, puis reviens avec un truc brillant.</string>
     <string name="loot_inventory_summary">%1$d jets de butin en stock. Le quartier-maitre pretend que tout est range.</string>
+    <string name="loot_generated_summary">%1$s %2$s. Bonus +%3$d. %4$d objets en stock.</string>
     <string name="notice_board_upgrade_title">Panneau des quetes Nv. %1$d</string>
     <string name="notice_board_upgrade_detail">+10% or de quete par niveau bonus. Et moins de fleches dans les annonces.</string>
     <string name="outcome_great_success">Grand succes</string>

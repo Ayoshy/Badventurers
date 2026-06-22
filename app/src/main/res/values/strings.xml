@@ -46,6 +46,7 @@
     <string name="loot_empty_title">No loot banked</string>
     <string name="loot_empty_summary">Start a quest, survive the paperwork, then come back here with something shiny.</string>
     <string name="loot_inventory_summary">%1$d loot rolls banked. The quartermaster is pretending this is organized.</string>
+    <string name="loot_generated_summary">%1$s %2$s. Bonus +%3$d. %4$d items banked.</string>
     <string name="notice_board_upgrade_title">Notice Board Lv. %1$d</string>
     <string name="notice_board_upgrade_detail">+10% quest gold per extra level. Also fewer arrows through job postings.</string>
     <string name="outcome_great_success">Great success</string>

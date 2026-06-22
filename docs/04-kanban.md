@@ -26,19 +26,24 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [x] Add ADB emulator capture script.
 - [x] Install current build on emulator.
 - [x] Capture current emulator screen through ADB.
-- [ ] Review captured emulator screen once Codex image viewing is unblocked.
-- [ ] Commit and push the playable-loop slice.
+- [x] Add save snapshot foundation for `PlaySessionState`.
+- [x] Add basic loot item generation.
+- [x] Add journal event generation from expedition results.
+- [x] Smoke install and capture the integrated build on emulator.
+- [x] Commit and push the save/loot/journal slice.
 
 ## Next
 
-- [ ] Create initial GitHub issues from this board.
-- [ ] Add local save for play session state.
-- [ ] Add basic loot item generation instead of raw loot rolls.
-- [ ] Add journal event generation from expedition results.
+- [ ] Integrate Android local persistence using `PlaySessionSnapshot`.
+- [ ] Replace remaining raw loot-roll UI with a small inventory list.
+- [ ] Localize generated journal/loot display text or route generated copy through templates.
 - [ ] Slice Batch 01 sheets into Android-ready hero, quest, loot, and resource assets.
 - [ ] Add a repeatable emulator smoke-test checklist.
-- [ ] Add a visual screenshot review workflow once Codex image viewing is reliable.
-- [ ] Investigate Codex `view_image` ACL failure on workspace screenshots.
+- [ ] Create initial GitHub issues once GitHub CLI/connector access works.
+
+## Blocked
+
+- [ ] Create initial GitHub issues from this board. Blocked: `gh`/GitHub connector unavailable in the agent environment.
 
 ## Later
 
@@ -50,6 +55,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [ ] Add Google Play Billing no-ads product.
 - [ ] Add store listing assets.
 - [ ] Add beta analytics and crash reporting.
+- [ ] Investigate Codex `view_image` ACL failure on workspace screenshots.
 
 ## Initial Issue Candidates
 

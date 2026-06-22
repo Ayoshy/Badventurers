@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.ayoshy.badventurers.R
 import com.ayoshy.badventurers.game.ExpeditionEngine
 import com.ayoshy.badventurers.game.ExpeditionOutcome
+import com.ayoshy.badventurers.game.LootItem
 import com.ayoshy.badventurers.game.PartyPowerCalculator
 import com.ayoshy.badventurers.game.PlayPhase
 import com.ayoshy.badventurers.game.PlaySessionState
@@ -137,7 +138,7 @@ fun BadventurersApp() {
                             session = session,
                             nowMillis = nowMillis,
                             onCollect = {
-                                session = session.collectResult()
+                                session = session.collectResult(SeedGame.heroes)
                                 selectedTab = GameTab.Loot
                             },
                             onNextQuest = { selectedTab = GameTab.Quests },
@@ -287,9 +288,14 @@ private fun GuildScreen(
         PaperPanel(title = stringResource(R.string.recommended_title), body = stringResource(R.string.recommended_upgrade)) {
             ProgressBar(progress = 0.72f)
         }
-        JournalLine(stringResource(R.string.journal_01))
-        JournalLine(stringResource(R.string.journal_02))
-        JournalLine(stringResource(R.string.journal_03))
+        val journalLines = session.journalEntries.takeLast(3).map { it.text }
+        if (journalLines.isEmpty()) {
+            JournalLine(stringResource(R.string.journal_01))
+            JournalLine(stringResource(R.string.journal_02))
+            JournalLine(stringResource(R.string.journal_03))
+        } else {
+            journalLines.forEach { line -> JournalLine(line) }
+        }
     }
 }
 
@@ -330,10 +336,11 @@ private fun HeroesScreen() {
 
 @Composable
 private fun LootScreen(session: PlaySessionState, onEquip: () -> Unit) {
-    val hasLoot = session.lootRolls > 0
-    val title = if (hasLoot) stringResource(R.string.loot_item_title) else stringResource(R.string.loot_empty_title)
-    val body = if (hasLoot) {
-        stringResource(R.string.loot_inventory_summary, session.lootRolls)
+    val latestItem = session.lootItems.lastOrNull()
+    val hasLoot = latestItem != null
+    val title = latestItem?.name ?: stringResource(R.string.loot_empty_title)
+    val body = if (latestItem != null) {
+        lootItemSummary(latestItem, session.lootItems.size)
     } else {
         stringResource(R.string.loot_empty_summary)
     }
@@ -395,6 +402,16 @@ private fun outcomeLabel(outcome: ExpeditionOutcome): String =
         ExpeditionOutcome.Failure -> stringResource(R.string.outcome_failure)
         ExpeditionOutcome.RidiculousFailure -> stringResource(R.string.outcome_ridiculous_failure)
     }
+
+@Composable
+private fun lootItemSummary(item: LootItem, totalItems: Int): String =
+    stringResource(
+        R.string.loot_generated_summary,
+        item.rarity.name,
+        item.slot.name,
+        item.bonus,
+        totalItems,
+    )
 
 private fun remainingSeconds(session: PlaySessionState, nowMillis: Long): Long {
     val endsAt = session.expedition?.endsAtMillis ?: return 0L
