@@ -22,6 +22,25 @@ class PlaySessionStateTest {
         )
     }
 
+
+    @Test
+    fun startQuestStoresSelectedPartyAndLimitsSlots() {
+        val selectedParty = HeroCatalog.heroes.map { it.toHero() }
+        val state = PlaySessionState.initial().copy(heroes = selectedParty).startQuest(1_000L, SeedGame.firstQuest, selectedParty)
+
+        assertEquals(SeedGame.firstQuest.partySlots, state.expedition?.partyHeroIds?.size)
+        assertEquals(selectedParty.take(SeedGame.firstQuest.partySlots).map { it.id }, state.expedition?.partyHeroIds)
+    }
+
+    @Test
+    fun finishQuestUsesStoredPartyInsteadOfFullRoster() {
+        val selectedParty = listOf(party.first())
+        val running = PlaySessionState.initial().startQuest(1_000L, SeedGame.firstQuest, selectedParty)
+        val finished = running.finishQuestNow(engine, party, roll = 0)
+        val expectedMargin = PartyPowerCalculator.totalPower(selectedParty) - SeedGame.firstQuest.difficulty
+
+        assertEquals(expectedMargin, finished.expedition?.result?.scoreMargin)
+    }
     @Test
     fun progressIsBoundedBetweenZeroAndOne() {
         val startedAt = 1_000L
@@ -124,7 +143,8 @@ class PlaySessionStateTest {
 
         val collected = ready.collectResult(SeedGame.heroes)
 
-        assertEquals(2, collected.lootItems.size)
+        assertEquals(emptyList<LootItem>(), collected.lootItems)
+        assertEquals(2, collected.pendingLootItems.size)
         assertTrue(collected.journalEntries.size >= 2)
         assertEquals(PlayPhase.Idle, collected.phase)
     }
@@ -139,4 +159,135 @@ class PlaySessionStateTest {
         assertNotNull(finished.expedition?.result)
         assertEquals(PlayPhase.Running, state.phase)
     }
+
+    @Test
+    fun recruitHeroConsumesGoldAndAddsSummonedHero() {
+        val state = PlaySessionState.initial().copy(heroes = emptyList())
+        val recruitment = requireNotNull(state.recruitHero(seed = 42))
+
+        assertEquals(HeroGacha.RECRUIT_COST, recruitment.cost)
+        assertEquals(false, recruitment.duplicate)
+        assertEquals(0, recruitment.reputationReward)
+        assertEquals(state.gold - HeroGacha.RECRUIT_COST, recruitment.session.gold)
+        assertEquals(state.reputation, recruitment.session.reputation)
+        assertEquals(state.heroes.size + 1, recruitment.session.heroes.size)
+        assertEquals(recruitment.hero, recruitment.session.heroes.last())
+    }
+
+    @Test
+    fun recruitHeroFailsWithoutEnoughGold() {
+        val state = PlaySessionState.initial().copy(gold = HeroGacha.RECRUIT_COST - 1)
+
+        assertEquals(null, state.recruitHero(seed = 42))
+    }
+
+    @Test
+    fun recruitHeroConvertsDuplicateIntoReputation() {
+        val state = PlaySessionState.initial().copy(
+            heroes = HeroCatalog.heroes.map { it.toHero() },
+        )
+        val recruitment = requireNotNull(state.recruitHero(seed = 42))
+
+        assertEquals(true, recruitment.duplicate)
+        assertEquals(HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.reputationReward)
+        assertEquals(state.gold - HeroGacha.RECRUIT_COST, recruitment.session.gold)
+        assertEquals(state.reputation + HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.session.reputation)
+        assertEquals(state.heroes.size, recruitment.session.heroes.size)
+    }
+    @Test
+    fun equipLootMovesItemIntoHeroSlotAndBoostsPartyPower() {
+        val hero = party.first()
+        val item = testLoot(id = "weapon_training_spoon", bonus = 5)
+        val state = PlaySessionState.initial().copy(lootItems = listOf(item))
+
+        val equipped = state.equipLoot(hero.id, item)
+
+        assertEquals(emptyList<LootItem>(), equipped.lootItems)
+        assertEquals(listOf(item), equipped.equippedItems(hero.id))
+        assertEquals(PartyPowerCalculator.totalPower(state.heroes) + item.bonus, equipped.totalPartyPower())
+    }
+
+    @Test
+    fun equipLootSwapsSameSlotItemBackIntoInventory() {
+        val hero = party.first()
+        val firstItem = testLoot(id = "weapon_training_spoon", bonus = 3)
+        val secondItem = testLoot(id = "weapon_invoice_sword", bonus = 7)
+        val state = PlaySessionState.initial().copy(lootItems = listOf(firstItem, secondItem))
+
+        val withFirst = state.equipLoot(hero.id, firstItem)
+        val withSecond = withFirst.equipLoot(hero.id, secondItem)
+        val unequipped = withSecond.unequipLoot(hero.id, LootSlot.Weapon)
+
+        assertEquals(listOf(firstItem), withSecond.lootItems)
+        assertEquals(listOf(secondItem), withSecond.equippedItems(hero.id))
+        assertEquals(listOf(firstItem, secondItem), unequipped.lootItems)
+        assertEquals(emptyList<LootItem>(), unequipped.equippedItems(hero.id))
+    }
+
+
+
+    @Test
+    fun releaseHeroRemovesHeroAndReturnsEquipmentToInventory() {
+        val hero = party.first()
+        val item = testLoot(id = "weapon_release_spoon", bonus = 5)
+        val state = PlaySessionState.initial()
+            .copy(lootItems = listOf(item))
+            .equipLoot(hero.id, item)
+
+        val released = state.releaseHero(hero.id)
+
+        assertEquals(false, released.heroes.any { it.id == hero.id })
+        assertEquals(listOf(item), released.lootItems)
+        assertEquals(emptyList<LootItem>(), released.equippedItems(hero.id))
+    }
+
+    @Test
+    fun releaseHeroKeepsLastHero() {
+        val onlyHero = party.first()
+        val state = PlaySessionState.initial().copy(heroes = listOf(onlyHero))
+
+        val released = state.releaseHero(onlyHero.id)
+
+        assertEquals(listOf(onlyHero), released.heroes)
+    }
+
+
+    @Test
+    fun keepPendingLootMovesRewardIntoInventory() {
+        val item = testLoot(id = "weapon_reward_spoon", bonus = 5)
+        val state = PlaySessionState.initial().copy(pendingLootItems = listOf(item))
+        val kept = state.keepPendingLoot(item)
+
+        assertEquals(emptyList<LootItem>(), kept.pendingLootItems)
+        assertEquals(listOf(item), kept.lootItems)
+        assertEquals(state.gold, kept.gold)
+    }
+
+    @Test
+    fun sellPendingLootRemovesRewardAndCreditsGold() {
+        val item = testLoot(id = "armor_reward_hat", bonus = 2)
+        val state = PlaySessionState.initial().copy(pendingLootItems = listOf(item))
+        val sold = state.sellPendingLoot(item)
+
+        assertEquals(emptyList<LootItem>(), sold.pendingLootItems)
+        assertEquals(emptyList<LootItem>(), sold.lootItems)
+        assertEquals(state.gold + LootEconomy.sellValue(item), sold.gold)
+    }
+    @Test
+    fun sellLootRemovesItemAndCreditsGold() {
+        val item = testLoot(id = "trinket_invoice_pebble", bonus = 4)
+        val state = PlaySessionState.initial().copy(lootItems = listOf(item))
+        val sold = state.sellLoot(item)
+
+        assertEquals(emptyList<LootItem>(), sold.lootItems)
+        assertEquals(state.gold + LootEconomy.sellValue(item), sold.gold)
+    }
+    private fun testLoot(id: String, bonus: Int): LootItem = LootItem(
+        id = id,
+        name = id,
+        rarity = LootRarity.Rare,
+        slot = LootSlot.Weapon,
+        bonus = bonus,
+        icon = LootIcon.Spoon,
+    )
 }

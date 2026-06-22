@@ -10,6 +10,15 @@ enum class LootRarity {
     Relic,
 }
 
+val LootRarity.statSlotCount: Int
+    get() = when (this) {
+        LootRarity.Common -> 1
+        LootRarity.Uncommon -> 2
+        LootRarity.Rare -> 3
+        LootRarity.Epic -> 4
+        LootRarity.Relic -> 5
+    }
+
 enum class LootSlot {
     Weapon,
     Armor,
@@ -41,9 +50,13 @@ data class LootItem(
     val name: String,
     val rarity: LootRarity,
     val slot: LootSlot,
-    val bonus: Int,
+    val stats: List<StatBonus> = emptyList(),
+    val bonus: Int = stats.sumOf { it.value },
     val icon: LootIcon,
-)
+) {
+    val isPerfect: Boolean
+        get() = stats.size == rarity.statSlotCount && stats.all { it.value == LootGenerator.MAX_STAT_VALUE }
+}
 
 object LootCatalog {
     val items = listOf(
@@ -87,13 +100,41 @@ object LootCatalog {
     }
 }
 
+object LootEconomy {
+    fun sellValue(item: LootItem): Int {
+        val rarityValue = when (item.rarity) {
+            LootRarity.Common -> 25
+            LootRarity.Uncommon -> 45
+            LootRarity.Rare -> 80
+            LootRarity.Epic -> 140
+            LootRarity.Relic -> 240
+        }
+        return rarityValue + item.bonus * 20
+    }
+}
+
 object LootGenerator {
+    const val MAX_STAT_VALUE = 10
+
     private val rarityWeights = listOf(
         LootRarity.Common to 60,
         LootRarity.Uncommon to 25,
         LootRarity.Rare to 10,
         LootRarity.Epic to 4,
         LootRarity.Relic to 1,
+    )
+
+    private val statValueWeights = listOf(
+        1 to 22,
+        2 to 19,
+        3 to 16,
+        4 to 13,
+        5 to 10,
+        6 to 8,
+        7 to 5,
+        8 to 4,
+        9 to 2,
+        10 to 1,
     )
 
     fun generate(rolls: Int, seed: Int = 0): List<LootItem> =
@@ -106,34 +147,26 @@ object LootGenerator {
             val slot = random.nextEnum(LootSlot.values().asList())
             val rarity = random.nextWeightedEnum(rarityWeights)
             val definition = random.nextEnum(LootCatalog.bySlot.getValue(slot))
-            val bonus = bonusFor(rarity, definition.slot)
+            val stats = rollStats(rarity, random)
 
             LootItem(
                 id = definition.id,
                 name = definition.name,
                 rarity = rarity,
                 slot = definition.slot,
-                bonus = bonus,
+                stats = stats,
+                bonus = stats.sumOf { it.value },
                 icon = definition.icon,
             )
         }
     }
 
-    private fun bonusFor(rarity: LootRarity, slot: LootSlot): Int {
-        val base = when (rarity) {
-            LootRarity.Common -> 1
-            LootRarity.Uncommon -> 2
-            LootRarity.Rare -> 4
-            LootRarity.Epic -> 7
-            LootRarity.Relic -> 11
-        }
-
-        return base + when (slot) {
-            LootSlot.Weapon -> 2
-            LootSlot.Armor -> 1
-            LootSlot.Trinket -> 0
-            LootSlot.Headgear -> 0
-            LootSlot.Consumable -> -1
+    private fun rollStats(rarity: LootRarity, random: Random): List<StatBonus> {
+        val remainingStats = StatType.values().toMutableList()
+        return List(rarity.statSlotCount) {
+            val stat = random.nextEnum(remainingStats)
+            remainingStats.remove(stat)
+            StatBonus(type = stat, value = random.nextWeightedEnum(statValueWeights))
         }
     }
 

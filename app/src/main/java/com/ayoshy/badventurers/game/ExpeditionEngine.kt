@@ -11,13 +11,10 @@ class ExpeditionEngine(
         party: List<Hero>,
         quest: Quest,
         roll: Int = random.nextInt(0, 101),
+        equipment: List<EquippedLoot> = emptyList(),
     ): ExpeditionResult {
-        val partyPower = PartyPowerCalculator.totalPower(party)
-        val riskPenalty = when (quest.risk) {
-            QuestRisk.Low -> 0
-            QuestRisk.Medium -> 8
-            QuestRisk.High -> 16
-        }
+        val partyPower = PartyPowerCalculator.totalPower(party, equipment)
+        val riskPenalty = ExpeditionEstimator.riskPenalty(quest.risk)
         val margin = partyPower + roll - quest.difficulty - riskPenalty
         val outcome = when {
             margin >= 80 -> ExpeditionOutcome.GreatSuccess
@@ -65,13 +62,59 @@ class ExpeditionEngine(
     }
 }
 
-object PartyPowerCalculator {
-    fun totalPower(party: List<Hero>): Int =
-        party.sumOf { hero ->
-            with(hero.stats) {
-                might * 2 + wits * 2 + sneak + grit + luck + ego / 2 + hero.level * 4
-            } + traitBonus(hero.trait)
+data class ExpeditionEstimate(
+    val partyPower: Int,
+    val targetPower: Int,
+    val successChancePercent: Int,
+    val riskPenalty: Int,
+)
+
+object ExpeditionEstimator {
+    fun estimate(
+        party: List<Hero>,
+        quest: Quest,
+        equipment: List<EquippedLoot> = emptyList(),
+    ): ExpeditionEstimate {
+        val partyPower = PartyPowerCalculator.totalPower(party, equipment)
+        val targetPower = targetPower(quest)
+        return ExpeditionEstimate(
+            partyPower = partyPower,
+            targetPower = targetPower,
+            successChancePercent = successChancePercent(partyPower, quest),
+            riskPenalty = riskPenalty(quest.risk),
+        )
+    }
+
+    fun targetPower(quest: Quest): Int = quest.difficulty + riskPenalty(quest.risk)
+
+    fun successChancePercent(partyPower: Int, quest: Quest): Int {
+        val requiredRoll = targetPower(quest) - partyPower
+        return when {
+            requiredRoll <= 0 -> 100
+            requiredRoll > 100 -> 0
+            else -> ((101 - requiredRoll) * 100 / 101).coerceIn(0, 100)
         }
+    }
+
+    fun riskPenalty(risk: QuestRisk): Int =
+        when (risk) {
+            QuestRisk.Low -> 0
+            QuestRisk.Medium -> 8
+            QuestRisk.High -> 16
+        }
+}
+
+object PartyPowerCalculator {
+    fun totalPower(party: List<Hero>, equipment: List<EquippedLoot> = emptyList()): Int =
+        party.sumOf { hero ->
+            basePower(hero) + equipmentBonus(hero.id, equipment)
+        }
+
+    fun basePower(hero: Hero): Int =
+        hero.stats.averagePower + hero.level * 4 + traitBonus(hero.trait)
+
+    fun equipmentBonus(heroId: String, equipment: List<EquippedLoot>): Int =
+        equipment.filter { it.heroId == heroId }.sumOf { it.item.bonus }
 
     private fun traitBonus(trait: Trait): Int =
         when (trait) {

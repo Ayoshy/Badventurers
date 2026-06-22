@@ -77,4 +77,17 @@ class LootGeneratorTest {
             assertEquals(definition.icon, item.icon)
         }
     }
+
+    @Test
+    fun generatedItemsRollStatsByRarity() {
+        val items = LootGenerator.generate(100, seed = 23)
+
+        assertTrue(items.isNotEmpty())
+        items.forEach { item ->
+            assertEquals(item.rarity.statSlotCount, item.stats.size)
+            assertEquals(item.bonus, item.stats.sumOf { it.value })
+            assertEquals(item.stats.size, item.stats.map { it.type }.toSet().size)
+            assertTrue(item.stats.all { it.value in 1..LootGenerator.MAX_STAT_VALUE })
+        }
+    }
 }

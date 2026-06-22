@@ -53,6 +53,77 @@ To capture the current emulator screen into `artifacts/screenshots`:
 
 Use `-DeviceSerial` when more than one device is connected, and `-OutputDir` to change the destination folder.
 
+## Repeatable Emulator Smoke Test
+
+Run this checklist after UI, state, art, or gameplay-loop changes.
+
+### 1. Prepare The Target
+
+1. Start one emulator or connect one device.
+2. Confirm exactly one ready target:
+
+```powershell
+adb devices
+```
+
+3. Build, test, and install the debug app:
+
+```powershell
+.\gradlew test assembleDebug installDebug
+```
+
+4. Relaunch from a clean foreground state:
+
+```powershell
+adb shell am force-stop com.ayoshy.badventurers
+adb shell monkey -p com.ayoshy.badventurers 1
+```
+
+### 2. Walk The Core Screens
+
+Use the bottom navigation and verify each tab:
+
+- Guild Home: Gold, Rep, Guild level, status badge, quest CTA, recommendation, and journal entries are readable.
+- Quests: quest artwork is a clean landscape card; quest title, description, `Start`, and `Party` are visible above the bottom navigation.
+- Heroes: recruitment desk is visible near the top; hero portraits load; roster details and rarity odds are reachable by scroll.
+- Loot: selected item artwork, item details, `Equip`, `Keep`, and the inventory row are visible.
+- Upgrades: upgrade names, effects, costs, next unlock, and buy CTA are readable without overlapping.
+
+### 3. Exercise One Loop
+
+1. Start a quest from the Quests tab.
+2. Return to Guild Home and confirm the expedition state changes to running.
+3. Use `Instant quest` or wait for completion.
+4. Confirm Gold, Rep, loot count, and journal entries update.
+5. Relaunch the app and confirm the latest resources, roster, loot, journal, and expedition state persist.
+
+### 4. Capture Evidence
+
+Capture at least one screenshot before and after the loop:
+
+```powershell
+.\tools\capture-emulator.ps1 -OutputDir artifacts\screenshots\smoke
+```
+
+If layout looks suspicious, capture the affected tab and keep the screenshot with a short note about device size, locale, and app state.
+
+Optional UI dump spot check for clipped quest actions:
+
+```powershell
+adb shell uiautomator dump /sdcard/window.xml
+adb pull /sdcard/window.xml artifacts\screenshots\smoke\window.xml
+Select-String -Path artifacts\screenshots\smoke\window.xml -Pattern "Quests|Bandit Tax Office|Start|Party"
+```
+
+### 5. Pass Criteria
+
+- App launches without crashing.
+- Primary actions are not hidden behind the bottom navigation.
+- Generated journal, loot, and hero text display through localized UI labels.
+- Art assets load on every tab.
+- Scrollable content remains reachable on a phone-sized viewport.
+- Local state survives force-stop and relaunch.
+
 ## Later Accounts
 
 These are not needed for the first prototype:

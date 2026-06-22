@@ -144,3 +144,118 @@ Acceptance criteria:
 
 Notes: Codex can create issues once repo access is granted through the GitHub connector or GitHub CLI is installed.
 
+## MVP Gameplay Screen Issues
+
+These tickets break down `docs/12-gameplay-screen-loop.md` into implementation-ready units for the next GitHub issue pass.
+
+## 11. [P0] Add dedicated Expedition Prep screen
+
+Goal: create a prep step between Quest selection and Expedition Active.
+
+Acceptance criteria:
+
+- [ ] Quests screen opens a dedicated prep screen instead of launching immediately.
+- [ ] Prep shows the selected quest art, title, duration, risk, and reward preview.
+- [ ] Prep shows current party slots and per-hero power.
+- [ ] Prep shows party power, target power, and estimated success chance.
+- [ ] Launching from prep starts the expedition and returns to Guild Home.
+
+Notes: local prototype implementation exists; keep future party editing compatible with this screen.
+
+## 12. [P0] Add dedicated Quest Result and Reward Choice flow
+
+Goal: move result payoff out of Guild Home into a focused return flow.
+
+Acceptance criteria:
+
+- [ ] Result-ready expeditions open a dedicated Quest Result screen.
+- [ ] Result screen shows outcome, score tone, gold, loot rolls, and journal incident.
+- [ ] Reward Choice lets the player collect, inspect loot, or continue to the next action.
+- [ ] Normal collect flow remains available without optional ads.
+- [ ] Result and reward strings are localized in EN/FR.
+
+Notes: preserve the current Guild result state as a fallback route.
+
+## 13. [P0] Add Offline Summary return flow
+
+Goal: make returning after absence feel intentional and funny.
+
+Acceptance criteria:
+
+- [ ] App detects when an active expedition completed while closed.
+- [ ] Return flow shows elapsed time, quest result, and rewards earned offline.
+- [ ] Summary includes one short localized journal-style line.
+- [ ] Player can collect and continue to Guild Home in one tap.
+- [ ] Unit tests cover timestamp completion and no-double-collect behavior.
+
+Notes: build on the snapshot persistence already in place.
+
+## 14. [P1] Add Item Detail with equip, sell, and keep actions
+
+Goal: make individual loot decisions clear after rewards and from inventory.
+
+Acceptance criteria:
+
+- [ ] Tapping an item opens a detail view with icon, rarity, slot, bonus, and flavor.
+- [ ] Detail suggests the best hero target based on slot and power gain.
+- [ ] Player can equip to the selected/suggested hero.
+- [ ] Player can keep the item without changing inventory state.
+- [ ] Sell action is stubbed or implemented with clear gold value rules.
+
+Notes: current inventory/equip basics can be reused.
+
+## 15. [P1] Add Hero Detail screen
+
+Goal: give each hero a readable identity and progression surface.
+
+Acceptance criteria:
+
+- [ ] Tapping a hero opens a detail screen with portrait, rarity, class, trait, stats, and gear.
+- [ ] Detail shows base power, gear bonus, and total contribution.
+- [ ] Equipment actions remain reachable from the detail screen.
+- [ ] Recruitment result can deep-link to the recruited hero detail.
+- [ ] Layout remains readable on portrait phone sizes.
+
+Notes: this can replace the dense roster rows once stable.
+
+## 16. [P1] Document monetization guardrails before fake rewarded ads
+
+Goal: lock the ethical monetization rules before prototyping ad prompts.
+
+Acceptance criteria:
+
+- [ ] Rewarded ads are optional and never required for core progression.
+- [ ] Random paid rewards and pay-to-win escalation are explicitly avoided.
+- [ ] No-ads purchase, cosmetics, and starter-pack boundaries are documented.
+- [ ] Fake rewarded ad placements are listed with normal non-ad alternatives.
+- [ ] The docs are linked from the Kanban and future ad issue.
+
+Notes: this should land before any rewarded prompt UI.
+
+## 17. [P1] Add fake Rewarded Ad Prompt flow
+
+Goal: prototype optional reward UX without integrating AdMob.
+
+Acceptance criteria:
+
+- [ ] Fake ad service grants rewards instantly in debug/prototype builds.
+- [ ] Reward Choice can offer a clearly optional double-reward action.
+- [ ] Timer speed-up or instant-finish remains gated to debug/prototype rules.
+- [ ] UI copy makes the normal collect path equally visible.
+- [ ] Code is shaped so real AdMob can replace the fake service later.
+
+Notes: depends on monetization guardrails.
+
+## 18. [P2] Add Settings screen with language and audio hooks
+
+Goal: add a support screen for player preferences and future platform needs.
+
+Acceptance criteria:
+
+- [ ] Settings is reachable from Guild Home or bottom navigation.
+- [ ] Screen shows language preference entry point and audio toggles.
+- [ ] Placeholder toggles persist locally if they affect current behavior.
+- [ ] Legal/support placeholders are present but not overbuilt.
+- [ ] EN/FR strings exist for all visible labels.
+
+Notes: language switching can remain a platform-level placeholder until the app needs runtime locale switching.

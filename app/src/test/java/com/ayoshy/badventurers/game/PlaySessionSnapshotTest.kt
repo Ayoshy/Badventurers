@@ -6,12 +6,19 @@ import org.junit.Test
 class PlaySessionSnapshotTest {
     @Test
     fun snapshotRoundTripsModifiedIdleState() {
+        val extraHero = HeroCatalog.byId.getValue("ledger").toHero()
+        val generatedLoot = LootGenerator.generate(2, seed = 5)
         val state = PlaySessionState.initial().copy(
             gold = 2_000,
             reputation = 29,
             guildLevel = 4,
             noticeBoardLevel = 3,
+            heroes = HeroCatalog.starterHeroes + extraHero,
             lootRolls = 7,
+            lootItems = generatedLoot.drop(1),
+            pendingLootItems = generatedLoot.take(1),
+            equippedLoot = listOf(EquippedLoot(extraHero.id, generatedLoot.first())),
+            journalEntries = listOf(JournalEntry(id = "note-1", text = "The ledger survived.")),
         )
 
         val snapshot = PlaySessionSnapshot.fromState(state)
@@ -22,18 +29,46 @@ class PlaySessionSnapshotTest {
     }
 
     @Test
-    fun snapshotRestoresIdleEvenWhenSourceHasExpedition() {
-        val running = PlaySessionState.initial().startQuest(1_000L, SeedGame.firstQuest)
+    fun snapshotRestoresRunningExpedition() {
+        val startedAt = 1_000L
+        val running = PlaySessionState.initial().startQuest(startedAt, SeedGame.firstQuest)
 
         val restored = PlaySessionSnapshot.fromState(running).toState()
 
-        assertEquals(PlayPhase.Idle, restored.phase)
-        assertEquals(running.gold, restored.gold)
-        assertEquals(running.reputation, restored.reputation)
-        assertEquals(running.guildLevel, restored.guildLevel)
-        assertEquals(running.noticeBoardLevel, restored.noticeBoardLevel)
-        assertEquals(running.lootRolls, restored.lootRolls)
-        assertEquals(null, restored.expedition)
+        assertEquals(PlayPhase.Running, restored.phase)
+        assertEquals(running.expedition, restored.expedition)
+        assertEquals(running.heroes, restored.heroes)
+    }
+
+
+    @Test
+    fun snapshotPreservesSelectedExpeditionParty() {
+        val selectedParty = HeroCatalog.starterHeroes.take(2)
+        val running = PlaySessionState.initial().startQuest(1_000L, SeedGame.firstQuest, selectedParty)
+
+        val restored = PlaySessionSnapshot.fromState(running).toState()
+
+        assertEquals(selectedParty.map { it.id }, restored.expedition?.partyHeroIds)
+    }
+    @Test
+    fun snapshotRestoresReadyResult() {
+        val startedAt = 1_000L
+        val running = PlaySessionState.initial().startQuest(startedAt, SeedGame.firstQuest)
+        val ready = running.finishQuestNow(ExpeditionEngine(), running.heroes, roll = 100)
+
+        val restored = PlaySessionSnapshot.fromState(ready).toState()
+
+        assertEquals(PlayPhase.ResultReady, restored.phase)
+        assertEquals(ready.expedition, restored.expedition)
+    }
+
+    @Test
+    fun snapshotFallsBackToStarterHeroesWhenSavedRosterIsUnknown() {
+        val snapshot = PlaySessionSnapshot.fromState(PlaySessionState.initial()).copy(heroIds = listOf("missing"))
+
+        val restored = snapshot.toState()
+
+        assertEquals(HeroCatalog.starterHeroes, restored.heroes)
     }
 
     @Test

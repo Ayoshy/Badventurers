@@ -28,4 +28,14 @@ Before Android integration, we should:
 ## Intended Use
 
 Use this batch to update the mockup, guide UI composition, and create the first Android prototype visual targets.
+## Android Slices
 
+Generated Android-ready PNGs live in `app/src/main/res/drawable-nodpi/`:
+
+- Hero portraits: `hero_portrait_brugg`, `hero_portrait_mira`, `hero_portrait_nell`, `hero_portrait_quill` from the 2x2 starter sheet.
+- Quest banners: `quest_banner_cave_minor_regrets`, `quest_banner_bandit_tax_office`, `quest_banner_03` as clean cropped 4:1 banner artwork from the 3-location sheet. The older `quest_card_*` row slices are staging assets and should not be used directly in Compose.
+- Loot icons: semantic `loot_icon_*` resources plus `loot_icon_extra_09` and `loot_icon_extra_10` from the 5x2 sheet.
+- Resource icons: `resource_icon_01` through `resource_icon_12` from the 4x3 sheet.
+- Quest frames: `quest_frame_brass`, `quest_frame_oak`, and `quest_frame_moss` are transparent ornament overlays for composing quest card variants.
+
+The Android prototype composes a quest banner with a separate transparent frame overlay, currently `quest_banner_bandit_tax_office` plus `quest_frame_brass`.

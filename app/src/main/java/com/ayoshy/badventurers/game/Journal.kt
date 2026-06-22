@@ -53,6 +53,18 @@ object JournalGenerator {
             HeroClass.ApprenticeMage -> "${hero.name} murmured at the walls."
             HeroClass.Rogueish -> "${hero.name} was seen near the missing part."
             HeroClass.BardAccountant -> "${hero.name} balanced the disaster."
+            HeroClass.Ninja -> "${hero.name} vanished, then invoiced the smoke."
+            HeroClass.Hunter -> "${hero.name} tracked the trail back to lunch."
+            HeroClass.Priest -> "${hero.name} healed morale with stern paperwork."
+            HeroClass.Necromancer -> "${hero.name} raised spirits. Some had opinions."
+            HeroClass.Paladin -> "${hero.name} held the line and the line thanked him."
+            HeroClass.Accountant -> "${hero.name} balanced the cave until it owed us money."
+            HeroClass.Gardener -> "${hero.name} pruned the disaster into something tidy."
+            HeroClass.DeathKnight -> "${hero.name} negotiated with death and got a discount."
+            HeroClass.Chef -> "${hero.name} seasoned the expedition until it behaved."
+            HeroClass.DemolitionExpert -> "${hero.name} improved the floor plan with explosives."
+            HeroClass.SaltElemental -> "${hero.name} salted the trail, the wounds, and the paperwork."
+            HeroClass.StupidTroll -> "${hero.name} solved the problem by misunderstanding it aggressively."
         }
 
     private fun rewardText(reward: Reward): String =
@@ -63,7 +75,7 @@ object JournalGenerator {
             if (reward.lootRolls > 0) {
                 append(", ")
                 append(reward.lootRolls)
-                append(" loot rolls")
+                append(" loot items")
             }
             append(".")
         }
