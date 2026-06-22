@@ -29,7 +29,15 @@ enum class LootIcon {
     Potion,
 }
 
+data class LootDefinition(
+    val id: String,
+    val name: String,
+    val slot: LootSlot,
+    val icon: LootIcon,
+)
+
 data class LootItem(
+    val id: String,
     val name: String,
     val rarity: LootRarity,
     val slot: LootSlot,
@@ -37,57 +45,55 @@ data class LootItem(
     val icon: LootIcon,
 )
 
-object LootGenerator {
-    private data class LootTemplate(
-        val name: String,
-        val slot: LootSlot,
-        val icon: LootIcon,
+object LootCatalog {
+    val items = listOf(
+        LootDefinition("weapon_bent_spoon", "Bent Spoon", LootSlot.Weapon, LootIcon.Spoon),
+        LootDefinition("weapon_fork_spear", "Fork Spear", LootSlot.Weapon, LootIcon.Weapon),
+        LootDefinition("weapon_moon_axe", "Moon Axe", LootSlot.Weapon, LootIcon.Weapon),
+        LootDefinition("weapon_nibblade", "Nibblade", LootSlot.Weapon, LootIcon.Weapon),
+        LootDefinition("weapon_toast_mace", "Toast Mace", LootSlot.Weapon, LootIcon.Spoon),
+
+        LootDefinition("armor_winged_boots", "Winged Boots", LootSlot.Armor, LootIcon.Boots),
+        LootDefinition("armor_travel_boots", "Travel Boots", LootSlot.Armor, LootIcon.Boots),
+        LootDefinition("armor_patch_hood", "Patch Hood", LootSlot.Armor, LootIcon.Hood),
+        LootDefinition("armor_moss_coat", "Moss Coat", LootSlot.Armor, LootIcon.Hood),
+        LootDefinition("armor_panic_helm", "Panic Helm", LootSlot.Armor, LootIcon.Helmet),
+
+        LootDefinition("trinket_lucky_ring", "Lucky Ring", LootSlot.Trinket, LootIcon.Ring),
+        LootDefinition("trinket_pocket_ring", "Pocket Ring", LootSlot.Trinket, LootIcon.Ring),
+        LootDefinition("trinket_spare_ring", "Spare Ring", LootSlot.Trinket, LootIcon.Ring),
+        LootDefinition("trinket_dusty_ring", "Dusty Ring", LootSlot.Trinket, LootIcon.Ring),
+        LootDefinition("trinket_quiet_ring", "Quiet Ring", LootSlot.Trinket, LootIcon.Ring),
+
+        LootDefinition("headgear_soup_helm", "Soup Helm", LootSlot.Headgear, LootIcon.Helmet),
+        LootDefinition("headgear_wobble_cap", "Wobble Cap", LootSlot.Headgear, LootIcon.Hood),
+        LootDefinition("headgear_paper_crown", "Paper Crown", LootSlot.Headgear, LootIcon.Helmet),
+        LootDefinition("headgear_lantern_hat", "Lantern Hat", LootSlot.Headgear, LootIcon.Helmet),
+        LootDefinition("headgear_grin_hood", "Grin Hood", LootSlot.Headgear, LootIcon.Hood),
+
+        LootDefinition("consumable_stale_potion", "Stale Potion", LootSlot.Consumable, LootIcon.Potion),
+        LootDefinition("consumable_brave_brew", "Brave Brew", LootSlot.Consumable, LootIcon.Tankard),
+        LootDefinition("consumable_tiny_flask", "Tiny Flask", LootSlot.Consumable, LootIcon.Potion),
+        LootDefinition("consumable_odd_elixir", "Odd Elixir", LootSlot.Consumable, LootIcon.Potion),
+        LootDefinition("consumable_snap_tonic", "Snap Tonic", LootSlot.Consumable, LootIcon.Potion),
     )
 
+    val byId: Map<String, LootDefinition> = items.associateBy { it.id }
+    val bySlot: Map<LootSlot, List<LootDefinition>> = items.groupBy { it.slot }
+
+    init {
+        require(items.size == byId.size) { "Loot definition ids must be unique." }
+        require(LootSlot.values().all { bySlot[it]?.isNotEmpty() == true }) { "Every loot slot needs catalog entries." }
+    }
+}
+
+object LootGenerator {
     private val rarityWeights = listOf(
         LootRarity.Common to 60,
         LootRarity.Uncommon to 25,
         LootRarity.Rare to 10,
         LootRarity.Epic to 4,
         LootRarity.Relic to 1,
-    )
-
-    private val templates = mapOf(
-        LootSlot.Weapon to listOf(
-            LootTemplate("Bent Spoon", LootSlot.Weapon, LootIcon.Spoon),
-            LootTemplate("Fork Spear", LootSlot.Weapon, LootIcon.Weapon),
-            LootTemplate("Moon Axe", LootSlot.Weapon, LootIcon.Weapon),
-            LootTemplate("Nibblade", LootSlot.Weapon, LootIcon.Weapon),
-            LootTemplate("Toast Mace", LootSlot.Weapon, LootIcon.Spoon),
-        ),
-        LootSlot.Armor to listOf(
-            LootTemplate("Winged Boots", LootSlot.Armor, LootIcon.Boots),
-            LootTemplate("Travel Boots", LootSlot.Armor, LootIcon.Boots),
-            LootTemplate("Patch Hood", LootSlot.Armor, LootIcon.Hood),
-            LootTemplate("Moss Coat", LootSlot.Armor, LootIcon.Hood),
-            LootTemplate("Panic Helm", LootSlot.Armor, LootIcon.Helmet),
-        ),
-        LootSlot.Trinket to listOf(
-            LootTemplate("Lucky Ring", LootSlot.Trinket, LootIcon.Ring),
-            LootTemplate("Pocket Ring", LootSlot.Trinket, LootIcon.Ring),
-            LootTemplate("Spare Ring", LootSlot.Trinket, LootIcon.Ring),
-            LootTemplate("Dusty Ring", LootSlot.Trinket, LootIcon.Ring),
-            LootTemplate("Quiet Ring", LootSlot.Trinket, LootIcon.Ring),
-        ),
-        LootSlot.Headgear to listOf(
-            LootTemplate("Soup Helm", LootSlot.Headgear, LootIcon.Helmet),
-            LootTemplate("Wobble Cap", LootSlot.Headgear, LootIcon.Hood),
-            LootTemplate("Paper Crown", LootSlot.Headgear, LootIcon.Helmet),
-            LootTemplate("Lantern Hat", LootSlot.Headgear, LootIcon.Helmet),
-            LootTemplate("Grin Hood", LootSlot.Headgear, LootIcon.Hood),
-        ),
-        LootSlot.Consumable to listOf(
-            LootTemplate("Stale Potion", LootSlot.Consumable, LootIcon.Potion),
-            LootTemplate("Brave Brew", LootSlot.Consumable, LootIcon.Tankard),
-            LootTemplate("Tiny Flask", LootSlot.Consumable, LootIcon.Potion),
-            LootTemplate("Odd Elixir", LootSlot.Consumable, LootIcon.Potion),
-            LootTemplate("Snap Tonic", LootSlot.Consumable, LootIcon.Potion),
-        ),
     )
 
     fun generate(rolls: Int, seed: Int = 0): List<LootItem> =
@@ -99,15 +105,16 @@ object LootGenerator {
         return List(rolls) {
             val slot = random.nextEnum(LootSlot.values().asList())
             val rarity = random.nextWeightedEnum(rarityWeights)
-            val template = random.nextEnum(templates.getValue(slot))
-            val bonus = bonusFor(rarity, slot)
+            val definition = random.nextEnum(LootCatalog.bySlot.getValue(slot))
+            val bonus = bonusFor(rarity, definition.slot)
 
             LootItem(
-                name = template.name,
+                id = definition.id,
+                name = definition.name,
                 rarity = rarity,
-                slot = template.slot,
+                slot = definition.slot,
                 bonus = bonus,
-                icon = template.icon,
+                icon = definition.icon,
             )
         }
     }

@@ -30,6 +30,21 @@ class LootGeneratorTest {
     }
 
     @Test
+    fun catalogDefinitionsHaveUniqueIdsAndNames() {
+        assertEquals(LootCatalog.items.size, LootCatalog.byId.size)
+        assertEquals(LootCatalog.items.size, LootCatalog.items.map { it.name }.toSet().size)
+    }
+
+    @Test
+    fun catalogCoversEverySlot() {
+        val expectedSlots = LootSlot.values().toSet()
+        val catalogSlots = LootCatalog.bySlot.keys
+
+        assertEquals(expectedSlots, catalogSlots)
+        assertTrue(LootCatalog.bySlot.values.all { it.isNotEmpty() })
+    }
+
+    @Test
     fun raritiesStayWithinExpectedEnumValues() {
         val expected = LootRarity.values().toSet()
         val items = LootGenerator.generate(20, seed = 7)
@@ -45,5 +60,21 @@ class LootGeneratorTest {
 
         assertTrue(items.isNotEmpty())
         assertTrue(items.all { it.icon in expected })
+    }
+
+    @Test
+    fun generatedItemsStayTiedToCatalogDefinitions() {
+        val items = LootGenerator.generate(100, seed = 17)
+
+        assertTrue(items.isNotEmpty())
+        items.forEach { item ->
+            val definition = LootCatalog.byId[item.id]
+            assertTrue("Generated loot '${item.id}' is missing from LootCatalog.", definition != null)
+            requireNotNull(definition)
+
+            assertEquals(definition.name, item.name)
+            assertEquals(definition.slot, item.slot)
+            assertEquals(definition.icon, item.icon)
+        }
     }
 }
