@@ -62,17 +62,17 @@ object LootGenerator {
         ),
         LootSlot.Armor to listOf(
             LootTemplate("Winged Boots", LootSlot.Armor, LootIcon.Boots),
-            LootTemplate("Tin Vest", LootSlot.Armor, LootIcon.Tankard),
-            LootTemplate("Patch Mail", LootSlot.Armor, LootIcon.Tankard),
+            LootTemplate("Travel Boots", LootSlot.Armor, LootIcon.Boots),
+            LootTemplate("Patch Hood", LootSlot.Armor, LootIcon.Hood),
             LootTemplate("Moss Coat", LootSlot.Armor, LootIcon.Hood),
-            LootTemplate("Panic Shell", LootSlot.Armor, LootIcon.Helmet),
+            LootTemplate("Panic Helm", LootSlot.Armor, LootIcon.Helmet),
         ),
         LootSlot.Trinket to listOf(
-            LootTemplate("Lucky Button", LootSlot.Trinket, LootIcon.Ring),
-            LootTemplate("Pocket Charm", LootSlot.Trinket, LootIcon.Ring),
+            LootTemplate("Lucky Ring", LootSlot.Trinket, LootIcon.Ring),
+            LootTemplate("Pocket Ring", LootSlot.Trinket, LootIcon.Ring),
             LootTemplate("Spare Ring", LootSlot.Trinket, LootIcon.Ring),
-            LootTemplate("Dust Coin", LootSlot.Trinket, LootIcon.Ring),
-            LootTemplate("Quiet Bell", LootSlot.Trinket, LootIcon.Ring),
+            LootTemplate("Dusty Ring", LootSlot.Trinket, LootIcon.Ring),
+            LootTemplate("Quiet Ring", LootSlot.Trinket, LootIcon.Ring),
         ),
         LootSlot.Headgear to listOf(
             LootTemplate("Soup Helm", LootSlot.Headgear, LootIcon.Helmet),
@@ -83,7 +83,7 @@ object LootGenerator {
         ),
         LootSlot.Consumable to listOf(
             LootTemplate("Stale Potion", LootSlot.Consumable, LootIcon.Potion),
-            LootTemplate("Brave Biscuit", LootSlot.Consumable, LootIcon.Tankard),
+            LootTemplate("Brave Brew", LootSlot.Consumable, LootIcon.Tankard),
             LootTemplate("Tiny Flask", LootSlot.Consumable, LootIcon.Potion),
             LootTemplate("Odd Elixir", LootSlot.Consumable, LootIcon.Potion),
             LootTemplate("Snap Tonic", LootSlot.Consumable, LootIcon.Potion),
