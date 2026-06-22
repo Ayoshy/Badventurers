@@ -1,5 +1,7 @@
 # Gradle
 .gradle/
+.kotlin/
+gradle/gradle-daemon-jvm.properties
 build/
 **/build/
 
@@ -10,6 +12,7 @@ local.properties
 
 # Android generated files
 captures/
+artifacts/screenshots/
 *.apk
 *.ap_
 *.aab
@@ -28,4 +31,3 @@ Thumbs.db
 keystore.properties
 *.jks
 *.keystore
-

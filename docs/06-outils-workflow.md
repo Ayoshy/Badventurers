@@ -45,6 +45,18 @@ For a small mobile game, GitHub Issues plus a GitHub Project is enough at the be
 - Update docs when a decision changes.
 - Add tests for formulas and persistence before tuning.
 
+## Codex Editing On Windows
+
+This project has repeatedly hit Windows sandbox / ACL failures when `apply_patch` tries to edit files created by agents, Gradle, Android Studio, or prior elevated shell commands.
+
+Operational rule for Codex on this repo:
+
+- Use targeted PowerShell edits directly for known ACL-sensitive files instead of trying `apply_patch` first.
+- Keep edits narrow: read file, replace an exact block or append a small documented section, write file, then immediately re-read the changed file.
+- Do not use broad rewrites, generated formatting churn, or destructive cleanup as a workaround.
+- If a PowerShell edit cannot find its exact target block, stop and inspect the file instead of guessing.
+- Continue to verify with `git status --short`, relevant file reads, and Gradle/tests when code changed.
+
 ## Definition Of Done
 
 A task is done when:

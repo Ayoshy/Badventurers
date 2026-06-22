@@ -1,6 +1,6 @@
 # Kanban
 
-Last updated: 2026-06-21
+Last updated: 2026-06-22
 
 This file is the repo-local board. GitHub Issues should mirror these items so the work can be tracked outside the codebase too.
 
@@ -17,25 +17,33 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [x] Create repository.
 - [x] Define product direction.
 - [x] Add project documentation.
-- [ ] Create initial GitHub issues.
-- [ ] Scaffold Android project.
-- [ ] Verify local Android build.
+- [x] Validate low-fidelity UX flow.
+- [x] Validate Batch 01 art direction.
+- [x] Add art-integrated HTML visual prototype.
+- [x] Scaffold Android project.
+- [x] Verify local Android test/build.
+- [x] Add first in-memory playable loop.
+- [x] Add ADB emulator capture script.
+- [x] Install current build on emulator.
+- [x] Capture current emulator screen through ADB.
+- [ ] Review captured emulator screen once Codex image viewing is unblocked.
+- [ ] Commit and push the playable-loop slice.
 
 ## Next
 
-- [ ] Build first Compose screen: Guild Home.
-- [ ] Add domain models for heroes, quests, rewards, and items.
-- [ ] Implement expedition timer and completion.
-- [ ] Implement local save.
-- [ ] Add English/French string resources.
-- [ ] Add basic loot generation.
-- [ ] Add journal event templates.
-- [ ] Add unit tests for expedition resolution.
+- [ ] Create initial GitHub issues from this board.
+- [ ] Add local save for play session state.
+- [ ] Add basic loot item generation instead of raw loot rolls.
+- [ ] Add journal event generation from expedition results.
+- [ ] Slice Batch 01 sheets into Android-ready hero, quest, loot, and resource assets.
+- [ ] Add a repeatable emulator smoke-test checklist.
+- [ ] Add a visual screenshot review workflow once Codex image viewing is reliable.
+- [ ] Investigate Codex `view_image` ACL failure on workspace screenshots.
 
 ## Later
 
-- [ ] Add hero roster and equipment UI.
-- [ ] Add guild upgrades.
+- [ ] Add hero roster interactions and equipment UI.
+- [ ] Add deeper guild upgrade effects.
 - [ ] Add offline progress summary.
 - [ ] Add fake rewarded ad service.
 - [ ] Add AdMob rewarded ads.
@@ -45,14 +53,13 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 
 ## Initial Issue Candidates
 
-1. Scaffold Android app with Kotlin and Jetpack Compose.
-2. Implement core domain models.
-3. Implement expedition resolution engine.
-4. Build Guild Home screen.
-5. Implement local save and offline progress.
-6. Add bilingual localization structure.
-7. Add loot generation and inventory basics.
-8. Add journal text generation.
+1. Install and smoke-test current Android build on emulator.
+2. Create initial GitHub issues from the repo-local Kanban.
+3. Add local save for `PlaySessionState`.
+4. Replace raw loot rolls with generated loot item basics.
+5. Generate journal entries from expedition outcomes.
+6. Slice Batch 01 artwork into production Android assets.
+7. Add emulator screenshot capture to the regular QA loop.
+8. Add hero roster interactions and equipment basics.
 9. Add fake rewarded ad reward flow.
 10. Prepare closed-test Play Store checklist.
-

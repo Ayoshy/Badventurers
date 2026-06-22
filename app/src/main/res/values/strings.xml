@@ -34,5 +34,23 @@
     <string name="journal_01">Brugg tried diplomacy. The door remained unconvinced.</string>
     <string name="journal_02">Mira found a ring. It was already judging everyone.</string>
     <string name="journal_03">The healer healed morale. Nobody noticed.</string>
-</resources>
+    <string name="quest_running_status">Running</string>
+    <string name="quest_result_status">Result</string>
+    <string name="idle_quest_title">No disaster scheduled</string>
+    <string name="idle_quest_summary">The guild is briefly calm. Pick a quest before the furniture gets ideas.</string>
+    <string name="running_quest_title">Expedition in progress</string>
+    <string name="running_quest_summary">The party returns in %1$d s. Paperwork is happening to someone else.</string>
+    <string name="result_quest_title">Expedition report</string>
+    <string name="result_quest_summary">%1$s. +%2$d gold and +%3$d loot rolls.</string>
+    <string name="quest_blocked_action">Busy</string>
+    <string name="loot_empty_title">No loot banked</string>
+    <string name="loot_empty_summary">Start a quest, survive the paperwork, then come back here with something shiny.</string>
+    <string name="loot_inventory_summary">%1$d loot rolls banked. The quartermaster is pretending this is organized.</string>
+    <string name="notice_board_upgrade_title">Notice Board Lv. %1$d</string>
+    <string name="notice_board_upgrade_detail">+10% quest gold per extra level. Also fewer arrows through job postings.</string>
+    <string name="outcome_great_success">Great success</string>
+    <string name="outcome_success">Success</string>
+    <string name="outcome_partial_success">Partial success</string>
+    <string name="outcome_failure">Failure</string>
+    <string name="outcome_ridiculous_failure">Ridiculous failure</string></resources>
 

@@ -1,6 +1,6 @@
 # Setup And Testing
 
-Last updated: 2026-06-21
+Last updated: 2026-06-22
 
 ## Install First
 
@@ -45,6 +45,14 @@ For emulator or device integration tests later:
 .\gradlew connectedDebugAndroidTest
 ```
 
+To capture the current emulator screen into `artifacts/screenshots`:
+
+```powershell
+.\tools\capture-emulator.ps1
+```
+
+Use `-DeviceSerial` when more than one device is connected, and `-OutputDir` to change the destination folder.
+
 ## Later Accounts
 
 These are not needed for the first prototype:
@@ -67,4 +75,3 @@ These are not needed for the first prototype:
 - Install Android Studio: https://developer.android.com/studio/install
 - Jetpack Compose: https://developer.android.com/compose
 - Android Gradle Plugin: https://developer.android.com/build/releases/gradle-plugin
-

@@ -31,8 +31,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,8 +51,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayoshy.badventurers.R
+import com.ayoshy.badventurers.game.ExpeditionEngine
+import com.ayoshy.badventurers.game.ExpeditionOutcome
 import com.ayoshy.badventurers.game.PartyPowerCalculator
+import com.ayoshy.badventurers.game.PlayPhase
+import com.ayoshy.badventurers.game.PlaySessionState
 import com.ayoshy.badventurers.game.SeedGame
+import kotlinx.coroutines.delay
 
 private val BadventurersColors = darkColorScheme(
     primary = Color(0xFF2F695C),
@@ -75,6 +82,18 @@ private enum class GameTab {
 fun BadventurersApp() {
     MaterialTheme(colorScheme = BadventurersColors) {
         var selectedTab by rememberSaveable { mutableStateOf(GameTab.Guild) }
+        var session by remember { mutableStateOf(PlaySessionState.initial()) }
+        var nowMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+        val expeditionEngine = remember { ExpeditionEngine() }
+
+        LaunchedEffect(session.phase, session.expedition?.endsAtMillis) {
+            while (session.phase == PlayPhase.Running) {
+                delay(250)
+                val currentTime = System.currentTimeMillis()
+                nowMillis = currentTime
+                session = session.tick(currentTime, expeditionEngine, SeedGame.heroes)
+            }
+        }
 
         Box(
             modifier = Modifier
@@ -107,7 +126,7 @@ fun BadventurersApp() {
                     .statusBarsPadding()
                     .navigationBarsPadding(),
             ) {
-                TopBar()
+                TopBar(session = session)
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -115,16 +134,30 @@ fun BadventurersApp() {
                 ) {
                     when (selectedTab) {
                         GameTab.Guild -> GuildScreen(
-                            onCollect = { selectedTab = GameTab.Loot },
+                            session = session,
+                            nowMillis = nowMillis,
+                            onCollect = {
+                                session = session.collectResult()
+                                selectedTab = GameTab.Loot
+                            },
                             onNextQuest = { selectedTab = GameTab.Quests },
                         )
                         GameTab.Quests -> QuestsScreen(
-                            onStart = { selectedTab = GameTab.Guild },
+                            session = session,
+                            onStart = {
+                                val currentTime = System.currentTimeMillis()
+                                nowMillis = currentTime
+                                session = session.startQuest(currentTime, SeedGame.firstQuest)
+                                selectedTab = GameTab.Guild
+                            },
                             onParty = { selectedTab = GameTab.Heroes },
                         )
                         GameTab.Heroes -> HeroesScreen()
-                        GameTab.Loot -> LootScreen(onEquip = { selectedTab = GameTab.Heroes })
-                        GameTab.Upgrades -> UpgradesScreen(onBuy = { selectedTab = GameTab.Guild })
+                        GameTab.Loot -> LootScreen(session = session, onEquip = { selectedTab = GameTab.Heroes })
+                        GameTab.Upgrades -> UpgradesScreen(
+                            session = session,
+                            onBuy = { session = session.upgradeNoticeBoard() },
+                        )
                     }
                 }
                 BottomBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
@@ -134,7 +167,7 @@ fun BadventurersApp() {
 }
 
 @Composable
-private fun TopBar() {
+private fun TopBar(session: PlaySessionState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -167,9 +200,9 @@ private fun TopBar() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            ResourceChip(label = stringResource(R.string.gold_label), value = "1,284")
-            ResourceChip(label = stringResource(R.string.reputation_label), value = "17")
-            ResourceChip(label = stringResource(R.string.guild_level_label), value = "Lv. 3")
+            ResourceChip(label = stringResource(R.string.gold_label), value = formatCount(session.gold))
+            ResourceChip(label = stringResource(R.string.reputation_label), value = session.reputation.toString())
+            ResourceChip(label = stringResource(R.string.guild_level_label), value = "Lv. ${session.guildLevel}")
         }
     }
 }
@@ -202,15 +235,54 @@ private fun RowScope.ResourceChip(label: String, value: String) {
 }
 
 @Composable
-private fun GuildScreen(onCollect: () -> Unit, onNextQuest: () -> Unit) {
-    ScreenScaffold(title = stringResource(R.string.guild_home_title), status = stringResource(R.string.quest_ready_status)) {
-        DarkPanel(title = stringResource(R.string.completed_quest_title), body = stringResource(R.string.completed_quest_summary)) {
-            ActionRow(
-                primaryLabel = stringResource(R.string.collect_action),
-                secondaryLabel = stringResource(R.string.next_quest_action),
-                onPrimary = onCollect,
-                onSecondary = onNextQuest,
-            )
+private fun GuildScreen(
+    session: PlaySessionState,
+    nowMillis: Long,
+    onCollect: () -> Unit,
+    onNextQuest: () -> Unit,
+) {
+    ScreenScaffold(title = stringResource(R.string.guild_home_title), status = phaseStatus(session.phase)) {
+        when (session.phase) {
+            PlayPhase.Idle -> {
+                DarkPanel(title = stringResource(R.string.idle_quest_title), body = stringResource(R.string.idle_quest_summary)) {
+                    ActionRow(
+                        primaryLabel = stringResource(R.string.next_quest_action),
+                        secondaryLabel = stringResource(R.string.party_action),
+                        onPrimary = onNextQuest,
+                        onSecondary = {},
+                    )
+                }
+            }
+            PlayPhase.Running -> {
+                val secondsLeft = remainingSeconds(session, nowMillis)
+                DarkPanel(
+                    title = stringResource(R.string.running_quest_title),
+                    body = stringResource(R.string.running_quest_summary, secondsLeft),
+                ) {
+                    ProgressBar(progress = session.progress(nowMillis).toFloat())
+                }
+            }
+            PlayPhase.ResultReady -> {
+                val result = session.expedition?.result
+                if (result != null) {
+                    DarkPanel(
+                        title = stringResource(R.string.result_quest_title),
+                        body = stringResource(
+                            R.string.result_quest_summary,
+                            outcomeLabel(result.outcome),
+                            rewardGoldWithNoticeBoard(session),
+                            result.reward.lootRolls,
+                        ),
+                    ) {
+                        ActionRow(
+                            primaryLabel = stringResource(R.string.collect_action),
+                            secondaryLabel = stringResource(R.string.next_quest_action),
+                            onPrimary = onCollect,
+                            onSecondary = onNextQuest,
+                        )
+                    }
+                }
+            }
         }
         PaperPanel(title = stringResource(R.string.recommended_title), body = stringResource(R.string.recommended_upgrade)) {
             ProgressBar(progress = 0.72f)
@@ -222,15 +294,19 @@ private fun GuildScreen(onCollect: () -> Unit, onNextQuest: () -> Unit) {
 }
 
 @Composable
-private fun QuestsScreen(onStart: () -> Unit, onParty: () -> Unit) {
-    ScreenScaffold(title = stringResource(R.string.quests_title), status = stringResource(R.string.quest_pick_trouble)) {
+private fun QuestsScreen(session: PlaySessionState, onStart: () -> Unit, onParty: () -> Unit) {
+    val canStart = session.phase == PlayPhase.Idle
+    val startLabel = if (canStart) stringResource(R.string.start_action) else stringResource(R.string.quest_blocked_action)
+
+    ScreenScaffold(title = stringResource(R.string.quests_title), status = phaseStatus(session.phase)) {
         ArtSheet(resourceId = R.drawable.quest_cards_sheet, aspectRatio = 1.25f)
         DarkPanel(title = stringResource(R.string.quest_card_title), body = stringResource(R.string.quest_card_summary)) {
             ActionRow(
-                primaryLabel = stringResource(R.string.start_action),
+                primaryLabel = startLabel,
                 secondaryLabel = stringResource(R.string.party_action),
                 onPrimary = onStart,
                 onSecondary = onParty,
+                primaryEnabled = canStart,
             )
         }
     }
@@ -253,29 +329,45 @@ private fun HeroesScreen() {
 }
 
 @Composable
-private fun LootScreen(onEquip: () -> Unit) {
+private fun LootScreen(session: PlaySessionState, onEquip: () -> Unit) {
+    val hasLoot = session.lootRolls > 0
+    val title = if (hasLoot) stringResource(R.string.loot_item_title) else stringResource(R.string.loot_empty_title)
+    val body = if (hasLoot) {
+        stringResource(R.string.loot_inventory_summary, session.lootRolls)
+    } else {
+        stringResource(R.string.loot_empty_summary)
+    }
+
     ScreenScaffold(title = stringResource(R.string.loot_title), status = stringResource(R.string.new_loot_status)) {
         ArtSheet(resourceId = R.drawable.loot_icons_sheet, aspectRatio = 1f)
-        DarkPanel(title = stringResource(R.string.loot_item_title), body = stringResource(R.string.loot_item_summary)) {
+        DarkPanel(title = title, body = body) {
             ActionRow(
                 primaryLabel = stringResource(R.string.equip_action),
                 secondaryLabel = stringResource(R.string.keep_action),
                 onPrimary = onEquip,
                 onSecondary = {},
+                primaryEnabled = hasLoot,
             )
         }
     }
 }
 
 @Composable
-private fun UpgradesScreen(onBuy: () -> Unit) {
+private fun UpgradesScreen(session: PlaySessionState, onBuy: () -> Unit) {
+    val canBuyNoticeBoard = session.gold >= 600
+
     ScreenScaffold(title = stringResource(R.string.upgrades_title), status = stringResource(R.string.guild_upgrade_status)) {
-        InfoRow(title = "Notice Board Lv. 2", detail = "+8% quest rewards", value = "600g")
+        InfoRow(
+            title = stringResource(R.string.notice_board_upgrade_title, session.noticeBoardLevel),
+            detail = stringResource(R.string.notice_board_upgrade_detail),
+            value = "600g",
+        )
         InfoRow(title = "Training Rug Lv. 1", detail = "+5% hero XP", value = "420g")
         InfoRow(title = "Accountant Stool Lv. 1", detail = "-3% mysterious losses", value = "500g")
         DarkPanel(title = stringResource(R.string.next_unlock_title), body = stringResource(R.string.next_unlock_summary)) {
             Button(
                 onClick = onBuy,
+                enabled = canBuyNoticeBoard,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
                 shape = RoundedCornerShape(8.dp),
@@ -285,6 +377,36 @@ private fun UpgradesScreen(onBuy: () -> Unit) {
         }
     }
 }
+
+@Composable
+private fun phaseStatus(phase: PlayPhase): String =
+    when (phase) {
+        PlayPhase.Idle -> stringResource(R.string.quest_ready_status)
+        PlayPhase.Running -> stringResource(R.string.quest_running_status)
+        PlayPhase.ResultReady -> stringResource(R.string.quest_result_status)
+    }
+
+@Composable
+private fun outcomeLabel(outcome: ExpeditionOutcome): String =
+    when (outcome) {
+        ExpeditionOutcome.GreatSuccess -> stringResource(R.string.outcome_great_success)
+        ExpeditionOutcome.Success -> stringResource(R.string.outcome_success)
+        ExpeditionOutcome.PartialSuccess -> stringResource(R.string.outcome_partial_success)
+        ExpeditionOutcome.Failure -> stringResource(R.string.outcome_failure)
+        ExpeditionOutcome.RidiculousFailure -> stringResource(R.string.outcome_ridiculous_failure)
+    }
+
+private fun remainingSeconds(session: PlaySessionState, nowMillis: Long): Long {
+    val endsAt = session.expedition?.endsAtMillis ?: return 0L
+    return ((endsAt - nowMillis + 999L) / 1000L).coerceAtLeast(0L)
+}
+
+private fun rewardGoldWithNoticeBoard(session: PlaySessionState): Int {
+    val rewardGold = session.expedition?.result?.reward?.gold ?: return 0
+    return rewardGold + rewardGold * (session.noticeBoardLevel - 1) / 10
+}
+
+private fun formatCount(value: Int): String = "%,d".format(value)
 
 @Composable
 private fun ScreenScaffold(title: String, status: String, content: @Composable ColumnScope.() -> Unit) {
@@ -349,6 +471,8 @@ private fun ActionRow(
     secondaryLabel: String,
     onPrimary: () -> Unit,
     onSecondary: () -> Unit,
+    primaryEnabled: Boolean = true,
+    secondaryEnabled: Boolean = true,
 ) {
     Row(
         modifier = Modifier
@@ -358,6 +482,7 @@ private fun ActionRow(
     ) {
         Button(
             onClick = onPrimary,
+            enabled = primaryEnabled,
             modifier = Modifier.weight(1f),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
             shape = RoundedCornerShape(8.dp),
@@ -366,6 +491,7 @@ private fun ActionRow(
         }
         Button(
             onClick = onSecondary,
+            enabled = secondaryEnabled,
             modifier = Modifier.weight(1f),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDEC777), contentColor = Color(0xFF211F1A)),
             shape = RoundedCornerShape(8.dp),
