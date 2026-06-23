@@ -34,6 +34,29 @@ class ExpeditionEngineTest {
     }
 
     @Test
+    fun facilityPowerBonusImprovesEstimateAndMargin() {
+        val party = SeedGame.heroes.take(1)
+        val quest = SeedGame.firstQuest.copy(difficulty = 100, tags = emptyList(), recommendedHeroIds = emptyList())
+        val partyPower = PartyPowerCalculator.totalPower(party)
+        val specialBonus = HeroSpecialCatalog.modifiersFor(party, quest).scoreBonus
+
+        val estimate = ExpeditionEstimator.estimate(
+            party = party,
+            quest = quest,
+            facilityPowerBonus = 8,
+        )
+        val result = engine.resolve(
+            party = party,
+            quest = quest,
+            roll = 0,
+            facilityPowerBonus = 8,
+        )
+
+        assertEquals(partyPower + 8, estimate.partyPower)
+        assertEquals(partyPower + 8 - quest.difficulty, result.scoreMargin)
+        assertEquals(0, ExpeditionEstimator.estimate(emptyList(), quest, facilityPowerBonus = 8).partyPower)
+    }
+    @Test
     fun estimatorCalculatesSuccessChanceFromQuestTarget() {
         val quest = SeedGame.firstQuest.copy(difficulty = 100, risk = QuestRisk.Medium)
 
@@ -42,5 +65,40 @@ class ExpeditionEngineTest {
         assertEquals(50, ExpeditionEstimator.successChancePercent(partyPower = 58, quest = quest))
         assertEquals(0, ExpeditionEstimator.successChancePercent(partyPower = 7, quest = quest))
     }
-}
 
+    @Test
+    fun matchingHeroSpecialAddsScoreToTaggedQuest() {
+        val party = listOf(HeroCatalog.byId.getValue("expert_en_demolition").toHero())
+        val quest = SeedGame.firstQuest.copy(
+            difficulty = 180,
+            risk = QuestRisk.Low,
+            tags = listOf(QuestTag.Wall, QuestTag.Obstacle),
+        )
+        val specialBonus = HeroSpecialCatalog.modifiersFor(party, quest).scoreBonus
+
+        val result = engine.resolve(party = party, quest = quest, roll = 0)
+
+        assertEquals(30, specialBonus)
+        assertEquals(PartyPowerCalculator.totalPower(party) + specialBonus - quest.difficulty, result.scoreMargin)
+    }
+
+    @Test
+    fun paperworkSpecialsIncreaseSuccessfulGoldRewards() {
+        val party = listOf(HeroCatalog.byId.getValue("ledger").toHero())
+        val quest = SeedGame.questById.getValue("bandit_tax_office").copy(difficulty = 80)
+
+        val result = engine.resolve(party = party, quest = quest, roll = 100)
+
+        assertEquals(20, HeroSpecialCatalog.modifiersFor(party, quest).goldBonusPercent)
+        assertTrue(result.reward.gold > (quest.baseGold * 1.75).toInt())
+    }
+
+    @Test
+    fun protectiveSpecialCanStopRidiculousFailureOnCursedQuest() {
+        val party = listOf(HeroCatalog.byId.getValue("pax").toHero())
+        val quest = SeedGame.questById.getValue("crypt_of_unpaid_debts").copy(difficulty = 999)
+
+        val result = engine.resolve(party = party, quest = quest, roll = 0)
+
+        assertEquals(ExpeditionOutcome.Failure, result.outcome)
+    }}

@@ -34,12 +34,44 @@ class PlaySessionStateTest {
 
     @Test
     fun finishQuestUsesStoredPartyInsteadOfFullRoster() {
+        val quest = SeedGame.firstQuest.copy(tags = emptyList(), recommendedHeroIds = emptyList())
         val selectedParty = listOf(party.first())
-        val running = PlaySessionState.initial().startQuest(1_000L, SeedGame.firstQuest, selectedParty)
+        val running = PlaySessionState.initial().startQuest(1_000L, quest, selectedParty)
         val finished = running.finishQuestNow(engine, party, roll = 0)
-        val expectedMargin = PartyPowerCalculator.totalPower(selectedParty) - SeedGame.firstQuest.difficulty
+        val expectedMargin = PartyPowerCalculator.totalPower(selectedParty) - quest.difficulty
 
         assertEquals(expectedMargin, finished.expedition?.result?.scoreMargin)
+    }
+    @Test
+    fun lockedQuestCannotStartUntilUnlockRequirementIsMet() {
+        val quest = SeedGame.questById.getValue("the_last_locked_door")
+        val locked = PlaySessionState.initial().copy(
+            reputation = 0,
+            completedQuestCount = 0,
+            trainingYardLevel = 1,
+        )
+
+        assertEquals(false, locked.isQuestUnlocked(quest))
+        assertEquals(PlayPhase.Idle, locked.startQuest(1_000L, quest).phase)
+
+        val unlocked = locked.copy(reputation = 22)
+
+        assertEquals(true, unlocked.isQuestUnlocked(quest))
+        assertEquals(PlayPhase.Running, unlocked.startQuest(1_000L, quest).phase)
+    }
+
+    @Test
+    fun questCanUnlockThroughCompletedCountOrFacilityUpgrade() {
+        val quest = SeedGame.questById.getValue("crypt_of_unpaid_debts")
+        val locked = PlaySessionState.initial().copy(
+            reputation = 0,
+            completedQuestCount = 0,
+            noticeBoardLevel = 1,
+        )
+
+        assertEquals(false, locked.isQuestUnlocked(quest))
+        assertEquals(true, locked.copy(completedQuestCount = 6).isQuestUnlocked(quest))
+        assertEquals(true, locked.copy(noticeBoardLevel = 3).isQuestUnlocked(quest))
     }
     @Test
     fun progressIsBoundedBetweenZeroAndOne() {
@@ -83,17 +115,47 @@ class PlaySessionStateTest {
         val reward = finished.expedition!!.result!!.reward
         val collected = finished.collectResult()
 
-        assertEquals(1284 + reward.gold, collected.gold)
+        assertEquals(finished.gold + reward.gold, collected.gold)
         assertEquals(reward.lootRolls, collected.lootRolls)
         assertEquals(PlayPhase.Idle, collected.phase)
+        assertEquals(1, collected.completedQuestCount)
         assertEquals(collected, collected.collectResult())
     }
 
     @Test
-    fun upgradeNoticeBoardConsumesGoldAndIncreasesLevel() {
-        val upgraded = PlaySessionState.initial().upgradeNoticeBoard()
+    fun collectResultGrantsXpToParticipatingHeroesOnly() {
+        val participant = HeroCatalog.byId.getValue("brugg").toHero()
+        val benchHero = HeroCatalog.byId.getValue("mira").toHero()
+        val earnedXp = HeroProgression.xpForNextLevel(participant.level) + 5
+        val ready = PlaySessionState.initial().copy(
+            heroes = listOf(participant, benchHero),
+            expedition = ExpeditionRun(
+                quest = SeedGame.firstQuest,
+                partyHeroIds = listOf(participant.id),
+                startedAtMillis = 1_000L,
+                endsAtMillis = 2_000L,
+                result = ExpeditionResult(
+                    outcome = ExpeditionOutcome.Success,
+                    reward = Reward(gold = 0, xp = earnedXp, lootRolls = 0),
+                    scoreMargin = 10,
+                ),
+            ),
+        )
 
-        assertEquals(684, upgraded.gold)
+        val collected = ready.collectResult()
+        val advancedHero = collected.heroes.first { it.id == participant.id }
+        val unchangedBenchHero = collected.heroes.first { it.id == benchHero.id }
+
+        assertEquals(participant.level + 1, advancedHero.level)
+        assertEquals(5, advancedHero.xp)
+        assertEquals(benchHero, unchangedBenchHero)
+    }
+    @Test
+    fun upgradeNoticeBoardConsumesGoldAndIncreasesLevel() {
+        val state = PlaySessionState.initial()
+        val upgraded = state.upgradeNoticeBoard()
+
+        assertEquals(state.gold - 600, upgraded.gold)
         assertEquals(2, upgraded.noticeBoardLevel)
     }
 
@@ -122,10 +184,70 @@ class PlaySessionStateTest {
 
         val collected = ready.collectResult()
 
-        assertEquals(1_394, collected.gold)
+        assertEquals(ready.gold + 110, collected.gold)
         assertEquals(1, collected.lootRolls)
     }
 
+    @Test
+    fun upgradeTrainingYardConsumesGoldAndIncreasesPowerBonus() {
+        val state = PlaySessionState.initial()
+        val upgraded = state.upgradeTrainingYard()
+
+        assertEquals(state.gold - state.trainingYardUpgradeCost(), upgraded.gold)
+        assertEquals(2, upgraded.trainingYardLevel)
+        assertEquals(8, upgraded.trainingYardPowerBonus())
+    }
+
+    @Test
+    fun upgradeBunkRoomAddsEffectiveQuestPartySlot() {
+        val upgraded = PlaySessionState.initial()
+            .copy(heroes = HeroCatalog.heroes.map { it.toHero() })
+            .upgradeBunkRoom()
+
+        val selectedParty = upgraded.selectedPartyForQuest(SeedGame.firstQuest, upgraded.heroes)
+
+        assertEquals(SeedGame.firstQuest.partySlots + 1, upgraded.effectivePartySlots(SeedGame.firstQuest))
+        assertEquals(SeedGame.firstQuest.partySlots + 1, selectedParty.size)
+    }
+
+    @Test
+    fun finishQuestAppliesTrainingYardPowerBonus() {
+        val quest = SeedGame.firstQuest.copy(tags = emptyList(), recommendedHeroIds = emptyList())
+        val selectedParty = listOf(party.first())
+        val running = PlaySessionState.initial()
+            .upgradeTrainingYard()
+            .startQuest(1_000L, quest, selectedParty)
+        val finished = running.finishQuestNow(engine, party, roll = 0)
+        val expectedMargin = PartyPowerCalculator.totalPower(selectedParty) + running.trainingYardPowerBonus() - quest.difficulty
+
+        assertEquals(expectedMargin, finished.expedition?.result?.scoreMargin)
+    }
+
+
+    @Test
+    fun collectResultAppliesFakeRewardedAdBonus() {
+        val ready = PlaySessionState.initial().copy(
+            expedition = ExpeditionRun(
+                quest = SeedGame.firstQuest,
+                startedAtMillis = 1_000L,
+                endsAtMillis = 2_000L,
+                result = ExpeditionResult(
+                    outcome = ExpeditionOutcome.Success,
+                    reward = Reward(gold = 100, xp = 10, lootRolls = 2),
+                    scoreMargin = 10,
+                ),
+            ),
+        )
+        val fakeReward = requireNotNull(FakeRewardedAdService.rewardFor(ready))
+
+        val collected = ready.collectResult(fakeRewardedAdReward = fakeReward)
+
+        assertEquals(ready.gold + 200, collected.gold)
+        assertEquals(4, collected.lootRolls)
+        assertEquals(4, collected.pendingLootItems.size)
+        assertEquals(PlayPhase.Idle, collected.phase)
+        assertEquals(1, collected.completedQuestCount)
+    }
     @Test
     fun collectGeneratesLootItemsAndJournalEntries() {
         val ready = PlaySessionState.initial().copy(
@@ -147,6 +269,7 @@ class PlaySessionStateTest {
         assertEquals(2, collected.pendingLootItems.size)
         assertTrue(collected.journalEntries.size >= 2)
         assertEquals(PlayPhase.Idle, collected.phase)
+        assertEquals(1, collected.completedQuestCount)
     }
 
     @Test

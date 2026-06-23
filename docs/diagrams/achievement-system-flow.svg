@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Badventurers Achievement System Flow</title>
+  <desc id="desc">Flow diagram for player actions, achievement events, progress tracking, reward claims, and unlocks.</desc>
+  <defs>
+    <style>
+      .bg { fill: #141512; }
+      .band { fill: #1d1f19; stroke: #4d4631; stroke-width: 2; }
+      .node { fill: #fff1bf; stroke: #d0a24a; stroke-width: 3; rx: 18; }
+      .node-dark { fill: #263a34; stroke: #2f695c; stroke-width: 3; rx: 18; }
+      .node-gold { fill: #d0a24a; stroke: #fff1bf; stroke-width: 3; rx: 18; }
+      .node-warn { fill: #64323c; stroke: #d0a24a; stroke-width: 3; rx: 18; }
+      .text { fill: #211f1a; font-family: Inter, Arial, sans-serif; font-size: 25px; font-weight: 800; }
+      .text-small { fill: #4f4630; font-family: Inter, Arial, sans-serif; font-size: 18px; font-weight: 700; }
+      .text-light { fill: #fff1bf; font-family: Inter, Arial, sans-serif; font-size: 24px; font-weight: 800; }
+      .text-light-small { fill: #ded0a2; font-family: Inter, Arial, sans-serif; font-size: 17px; font-weight: 700; }
+      .arrow { stroke: #fff1bf; stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrowhead); }
+      .arrow-muted { stroke: #7b6a43; stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrowhead-muted); }
+      .label { fill: #ded0a2; font-family: Inter, Arial, sans-serif; font-size: 18px; font-weight: 800; }
+    </style>
+    <marker id="arrowhead" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto">
+      <path d="M0,0 L14,5 L0,10 Z" fill="#fff1bf"/>
+    </marker>
+    <marker id="arrowhead-muted" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto">
+      <path d="M0,0 L14,5 L0,10 Z" fill="#7b6a43"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1280" height="720"/>
+  <rect class="band" x="48" y="48" width="1184" height="624" rx="28"/>
+
+  <text x="72" y="100" class="text-light" font-size="34">Badventurers - flux des hauts faits</text>
+  <text x="72" y="132" class="text-light-small">Les actions du joueur alimentent des evenements, puis des bonus bornes et des deblocages lisibles.</text>
+
+  <rect class="node" x="72" y="214" width="190" height="112"/>
+  <text x="96" y="258" class="text">Action</text>
+  <text x="96" y="286" class="text-small">quete, loot,</text>
+  <text x="96" y="310" class="text-small">heros, guilde</text>
+
+  <rect class="node-dark" x="318" y="214" width="210" height="112"/>
+  <text x="344" y="258" class="text-light">Event</text>
+  <text x="344" y="286" class="text-light-small">QuestCompleted</text>
+  <text x="344" y="310" class="text-light-small">LootEquipped...</text>
+
+  <rect class="node" x="584" y="214" width="210" height="112"/>
+  <text x="610" y="258" class="text">Tracker</text>
+  <text x="610" y="286" class="text-small">progression</text>
+  <text x="610" y="310" class="text-small">conditions</text>
+
+  <rect class="node-gold" x="850" y="214" width="192" height="112"/>
+  <text x="874" y="258" class="text">Pret</text>
+  <text x="874" y="286" class="text-small">claim badge</text>
+  <text x="874" y="310" class="text-small">+ sceaux</text>
+
+  <rect class="node-dark" x="850" y="404" width="192" height="112"/>
+  <text x="874" y="448" class="text-light">Charte</text>
+  <text x="874" y="476" class="text-light-small">paliers meta</text>
+  <text x="874" y="500" class="text-light-small">bonus bornes</text>
+
+  <rect class="node-warn" x="1076" y="340" width="126" height="160"/>
+  <text x="1096" y="384" class="text-light">Unlocks</text>
+  <text x="1096" y="414" class="text-light-small">guilde</text>
+  <text x="1096" y="438" class="text-light-small">heros</text>
+  <text x="1096" y="462" class="text-light-small">rewards</text>
+
+  <rect class="node-dark" x="584" y="434" width="210" height="112"/>
+  <text x="610" y="478" class="text-light">Save</text>
+  <text x="610" y="506" class="text-light-small">progress</text>
+  <text x="610" y="530" class="text-light-small">claimed, seen</text>
+
+  <rect class="node" x="318" y="434" width="210" height="112"/>
+  <text x="344" y="478" class="text">Definitions</text>
+  <text x="344" y="506" class="text-small">catalogue</text>
+  <text x="344" y="530" class="text-small">localise</text>
+
+  <path class="arrow" d="M262 270 H318"/>
+  <path class="arrow" d="M528 270 H584"/>
+  <path class="arrow" d="M794 270 H850"/>
+  <path class="arrow" d="M946 326 V404"/>
+  <path class="arrow" d="M1042 460 H1076"/>
+  <path class="arrow-muted" d="M689 326 V434"/>
+  <path class="arrow-muted" d="M528 490 H584"/>
+  <path class="arrow-muted" d="M423 434 V326"/>
+  <path class="arrow-muted" d="M1138 500 C1138 616 180 626 167 326"/>
+
+  <text x="1094" y="612" class="label">Retour boucle idle</text>
+  <text x="60" y="644" class="text-light-small">Regle cle: aucun haut fait ne depend d'une pub payante ou obligatoire.</text>
+</svg>

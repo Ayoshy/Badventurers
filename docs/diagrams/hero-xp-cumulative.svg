@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect width="960" height="540" fill="#171813"/>
+<text x="86" y="34" fill="#FFF1C0" font-family="Arial, sans-serif" font-size="24" font-weight="700">Cumulative XP to reach level</text>
+<text x="86" y="54" fill="#DED0A2" font-family="Arial, sans-serif" font-size="13">Total XP earned by one participating hero from level 1</text>
+<line x1="86" y1="462" x2="926" y2="462" stroke="#3A3326" stroke-width="1"/>
+<text x="74" y="462" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="end" dominant-baseline="middle">0</text>
+<line x1="86" y1="381.2" x2="926" y2="381.2" stroke="#3A3326" stroke-width="1"/>
+<text x="74" y="381.2" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="end" dominant-baseline="middle">3100</text>
+<line x1="86" y1="300.4" x2="926" y2="300.4" stroke="#3A3326" stroke-width="1"/>
+<text x="74" y="300.4" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="end" dominant-baseline="middle">6200</text>
+<line x1="86" y1="219.6" x2="926" y2="219.6" stroke="#3A3326" stroke-width="1"/>
+<text x="74" y="219.6" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="end" dominant-baseline="middle">9300</text>
+<line x1="86" y1="138.8" x2="926" y2="138.8" stroke="#3A3326" stroke-width="1"/>
+<text x="74" y="138.8" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="end" dominant-baseline="middle">12400</text>
+<line x1="86" y1="58" x2="926" y2="58" stroke="#3A3326" stroke-width="1"/>
+<text x="74" y="58" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="end" dominant-baseline="middle">15500</text>
+<line x1="86" y1="58" x2="86" y2="462" stroke="#2A261D" stroke-width="1"/>
+<text x="86" y="482" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">1</text>
+<line x1="262.842" y1="58" x2="262.842" y2="462" stroke="#2A261D" stroke-width="1"/>
+<text x="262.842" y="482" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">5</text>
+<line x1="483.895" y1="58" x2="483.895" y2="462" stroke="#2A261D" stroke-width="1"/>
+<text x="483.895" y="482" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">10</text>
+<line x1="704.947" y1="58" x2="704.947" y2="462" stroke="#2A261D" stroke-width="1"/>
+<text x="704.947" y="482" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">15</text>
+<line x1="926" y1="58" x2="926" y2="462" stroke="#2A261D" stroke-width="1"/>
+<text x="926" y="482" fill="#DED0A2" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">20</text>
+<line x1="86" y1="462" x2="926" y2="462" stroke="#FFF1C0" stroke-width="1.5"/>
+<line x1="86" y1="58" x2="86" y2="462" stroke="#FFF1C0" stroke-width="1.5"/>
+<text x="506" y="520" fill="#FFF1C0" font-family="Arial, sans-serif" font-size="13" text-anchor="middle">Hero level</text>
+<polyline points="86,462 130.211,460.957 174.421,459.394 218.632,457.308 262.842,454.702 307.053,451.574 351.263,447.925 395.474,443.755 439.684,439.063 483.895,433.85 528.105,428.116 572.316,421.861 616.526,415.084 660.737,407.786 704.947,399.966 749.158,391.626 793.368,382.764 837.579,373.381 881.789,363.476 926,353.05" fill="none" stroke="#D0A24A" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="86" cy="462" r="4.5" fill="#D0A24A" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="262.842" cy="454.702" r="4.5" fill="#D0A24A" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="483.895" cy="433.85" r="4.5" fill="#D0A24A" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="704.947" cy="399.966" r="4.5" fill="#D0A24A" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="926" cy="353.05" r="4.5" fill="#D0A24A" stroke="#FFF1C0" stroke-width="1"/>
+<line x1="674" y1="82" x2="712" y2="82" stroke="#D0A24A" stroke-width="5" stroke-linecap="round"/>
+<text x="722" y="82" fill="#FFF1C0" font-family="Arial, sans-serif" font-size="13" dominant-baseline="middle">Current linear</text>
+<polyline points="86,462 130.211,460.827 174.421,459.133 218.632,456.787 262.842,453.659 307.053,449.619 351.263,444.537 395.474,438.281 439.684,430.723 483.895,421.73 528.105,411.174 572.316,398.924 616.526,384.849 660.737,368.819 704.947,350.705 749.158,330.374 793.368,307.698 837.579,282.546 881.789,254.787 926,224.292" fill="none" stroke="#2F695C" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="86" cy="462" r="4.5" fill="#2F695C" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="262.842" cy="453.659" r="4.5" fill="#2F695C" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="483.895" cy="421.73" r="4.5" fill="#2F695C" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="704.947" cy="350.705" r="4.5" fill="#2F695C" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="926" cy="224.292" r="4.5" fill="#2F695C" stroke="#FFF1C0" stroke-width="1"/>
+<line x1="674" y1="106" x2="712" y2="106" stroke="#2F695C" stroke-width="5" stroke-linecap="round"/>
+<text x="722" y="106" fill="#FFF1C0" font-family="Arial, sans-serif" font-size="13" dominant-baseline="middle">Recommended soft ramp</text>
+<polyline points="86,462 130.211,460.436 174.421,458.221 218.632,455.093 262.842,450.792 307.053,445.058 351.263,437.63 395.474,428.246 439.684,416.648 483.895,402.573 528.105,385.761 572.316,365.952 616.526,342.885 660.737,316.299 704.947,285.934 749.158,251.529 793.368,212.823 837.579,169.556 881.789,121.467 926,68.295" fill="none" stroke="#8F4F3A" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="86" cy="462" r="4.5" fill="#8F4F3A" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="262.842" cy="450.792" r="4.5" fill="#8F4F3A" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="483.895" cy="402.573" r="4.5" fill="#8F4F3A" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="704.947" cy="285.934" r="4.5" fill="#8F4F3A" stroke="#FFF1C0" stroke-width="1"/>
+<circle cx="926" cy="68.295" r="4.5" fill="#8F4F3A" stroke="#FFF1C0" stroke-width="1"/>
+<line x1="674" y1="130" x2="712" y2="130" stroke="#8F4F3A" stroke-width="5" stroke-linecap="round"/>
+<text x="722" y="130" fill="#FFF1C0" font-family="Arial, sans-serif" font-size="13" dominant-baseline="middle">Slow long-tail</text>
+</svg>

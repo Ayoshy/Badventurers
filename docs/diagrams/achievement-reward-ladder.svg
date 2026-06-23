@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Badventurers Achievement Reward Ladder</title>
+  <desc id="desc">Milestone ladder for achievement seals and gameplay unlocks.</desc>
+  <defs>
+    <style>
+      .bg { fill: #141512; }
+      .panel { fill: #1d1f19; stroke: #4d4631; stroke-width: 2; }
+      .track { stroke: #d0a24a; stroke-width: 12; stroke-linecap: round; fill: none; }
+      .dot { fill: #fff1bf; stroke: #d0a24a; stroke-width: 5; }
+      .dot-major { fill: #2f695c; stroke: #fff1bf; stroke-width: 6; }
+      .card { fill: #fff1bf; stroke: #d0a24a; stroke-width: 3; rx: 16; }
+      .card-dark { fill: #263a34; stroke: #2f695c; stroke-width: 3; rx: 16; }
+      .t1 { fill: #fff1bf; font-family: Inter, Arial, sans-serif; font-size: 34px; font-weight: 900; }
+      .t2 { fill: #ded0a2; font-family: Inter, Arial, sans-serif; font-size: 18px; font-weight: 700; }
+      .dark { fill: #211f1a; font-family: Inter, Arial, sans-serif; font-size: 22px; font-weight: 900; }
+      .dark-small { fill: #4f4630; font-family: Inter, Arial, sans-serif; font-size: 16px; font-weight: 700; }
+      .light { fill: #fff1bf; font-family: Inter, Arial, sans-serif; font-size: 22px; font-weight: 900; }
+      .light-small { fill: #ded0a2; font-family: Inter, Arial, sans-serif; font-size: 16px; font-weight: 700; }
+      .seal { fill: #d0a24a; font-family: Inter, Arial, sans-serif; font-size: 20px; font-weight: 900; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1280" height="720"/>
+  <rect class="panel" x="48" y="48" width="1184" height="624" rx="28"/>
+  <text x="72" y="104" class="t1">Echelle de recompenses par sceaux</text>
+  <text x="72" y="136" class="t2">Les badges donnent des sceaux. Les sceaux ouvrent des paliers controles: guilde, heros, rewards.</text>
+
+  <path class="track" d="M136 374 H1138"/>
+
+  <g>
+    <circle class="dot-major" cx="136" cy="374" r="34"/>
+    <text class="seal" x="136" y="381">1</text>
+    <rect class="card" x="72" y="190" width="180" height="112"/>
+    <text x="94" y="230" class="dark">Registre</text>
+    <text x="94" y="258" class="dark-small">screen hauts faits</text>
+    <text x="94" y="280" class="dark-small">+ premiers claims</text>
+  </g>
+
+  <g>
+    <circle class="dot" cx="336" cy="374" r="30"/>
+    <text class="seal" x="336" y="381">4</text>
+    <rect class="card-dark" x="252" y="458" width="190" height="112"/>
+    <text x="276" y="498" class="light">Assurance</text>
+    <text x="276" y="526" class="light-small">pity failures</text>
+    <text x="276" y="548" class="light-small">bonus limite</text>
+  </g>
+
+  <g>
+    <circle class="dot-major" cx="536" cy="374" r="34"/>
+    <text class="seal" x="536" y="381">8</text>
+    <rect class="card" x="450" y="190" width="196" height="112"/>
+    <text x="474" y="230" class="dark">Mentorat</text>
+    <text x="474" y="258" class="dark-small">promotions heros</text>
+    <text x="474" y="280" class="dark-small">entrainement special</text>
+  </g>
+
+  <g>
+    <circle class="dot" cx="736" cy="374" r="30"/>
+    <text class="seal" x="736" y="381">12</text>
+    <rect class="card-dark" x="658" y="458" width="190" height="112"/>
+    <text x="682" y="498" class="light">Choix loot</text>
+    <text x="682" y="526" class="light-small">1 choix sur 2</text>
+    <text x="682" y="548" class="light-small">sur gros succes</text>
+  </g>
+
+  <g>
+    <circle class="dot-major" cx="936" cy="374" r="34"/>
+    <text class="seal" x="936" y="381">18</text>
+    <rect class="card" x="846" y="190" width="208" height="112"/>
+    <text x="870" y="230" class="dark">Contrats +</text>
+    <text x="870" y="258" class="dark-small">quetes speciales</text>
+    <text x="870" y="280" class="dark-small">conditions mixtes</text>
+  </g>
+
+  <g>
+    <circle class="dot" cx="1138" cy="374" r="30"/>
+    <text class="seal" x="1138" y="381">25</text>
+    <rect class="card-dark" x="1034" y="458" width="168" height="112"/>
+    <text x="1058" y="498" class="light">Charte</text>
+    <text x="1058" y="526" class="light-small">bonus long terme</text>
+    <text x="1058" y="548" class="light-small">prestige futur</text>
+  </g>
+
+  <text x="72" y="632" class="t2">Les bonus numeriques restent additifs et capes; les gros paliers ouvrent surtout des choix et des contenus.</text>
+</svg>

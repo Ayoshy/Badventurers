@@ -22,9 +22,14 @@ This scaffold now compiles locally with the Gradle Wrapper. Unit tests and the d
 - `app/src/main/java/com/ayoshy/badventurers/ui/BadventurersApp.kt`
 - `app/src/main/java/com/ayoshy/badventurers/game/*`
 - `app/src/test/java/com/ayoshy/badventurers/game/*`
-- `app/src/main/res/drawable-nodpi/*`
 - `app/src/main/res/values/*`
 - `app/src/main/res/values-fr/*`
+- `app/src/main/res-guild/drawable-nodpi/*`
+- `app/src/main/res-heroes/drawable-nodpi/*`
+- `app/src/main/res-loot/drawable-nodpi/*`
+- `app/src/main/res-quests/drawable-nodpi/*`
+- `app/src/main/res-resources/drawable-nodpi/*`
+- `app/src/main/res-ui/drawable/*`
 
 ## Current App Behavior
 

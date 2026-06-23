@@ -6,13 +6,20 @@ import org.junit.Test
 class PlaySessionSnapshotTest {
     @Test
     fun snapshotRoundTripsModifiedIdleState() {
-        val extraHero = HeroCatalog.byId.getValue("ledger").toHero()
+        val extraHero = HeroProgression.withProgress(
+            hero = HeroCatalog.byId.getValue("ledger").toHero(),
+            level = 6,
+            xp = 17,
+        )
         val generatedLoot = LootGenerator.generate(2, seed = 5)
         val state = PlaySessionState.initial().copy(
             gold = 2_000,
             reputation = 29,
             guildLevel = 4,
+            completedQuestCount = 5,
             noticeBoardLevel = 3,
+            trainingYardLevel = 2,
+            bunkRoomLevel = 3,
             heroes = HeroCatalog.starterHeroes + extraHero,
             lootRolls = 7,
             lootItems = generatedLoot.drop(1),
@@ -69,6 +76,24 @@ class PlaySessionSnapshotTest {
         val restored = snapshot.toState()
 
         assertEquals(HeroCatalog.starterHeroes, restored.heroes)
+    }
+
+    @Test
+    fun snapshotRestoresKnownLootWithCurrentCatalogDefinition() {
+        val staleBoots = LootItemSnapshot(
+            id = "armor_winged_boots",
+            name = "Winged Boots",
+            rarity = LootRarity.Rare,
+            slot = LootSlot.Armor,
+            bonus = 3,
+            icon = LootIcon.Boots,
+        )
+
+        val restored = staleBoots.toItem()
+
+        assertEquals(LootSlot.Footwear, restored.slot)
+        assertEquals(LootIcon.Boots, restored.icon)
+        assertEquals(LootCatalog.byId.getValue("armor_winged_boots").name, restored.name)
     }
 
     @Test

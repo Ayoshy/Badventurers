@@ -44,6 +44,32 @@ class JournalGeneratorTest {
     }
 
     @Test
+    fun questLineAppearsWhenQuestProvided() {
+        val entries = JournalGenerator.generate(result(ExpeditionOutcome.Success), SeedGame.heroes, SeedGame.firstQuest)
+
+        assertTrue(entries.any { it.id == "quest-cave_minor_regrets" })
+        assertTrue(entries.any { it.text.contains("Cave") })
+    }
+
+    @Test
+    fun activeSpecialLineAppearsWhenPartyMatchesQuestTags() {
+        val entries = JournalGenerator.generate(result(ExpeditionOutcome.Success), SeedGame.heroes, SeedGame.firstQuest)
+        val special = entries.single { it.id == "special-brugg-cave_minor_regrets" }
+
+        assertTrue(special.text.contains("Brugg"))
+    }
+
+    @Test
+    fun inactiveSpecialsDoNotAddSpecialLine() {
+        val entries = JournalGenerator.generate(
+            result(ExpeditionOutcome.Success),
+            listOf(HeroCatalog.byId.getValue("mira").toHero()),
+            SeedGame.firstQuest,
+        )
+
+        assertTrue(entries.none { it.id.startsWith("special-") })
+    }
+    @Test
     fun idsAreStableAndNonEmpty() {
         val first = JournalGenerator.generate(result(ExpeditionOutcome.Failure, gold = 3), SeedGame.heroes.take(1))
         val second = JournalGenerator.generate(result(ExpeditionOutcome.Failure, gold = 3), SeedGame.heroes.take(1))

@@ -5,25 +5,38 @@ data class PlaySessionSnapshot(
     val gold: Int,
     val reputation: Int,
     val guildLevel: Int,
+    val completedQuestCount: Int,
     val noticeBoardLevel: Int,
+    val trainingYardLevel: Int,
+    val bunkRoomLevel: Int,
     val lootRolls: Int,
     val heroIds: List<String> = HeroCatalog.starterHeroes.map { it.id },
+    val heroProgress: List<HeroProgressSnapshot> = emptyList(),
     val lootItems: List<LootItemSnapshot> = emptyList(),
     val pendingLootItems: List<LootItemSnapshot> = emptyList(),
     val equippedLoot: List<EquippedLootSnapshot> = emptyList(),
     val journalEntries: List<JournalEntrySnapshot> = emptyList(),
     val expedition: ExpeditionRunSnapshot? = null,
+    val achievementProgress: List<AchievementProgress> = emptyList(),
 ) {
     fun toState(): PlaySessionState {
+        val progressByHeroId = heroProgress.associateBy { it.heroId }
         val restoredHeroes = heroIds
-            .mapNotNull { HeroCatalog.byId[it]?.toHero() }
+            .mapNotNull { heroId ->
+                HeroCatalog.byId[heroId]?.toHero()?.let { hero ->
+                    progressByHeroId[heroId]?.applyTo(hero) ?: hero
+                }
+            }
             .ifEmpty { HeroCatalog.starterHeroes }
 
         return PlaySessionState(
             gold = gold,
             reputation = reputation,
             guildLevel = guildLevel,
+            completedQuestCount = completedQuestCount,
             noticeBoardLevel = noticeBoardLevel,
+            trainingYardLevel = trainingYardLevel,
+            bunkRoomLevel = bunkRoomLevel,
             heroes = restoredHeroes,
             lootRolls = lootRolls,
             lootItems = lootItems.map { it.toItem() },
@@ -31,11 +44,12 @@ data class PlaySessionSnapshot(
             equippedLoot = equippedLoot.mapNotNull { it.toEquippedLoot(restoredHeroes) },
             journalEntries = journalEntries.map { it.toEntry() },
             expedition = expedition?.toRun(),
+            achievementProgress = AchievementCatalog.normalizeProgress(achievementProgress),
         )
     }
 
     companion object {
-        const val CURRENT_VERSION = 5
+        const val CURRENT_VERSION = 10
 
         fun initial(): PlaySessionSnapshot {
             return fromState(PlaySessionState.initial())
@@ -47,16 +61,37 @@ data class PlaySessionSnapshot(
                 gold = state.gold,
                 reputation = state.reputation,
                 guildLevel = state.guildLevel,
+                completedQuestCount = state.completedQuestCount,
                 noticeBoardLevel = state.noticeBoardLevel,
+                trainingYardLevel = state.trainingYardLevel,
+                bunkRoomLevel = state.bunkRoomLevel,
                 lootRolls = state.lootRolls,
                 heroIds = state.heroes.map { it.id },
+                heroProgress = state.heroes.map { HeroProgressSnapshot.fromHero(it) },
                 lootItems = state.lootItems.map { LootItemSnapshot.fromItem(it) },
                 pendingLootItems = state.pendingLootItems.map { LootItemSnapshot.fromItem(it) },
                 equippedLoot = state.equippedLoot.map { EquippedLootSnapshot.fromEquippedLoot(it) },
                 journalEntries = state.journalEntries.map { JournalEntrySnapshot.fromEntry(it) },
                 expedition = state.expedition?.let { ExpeditionRunSnapshot.fromRun(it) },
+                achievementProgress = AchievementCatalog.normalizeProgress(state.achievementProgress),
             )
         }
+    }
+}
+
+data class HeroProgressSnapshot(
+    val heroId: String,
+    val level: Int,
+    val xp: Int,
+) {
+    fun applyTo(hero: Hero): Hero = HeroProgression.withProgress(hero, level, xp)
+
+    companion object {
+        fun fromHero(hero: Hero): HeroProgressSnapshot = HeroProgressSnapshot(
+            heroId = hero.id,
+            level = hero.level,
+            xp = hero.xp,
+        )
     }
 }
 
@@ -71,14 +106,15 @@ data class LootItemSnapshot(
 ) {
     fun toItem(): LootItem {
         val restoredStats = stats.map { it.toStatBonus() }
+        val catalogDefinition = LootCatalog.byId[id]
         return LootItem(
             id = id,
-            name = name,
+            name = catalogDefinition?.name ?: name,
             rarity = rarity,
-            slot = slot,
+            slot = catalogDefinition?.slot ?: slot,
             stats = restoredStats,
             bonus = if (restoredStats.isEmpty()) bonus else restoredStats.sumOf { it.value },
-            icon = icon,
+            icon = catalogDefinition?.icon ?: icon,
         )
     }
 

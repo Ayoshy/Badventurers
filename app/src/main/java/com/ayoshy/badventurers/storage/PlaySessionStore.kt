@@ -1,11 +1,13 @@
 package com.ayoshy.badventurers.storage
 
 import android.content.Context
+import com.ayoshy.badventurers.game.AchievementProgress
 import com.ayoshy.badventurers.game.EquippedLootSnapshot
 import com.ayoshy.badventurers.game.ExpeditionOutcome
 import com.ayoshy.badventurers.game.ExpeditionResultSnapshot
 import com.ayoshy.badventurers.game.ExpeditionRunSnapshot
 import com.ayoshy.badventurers.game.HeroCatalog
+import com.ayoshy.badventurers.game.HeroProgressSnapshot
 import com.ayoshy.badventurers.game.JournalEntrySnapshot
 import com.ayoshy.badventurers.game.LootIcon
 import com.ayoshy.badventurers.game.LootItemSnapshot
@@ -38,14 +40,19 @@ class PlaySessionStore(context: Context) {
         .put("gold", snapshot.gold)
         .put("reputation", snapshot.reputation)
         .put("guildLevel", snapshot.guildLevel)
+        .put("completedQuestCount", snapshot.completedQuestCount)
         .put("noticeBoardLevel", snapshot.noticeBoardLevel)
+        .put("trainingYardLevel", snapshot.trainingYardLevel)
+        .put("bunkRoomLevel", snapshot.bunkRoomLevel)
         .put("lootRolls", snapshot.lootRolls)
         .put("heroIds", JSONArray().also { array -> snapshot.heroIds.forEach { array.put(it) } })
+        .put("heroProgress", JSONArray().also { array -> snapshot.heroProgress.forEach { array.put(encodeHeroProgress(it)) } })
         .put("lootItems", JSONArray().also { array -> snapshot.lootItems.forEach { array.put(encodeLootItem(it)) } })
         .put("pendingLootItems", JSONArray().also { array -> snapshot.pendingLootItems.forEach { array.put(encodeLootItem(it)) } })
         .put("equippedLoot", JSONArray().also { array -> snapshot.equippedLoot.forEach { array.put(encodeEquippedLoot(it)) } })
         .put("journalEntries", JSONArray().also { array -> snapshot.journalEntries.forEach { array.put(encodeJournalEntry(it)) } })
         .put("expedition", snapshot.expedition?.let { encodeExpedition(it) })
+        .put("achievementProgress", JSONArray().also { array -> snapshot.achievementProgress.forEach { array.put(encodeAchievementProgress(it)) } })
         .toString()
 
     private fun decodeSnapshot(encoded: String): PlaySessionSnapshot? = try {
@@ -55,17 +62,54 @@ class PlaySessionStore(context: Context) {
             gold = json.optInt("gold", PlaySessionState.initial().gold),
             reputation = json.optInt("reputation", PlaySessionState.initial().reputation),
             guildLevel = json.optInt("guildLevel", PlaySessionState.initial().guildLevel),
+            completedQuestCount = json.optInt("completedQuestCount", PlaySessionState.initial().completedQuestCount),
             noticeBoardLevel = json.optInt("noticeBoardLevel", PlaySessionState.initial().noticeBoardLevel),
+            trainingYardLevel = json.optInt("trainingYardLevel", PlaySessionState.initial().trainingYardLevel),
+            bunkRoomLevel = json.optInt("bunkRoomLevel", PlaySessionState.initial().bunkRoomLevel),
             lootRolls = json.optInt("lootRolls", PlaySessionState.initial().lootRolls),
             heroIds = decodeStringArray(json.optJSONArray("heroIds")).ifEmpty { HeroCatalog.starterHeroes.map { it.id } },
+            heroProgress = decodeObjectArray(json.optJSONArray("heroProgress"), ::decodeHeroProgress),
             lootItems = decodeObjectArray(json.optJSONArray("lootItems"), ::decodeLootItem),
             pendingLootItems = decodeObjectArray(json.optJSONArray("pendingLootItems"), ::decodeLootItem),
             equippedLoot = decodeObjectArray(json.optJSONArray("equippedLoot"), ::decodeEquippedLoot),
             journalEntries = decodeObjectArray(json.optJSONArray("journalEntries"), ::decodeJournalEntry),
             expedition = json.optJSONObject("expedition")?.let(::decodeExpedition),
+            achievementProgress = decodeObjectArray(json.optJSONArray("achievementProgress"), ::decodeAchievementProgress),
         )
     } catch (_: Exception) {
         null
+    }
+
+    private fun encodeHeroProgress(progress: HeroProgressSnapshot): JSONObject = JSONObject()
+        .put("heroId", progress.heroId)
+        .put("level", progress.level)
+        .put("xp", progress.xp)
+
+    private fun decodeHeroProgress(json: JSONObject): HeroProgressSnapshot? {
+        val heroId = json.optString("heroId").takeIf { it.isNotBlank() } ?: return null
+        return HeroProgressSnapshot(
+            heroId = heroId,
+            level = json.optInt("level", 1),
+            xp = json.optInt("xp"),
+        )
+    }
+
+    private fun encodeAchievementProgress(progress: AchievementProgress): JSONObject = JSONObject()
+        .put("achievementId", progress.achievementId)
+        .put("current", progress.current)
+        .put("completedAtMillis", progress.completedAtMillis ?: JSONObject.NULL)
+        .put("claimedAtMillis", progress.claimedAtMillis ?: JSONObject.NULL)
+        .put("seen", progress.seen)
+
+    private fun decodeAchievementProgress(json: JSONObject): AchievementProgress? {
+        val achievementId = json.optString("achievementId").takeIf { it.isNotBlank() } ?: return null
+        return AchievementProgress(
+            achievementId = achievementId,
+            current = json.optInt("current"),
+            completedAtMillis = nullableLong(json, "completedAtMillis"),
+            claimedAtMillis = nullableLong(json, "claimedAtMillis"),
+            seen = json.optBoolean("seen"),
+        )
     }
 
     private fun encodeLootItem(item: LootItemSnapshot): JSONObject = JSONObject()
@@ -161,6 +205,9 @@ class PlaySessionStore(context: Context) {
         xp = json.optInt("xp"),
         lootRolls = json.optInt("lootRolls"),
     )
+
+    private fun nullableLong(json: JSONObject, key: String): Long? =
+        if (json.has(key) && !json.isNull(key)) json.optLong(key) else null
 
     private fun decodeStringArray(array: JSONArray?): List<String> {
         if (array == null) return emptyList()

@@ -22,6 +22,7 @@ val LootRarity.statSlotCount: Int
 enum class LootSlot {
     Weapon,
     Armor,
+    Footwear,
     Trinket,
     Headgear,
     Consumable,
@@ -64,13 +65,13 @@ object LootCatalog {
         LootDefinition("weapon_fork_spear", "Fork Spear", LootSlot.Weapon, LootIcon.Weapon),
         LootDefinition("weapon_moon_axe", "Moon Axe", LootSlot.Weapon, LootIcon.Weapon),
         LootDefinition("weapon_nibblade", "Nibblade", LootSlot.Weapon, LootIcon.Weapon),
-        LootDefinition("weapon_toast_mace", "Toast Mace", LootSlot.Weapon, LootIcon.Spoon),
+        LootDefinition("weapon_toast_mace", "Toast Spoon", LootSlot.Weapon, LootIcon.Spoon),
 
-        LootDefinition("armor_winged_boots", "Winged Boots", LootSlot.Armor, LootIcon.Boots),
-        LootDefinition("armor_travel_boots", "Travel Boots", LootSlot.Armor, LootIcon.Boots),
-        LootDefinition("armor_patch_hood", "Patch Hood", LootSlot.Armor, LootIcon.Hood),
+        LootDefinition("armor_patch_hood", "Patch Cloak", LootSlot.Armor, LootIcon.Hood),
         LootDefinition("armor_moss_coat", "Moss Coat", LootSlot.Armor, LootIcon.Hood),
-        LootDefinition("armor_panic_helm", "Panic Helm", LootSlot.Armor, LootIcon.Helmet),
+
+        LootDefinition("armor_winged_boots", "Winged Boots", LootSlot.Footwear, LootIcon.Boots),
+        LootDefinition("armor_travel_boots", "Travel Boots", LootSlot.Footwear, LootIcon.Boots),
 
         LootDefinition("trinket_lucky_ring", "Lucky Ring", LootSlot.Trinket, LootIcon.Ring),
         LootDefinition("trinket_pocket_ring", "Pocket Ring", LootSlot.Trinket, LootIcon.Ring),
@@ -78,6 +79,7 @@ object LootCatalog {
         LootDefinition("trinket_dusty_ring", "Dusty Ring", LootSlot.Trinket, LootIcon.Ring),
         LootDefinition("trinket_quiet_ring", "Quiet Ring", LootSlot.Trinket, LootIcon.Ring),
 
+        LootDefinition("armor_panic_helm", "Panic Helm", LootSlot.Headgear, LootIcon.Helmet),
         LootDefinition("headgear_soup_helm", "Soup Helm", LootSlot.Headgear, LootIcon.Helmet),
         LootDefinition("headgear_wobble_cap", "Wobble Cap", LootSlot.Headgear, LootIcon.Hood),
         LootDefinition("headgear_paper_crown", "Paper Crown", LootSlot.Headgear, LootIcon.Helmet),

@@ -143,7 +143,7 @@ object HeroCatalog {
         ),
         HeroDefinition(
             id = "paladin",
-            name = "Paladin",
+            name = "Dame Brindle",
             heroClass = HeroClass.Paladin,
             rarity = HeroRarity.Legendary,
             level = 4,
@@ -152,7 +152,7 @@ object HeroCatalog {
         ),
         HeroDefinition(
             id = "comptable",
-            name = "Comptable",
+            name = "Tally Noakes",
             heroClass = HeroClass.Accountant,
             rarity = HeroRarity.Rare,
             level = 2,
@@ -161,7 +161,7 @@ object HeroCatalog {
         ),
         HeroDefinition(
             id = "jardinier",
-            name = "Jardinier",
+            name = "Moss Fenlow",
             heroClass = HeroClass.Gardener,
             rarity = HeroRarity.Common,
             level = 1,
@@ -170,7 +170,7 @@ object HeroCatalog {
         ),
         HeroDefinition(
             id = "chevalier_de_la_mort",
-            name = "Chevalier de la mort",
+            name = "Grave Odo",
             heroClass = HeroClass.DeathKnight,
             rarity = HeroRarity.Epic,
             level = 3,
@@ -179,7 +179,7 @@ object HeroCatalog {
         ),
         HeroDefinition(
             id = "chef_cuistot",
-            name = "Chef Cuistot",
+            name = "Basil Bouillon",
             heroClass = HeroClass.Chef,
             rarity = HeroRarity.Uncommon,
             level = 2,
@@ -188,7 +188,7 @@ object HeroCatalog {
         ),
         HeroDefinition(
             id = "expert_en_demolition",
-            name = "Expert en démolition",
+            name = "Nix Powderkeg",
             heroClass = HeroClass.DemolitionExpert,
             rarity = HeroRarity.Rare,
             level = 2,
@@ -197,7 +197,7 @@ object HeroCatalog {
         ),
         HeroDefinition(
             id = "elementaire_de_sel",
-            name = "Élémentaire de sel",
+            name = "Salina Brine",
             heroClass = HeroClass.SaltElemental,
             rarity = HeroRarity.Uncommon,
             level = 3,
@@ -206,7 +206,7 @@ object HeroCatalog {
         ),
         HeroDefinition(
             id = "troll_stupide",
-            name = "Troll Stupide",
+            name = "Grum",
             heroClass = HeroClass.StupidTroll,
             rarity = HeroRarity.Common,
             level = 1,

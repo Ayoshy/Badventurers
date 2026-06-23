@@ -1,4 +1,4 @@
-﻿package com.ayoshy.badventurers.ui
+package com.ayoshy.badventurers.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -68,14 +68,22 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ayoshy.badventurers.R
+import com.ayoshy.badventurers.game.AchievementCatalog
+import com.ayoshy.badventurers.game.AchievementCategory
+import com.ayoshy.badventurers.game.AchievementDefinition
 import com.ayoshy.badventurers.game.ExpeditionEngine
 import com.ayoshy.badventurers.game.ExpeditionEstimator
 import com.ayoshy.badventurers.game.ExpeditionOutcome
+import com.ayoshy.badventurers.game.FakeRewardedAdService
 import com.ayoshy.badventurers.game.Hero
 import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroClass
 import com.ayoshy.badventurers.game.HeroGacha
+import com.ayoshy.badventurers.game.HeroProgression
 import com.ayoshy.badventurers.game.HeroRarity
+import com.ayoshy.badventurers.game.HeroXpPreview
+import com.ayoshy.badventurers.game.HeroSpecial
+import com.ayoshy.badventurers.game.HeroSpecialCatalog
 import com.ayoshy.badventurers.game.HeroRecruitmentResult
 import com.ayoshy.badventurers.game.JournalEntry
 import com.ayoshy.badventurers.game.LootEconomy
@@ -87,8 +95,12 @@ import com.ayoshy.badventurers.game.PartyPowerCalculator
 import com.ayoshy.badventurers.game.PlayPhase
 import com.ayoshy.badventurers.game.PlaySessionState
 import com.ayoshy.badventurers.game.Quest
+import com.ayoshy.badventurers.game.QuestDifficultyTier
 import com.ayoshy.badventurers.game.QuestRisk
+import com.ayoshy.badventurers.game.QuestTag
+import com.ayoshy.badventurers.game.QuestUnlockCondition
 import com.ayoshy.badventurers.game.SeedGame
+import com.ayoshy.badventurers.game.StatBonus
 import com.ayoshy.badventurers.game.StatType
 import com.ayoshy.badventurers.game.Trait
 import kotlinx.coroutines.delay
@@ -122,6 +134,7 @@ private enum class GameTab {
     Heroes,
     Loot,
     Upgrades,
+    Achievements,
 }
 private enum class HeroesPanelTab {
     Roster,
@@ -145,21 +158,26 @@ fun BadventurersApp(
         var nowMillis by remember { mutableStateOf(System.currentTimeMillis()) }
         var lastRecruitment by remember { mutableStateOf<HeroRecruitmentResult?>(null) }
         var selectedHeroId by rememberSaveable { mutableStateOf(initialSession.heroes.firstOrNull()?.id.orEmpty()) }
+        var selectedQuestId by rememberSaveable { mutableStateOf(SeedGame.firstQuest.id) }
+        val selectedQuest = SeedGame.questById[selectedQuestId] ?: SeedGame.firstQuest
         var selectedQuestPartyIds by rememberSaveable {
             mutableStateOf(initialSession.selectedPartyForQuest(SeedGame.firstQuest, initialSession.heroes).map { it.id })
         }
         val expeditionEngine = remember { ExpeditionEngine() }
-        val selectedQuestParty = selectedQuestPartyIds.mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }
+        val selectedQuestParty = selectedQuestPartyIds
+            .mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }
+            .take(session.effectivePartySlots(selectedQuest))
         fun updateSession(nextSession: PlaySessionState) {
             session = nextSession
             if (nextSession.heroes.none { it.id == selectedHeroId }) {
                 selectedHeroId = nextSession.heroes.firstOrNull()?.id.orEmpty()
             }
             val nextHeroIds = nextSession.heroes.map { it.id }
-            val keptPartyIds = selectedQuestPartyIds.filter { it in nextHeroIds }.take(SeedGame.firstQuest.partySlots)
+            val nextPartySlots = nextSession.effectivePartySlots(selectedQuest)
+            val keptPartyIds = selectedQuestPartyIds.filter { it in nextHeroIds }.take(nextPartySlots)
             selectedQuestPartyIds = keptPartyIds + nextHeroIds
                 .filterNot { it in keptPartyIds }
-                .take(SeedGame.firstQuest.partySlots - keptPartyIds.size)
+                .take(nextPartySlots - keptPartyIds.size)
             onSessionChanged(nextSession)
         }
         LaunchedEffect(session.phase, session.expedition?.endsAtMillis) {
@@ -178,7 +196,13 @@ fun BadventurersApp(
                 .background(Color(0xFF141512)),
         ) {
             Image(
-                painter = painterResource(R.drawable.guild_home_background),
+                painter = painterResource(
+                    if (selectedTab == GameTab.Achievements) {
+                        R.drawable.achievement_hall_concept
+                    } else {
+                        R.drawable.guild_home_background
+                    },
+                ),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
@@ -212,9 +236,11 @@ fun BadventurersApp(
                     when (selectedTab) {
                         GameTab.Guild -> GuildScreen(
                             session = session,
+                            selectedQuest = selectedQuest,
                             nowMillis = nowMillis,
                             onViewResult = { selectedTab = GameTab.QuestResult },
                             onNextQuest = { selectedTab = GameTab.Quests },
+                            onAchievements = { selectedTab = GameTab.Achievements },
                             onFinishQuestNow = {
                                 updateSession(session.finishQuestNow(expeditionEngine, session.heroes))
                                 nowMillis = System.currentTimeMillis()
@@ -222,23 +248,33 @@ fun BadventurersApp(
                         )
                         GameTab.Quests -> QuestsScreen(
                             session = session,
-                            onPrepare = { selectedTab = GameTab.ExpeditionPrep },
+                            selectedQuest = selectedQuest,
+                            onSelectQuest = { quest ->
+                                selectedQuestId = quest.id
+                                val partySlots = session.effectivePartySlots(quest)
+                                selectedQuestPartyIds = selectedQuestPartyIds.take(partySlots)
+                            },
+                            onPrepare = { quest ->
+                                selectedQuestId = quest.id
+                                selectedTab = GameTab.ExpeditionPrep
+                            },
                             onParty = { selectedTab = GameTab.Heroes },
                         )
                         GameTab.ExpeditionPrep -> ExpeditionPrepScreen(
                             session = session,
+                            quest = selectedQuest,
                             selectedPartyIds = selectedQuestPartyIds,
                             onToggleHero = { heroId ->
                                 selectedQuestPartyIds = togglePartyHero(
                                     currentIds = selectedQuestPartyIds,
                                     heroId = heroId,
-                                    maxSlots = SeedGame.firstQuest.partySlots,
+                                    maxSlots = session.effectivePartySlots(selectedQuest),
                                 )
                             },
                             onLaunch = {
                                 val currentTime = System.currentTimeMillis()
                                 nowMillis = currentTime
-                                updateSession(session.startQuest(currentTime, SeedGame.firstQuest, selectedQuestParty))
+                                updateSession(session.startQuest(currentTime, selectedQuest, selectedQuestParty))
                                 selectedTab = GameTab.Guild
                             },
                             onParty = { selectedTab = GameTab.Heroes },
@@ -255,6 +291,14 @@ fun BadventurersApp(
                                 val nextSession = session.collectResult()
                                 updateSession(nextSession)
                                 selectedTab = if (nextSession.pendingLootItems.isEmpty()) GameTab.Guild else GameTab.RewardLoot
+                            },
+                            onCollectWithFakeAd = {
+                                val fakeReward = FakeRewardedAdService.rewardFor(session)
+                                if (fakeReward != null) {
+                                    val nextSession = session.collectResult(fakeRewardedAdReward = fakeReward)
+                                    updateSession(nextSession)
+                                    selectedTab = if (nextSession.pendingLootItems.isEmpty()) GameTab.Guild else GameTab.RewardLoot
+                                }
                             },
                             onBack = { selectedTab = GameTab.Guild },
                         )
@@ -295,7 +339,16 @@ fun BadventurersApp(
                         )
                         GameTab.Upgrades -> UpgradesScreen(
                             session = session,
-                            onBuy = { updateSession(session.upgradeNoticeBoard()) },
+                            onAchievements = { selectedTab = GameTab.Achievements },
+                            onBuyNoticeBoard = { updateSession(session.upgradeNoticeBoard()) },
+                            onBuyTrainingYard = { updateSession(session.upgradeTrainingYard()) },
+                            onBuyBunkRoom = { updateSession(session.upgradeBunkRoom()) },
+                        )
+                        GameTab.Achievements -> AchievementsScreen(
+                            session = session,
+                            onClaim = { achievementId -> updateSession(session.claimAchievement(achievementId, System.currentTimeMillis())) },
+                            onClaimAll = { updateSession(session.claimAllAchievements(System.currentTimeMillis())) },
+                            onBack = { selectedTab = GameTab.Upgrades },
                         )
                     }
                 }
@@ -359,9 +412,11 @@ private fun RowScope.ResourceChip(label: String, value: String) {
 @Composable
 private fun GuildScreen(
     session: PlaySessionState,
+    selectedQuest: Quest,
     nowMillis: Long,
     onViewResult: () -> Unit,
     onNextQuest: () -> Unit,
+    onAchievements: () -> Unit,
     onFinishQuestNow: () -> Unit,
 ) {
     ScreenScaffold(title = stringResource(R.string.guild_home_title), status = phaseStatus(session.phase)) {
@@ -406,7 +461,7 @@ private fun GuildScreen(
                             R.string.result_quest_summary,
                             outcomeLabel(result.outcome),
                             rewardGoldWithNoticeBoard(session),
-                            result.reward.lootRolls,
+                            session.collectableLootRolls(result),
                         ),
                     ) {
                         ActionRow(
@@ -419,10 +474,12 @@ private fun GuildScreen(
                 }
             }
         }
+        GuildFacilitiesPanel(session, SeedGame.firstQuest)
+        AchievementLedgerPanel(session = session, onOpen = onAchievements)
         PaperPanel(title = stringResource(R.string.recommended_title), body = stringResource(R.string.recommended_upgrade)) {
             ProgressBar(progress = 0.72f)
         }
-        val journalLines = session.journalEntries.takeLast(3).map { journalEntryText(it) }
+        val journalLines = session.journalEntries.takeLast(5).map { journalEntryText(it) }
         if (journalLines.isEmpty()) {
             JournalLine(stringResource(R.string.journal_01))
             JournalLine(stringResource(R.string.journal_02))
@@ -434,7 +491,101 @@ private fun GuildScreen(
 }
 
 @Composable
-private fun QuestResultScreen(session: PlaySessionState, onCollect: () -> Unit, onBack: () -> Unit) {
+private fun AchievementLedgerPanel(session: PlaySessionState, onOpen: () -> Unit) {
+    val claimableCount = session.claimableAchievementCount()
+    val nextMilestone = session.nextAchievementMilestone()
+    val milestoneLine = nextMilestone?.let { milestone ->
+        stringResource(R.string.achievements_next_milestone_detail, milestone.sealsRequired, milestone.title)
+    } ?: stringResource(R.string.achievements_all_milestones_done)
+
+    PaperPanel(
+        title = stringResource(R.string.achievements_home_title),
+        body = stringResource(
+            R.string.achievements_home_summary,
+            session.completedAchievementCount(),
+            claimableCount,
+            session.achievementSeals(),
+        ),
+    ) {
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = milestoneLine,
+            color = Color(0xFF493F2B),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Black,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Button(
+            onClick = onOpen,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+            shape = RoundedCornerShape(8.dp),
+        ) {
+            Text(stringResource(R.string.achievements_open_action), fontWeight = FontWeight.Black)
+        }
+    }
+}
+@Composable
+private fun GuildFacilitiesPanel(session: PlaySessionState, selectedQuest: Quest) {
+    PaperPanel(
+        title = stringResource(R.string.guild_facilities_title),
+        body = stringResource(R.string.guild_facilities_summary),
+    ) {
+        Spacer(Modifier.height(8.dp))
+        FacilityLine(
+            label = stringResource(R.string.guild_facility_notice_board),
+            value = stringResource(R.string.guild_facility_notice_effect, session.noticeBoardGoldBonusPercent()),
+        )
+        FacilityLine(
+            label = stringResource(R.string.guild_facility_training_yard),
+            value = stringResource(R.string.guild_facility_training_effect, session.trainingYardPowerBonus()),
+        )
+        FacilityLine(
+            label = stringResource(R.string.guild_facility_bunk_room),
+            value = stringResource(R.string.guild_facility_bunk_effect, session.effectivePartySlots(selectedQuest)),
+        )
+    }
+}
+
+@Composable
+private fun FacilityLine(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 5.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            color = Color(0xFF493F2B),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Black,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = value,
+            color = Color(0xFF211F1A),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Black,
+            textAlign = TextAlign.End,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun QuestResultScreen(
+    session: PlaySessionState,
+    onCollect: () -> Unit,
+    onCollectWithFakeAd: () -> Unit,
+    onBack: () -> Unit,
+) {
     val run = session.expedition
     val result = run?.result
 
@@ -444,7 +595,12 @@ private fun QuestResultScreen(session: PlaySessionState, onCollect: () -> Unit, 
                 Button(
                     onClick = onBack,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+                    colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2F695C),
+                    contentColor = Color(0xFFF8F1D8),
+                    disabledContainerColor = Color(0xFF6B5E3C),
+                    disabledContentColor = Color(0xFFFFF1C0),
+                ),
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(stringResource(R.string.guild_home_title), fontWeight = FontWeight.Black)
@@ -453,10 +609,13 @@ private fun QuestResultScreen(session: PlaySessionState, onCollect: () -> Unit, 
             return@ScreenScaffold
         }
 
-        val partyNames = run.partyHeroIds
-            .mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId }?.name }
-            .ifEmpty { session.heroes.take(run.quest.partySlots).map { it.name } }
-            .joinToString()
+        val resultParty = run.partyHeroIds
+            .mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }
+            .ifEmpty { session.heroes.take(session.effectivePartySlots(run.quest)) }
+        val partyNames = resultParty.joinToString { it.name }
+        val levelUpPreviews = resultParty
+            .map { hero -> hero to HeroProgression.previewGrantXp(hero, result.reward.xp) }
+            .filter { (_, preview) -> preview.levelsGained > 0 }
 
         QuestCardArt(
             bannerResourceId = questBannerResource(run.quest),
@@ -474,6 +633,24 @@ private fun QuestResultScreen(session: PlaySessionState, onCollect: () -> Unit, 
                 onSecondary = onBack,
             )
         }
+        val fakeReward = FakeRewardedAdService.rewardFor(session)
+        if (booleanResource(R.bool.debug_tools_enabled) && fakeReward != null) {
+            DarkPanel(
+                title = stringResource(R.string.rewarded_ad_fake_title),
+                body = stringResource(R.string.rewarded_ad_fake_summary, fakeReward.extraGold, fakeReward.extraLootRolls),
+            ) {
+                Button(
+                    onClick = onCollectWithFakeAd,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text(stringResource(R.string.rewarded_ad_fake_action), fontWeight = FontWeight.Black)
+                }
+            }
+        }
         InfoRow(
             title = stringResource(R.string.result_outcome_title),
             detail = stringResource(R.string.result_outcome_detail, result.scoreMargin),
@@ -484,15 +661,16 @@ private fun QuestResultScreen(session: PlaySessionState, onCollect: () -> Unit, 
             detail = stringResource(R.string.result_reward_detail, result.reward.xp),
             value = stringResource(R.string.gold_value, rewardGoldWithNoticeBoard(session)),
         )
+        HeroLevelUpRevealPanel(levelUps = levelUpPreviews)
         InfoRow(
             title = stringResource(R.string.result_loot_reveal_title),
-            detail = stringResource(R.string.result_loot_reveal_detail, result.reward.lootRolls),
-            value = result.reward.lootRolls.toString(),
+            detail = stringResource(R.string.result_loot_reveal_detail, session.collectableLootRolls(result)),
+            value = session.collectableLootRolls(result).toString(),
         )
         InfoRow(
             title = stringResource(R.string.result_party_title),
             detail = partyNames,
-            value = stringResource(R.string.result_party_value, run.partyHeroIds.size),
+            value = stringResource(R.string.result_party_value, resultParty.size),
         )
         InfoRow(
             title = stringResource(R.string.result_incident_title),
@@ -502,6 +680,65 @@ private fun QuestResultScreen(session: PlaySessionState, onCollect: () -> Unit, 
     }
 }
 
+@Composable
+private fun HeroLevelUpRevealPanel(levelUps: List<Pair<Hero, HeroXpPreview>>) {
+    if (levelUps.isEmpty()) return
+
+    DarkPanel(
+        title = stringResource(R.string.result_level_up_title),
+        body = stringResource(R.string.result_level_up_summary),
+    ) {
+        Spacer(Modifier.height(4.dp))
+        levelUps.forEach { (hero, preview) ->
+            HeroLevelUpRevealRow(hero = hero, preview = preview)
+        }
+    }
+}
+
+@Composable
+private fun HeroLevelUpRevealRow(hero: Hero, preview: HeroXpPreview) {
+    val borderStyle = heroBorderStyle(hero.rarity)
+    val statSummary = statBonusSummary(preview.statGains)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xF4FFF1BF))
+            .border(1.dp, borderStyle.borderColor, RoundedCornerShape(8.dp))
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(9.dp),
+    ) {
+        Image(
+            painter = painterResource(heroPortraitResource(hero)),
+            contentDescription = hero.name,
+            modifier = Modifier
+                .size(46.dp)
+                .clip(RoundedCornerShape(7.dp))
+                .border(1.dp, borderStyle.innerColor, RoundedCornerShape(7.dp)),
+            contentScale = ContentScale.Crop,
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.result_level_up_line, hero.name, preview.afterLevel),
+                color = Color(0xFF211F1A),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = stringResource(R.string.result_level_up_detail, preview.levelsGained, statSummary),
+                color = Color(0xFF756B54),
+                fontSize = 11.sp,
+                lineHeight = 14.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
 @Composable
 private fun OfflineSummaryScreen(
     session: PlaySessionState,
@@ -518,7 +755,12 @@ private fun OfflineSummaryScreen(
                 Button(
                     onClick = onGuild,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+                    colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2F695C),
+                    contentColor = Color(0xFFF8F1D8),
+                    disabledContainerColor = Color(0xFF6B5E3C),
+                    disabledContentColor = Color(0xFFFFF1C0),
+                ),
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(stringResource(R.string.guild_home_title), fontWeight = FontWeight.Black)
@@ -529,10 +771,10 @@ private fun OfflineSummaryScreen(
 
         val secondsAway = ((nowMillis - run.startedAtMillis) / 1000L).coerceAtLeast(0L)
         val secondsLate = ((nowMillis - run.endsAtMillis) / 1000L).coerceAtLeast(0L)
-        val partyNames = run.partyHeroIds
-            .mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId }?.name }
-            .ifEmpty { session.heroes.take(run.quest.partySlots).map { it.name } }
-            .joinToString()
+        val resultParty = run.partyHeroIds
+            .mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }
+            .ifEmpty { session.heroes.take(session.effectivePartySlots(run.quest)) }
+        val partyNames = resultParty.joinToString { it.name }
 
         QuestCardArt(
             bannerResourceId = questBannerResource(run.quest),
@@ -567,55 +809,100 @@ private fun OfflineSummaryScreen(
         )
         InfoRow(
             title = stringResource(R.string.result_loot_reveal_title),
-            detail = stringResource(R.string.result_loot_reveal_detail, result.reward.lootRolls),
-            value = result.reward.lootRolls.toString(),
+            detail = stringResource(R.string.result_loot_reveal_detail, session.collectableLootRolls(result)),
+            value = session.collectableLootRolls(result).toString(),
         )
         InfoRow(
             title = stringResource(R.string.result_party_title),
             detail = partyNames,
-            value = stringResource(R.string.result_party_value, run.partyHeroIds.size),
+            value = stringResource(R.string.result_party_value, resultParty.size),
         )
     }
 }
 
 @Composable
-private fun QuestsScreen(session: PlaySessionState, onPrepare: () -> Unit, onParty: () -> Unit) {
+private fun QuestsScreen(
+    session: PlaySessionState,
+    selectedQuest: Quest,
+    onSelectQuest: (Quest) -> Unit,
+    onPrepare: (Quest) -> Unit,
+    onParty: () -> Unit,
+) {
     val canPrepare = session.phase == PlayPhase.Idle
     val prepareLabel = if (canPrepare) stringResource(R.string.prep_action) else stringResource(R.string.quest_blocked_action)
-    val quest = SeedGame.firstQuest
 
     ScreenScaffold(title = stringResource(R.string.quests_title), status = phaseStatus(session.phase)) {
-        QuestCardArt(
-            bannerResourceId = questBannerResource(quest),
-            frameResourceId = questFrameResource(quest.difficulty),
-            borderStyle = questDifficultyBorderStyle(quest.difficulty),
-        )
-        DarkPanel(title = stringResource(R.string.quest_card_title), body = stringResource(R.string.quest_card_summary)) {
-            ActionRow(
-                primaryLabel = prepareLabel,
-                secondaryLabel = stringResource(R.string.party_action),
-                onPrimary = onPrepare,
-                onSecondary = onParty,
-                primaryEnabled = canPrepare,
+        SeedGame.quests.forEach { quest ->
+            val selected = quest.id == selectedQuest.id
+            val unlocked = session.isQuestUnlocked(quest)
+            val primaryLabel = when {
+                !unlocked -> stringResource(R.string.quest_locked_action)
+                selected -> prepareLabel
+                else -> stringResource(R.string.quest_select_action)
+            }
+            QuestCardArt(
+                bannerResourceId = questBannerResource(quest),
+                frameResourceId = questFrameResource(quest.difficulty),
+                borderStyle = questDifficultyBorderStyle(quest.difficulty),
             )
+            DarkPanel(title = questTitle(quest), body = questSummary(quest)) {
+                Text(
+                    text = "${questDifficultyLabel(quest.difficultyTier)} - ${questTagsLabel(quest.tags)}",
+                    color = Color(0xFFDED0A2),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+                RecommendedHeroesInline(session = session, quest = quest)
+                if (!unlocked) {
+                    Text(
+                        text = questUnlockDetail(session, quest),
+                        color = Color(0xFFFFD27D),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                }
+                ActionRow(
+                    primaryLabel = primaryLabel,
+                    secondaryLabel = stringResource(R.string.party_action),
+                    onPrimary = {
+                        onSelectQuest(quest)
+                        if (unlocked) onPrepare(quest)
+                    },
+                    onSecondary = onParty,
+                    primaryEnabled = canPrepare && unlocked,
+                )
+            }
         }
     }
 }
-
 @Composable
 private fun ExpeditionPrepScreen(
     session: PlaySessionState,
+    quest: Quest,
     selectedPartyIds: List<String>,
     onToggleHero: (String) -> Unit,
     onLaunch: () -> Unit,
     onParty: () -> Unit,
 ) {
-    val quest = SeedGame.firstQuest
-    val partyHeroes = selectedPartyIds.mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }
-    val estimate = ExpeditionEstimator.estimate(partyHeroes, quest, session.equippedLoot)
-    val canLaunch = session.phase == PlayPhase.Idle && partyHeroes.isNotEmpty()
-    val launchLabel = if (canLaunch) stringResource(R.string.launch_quest_action) else stringResource(R.string.quest_blocked_action)
-    val previewGold = questBaseGoldWithNoticeBoard(session, quest)
+    val partySlots = session.effectivePartySlots(quest)
+    val partyHeroes = selectedPartyIds.mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }.take(partySlots)
+    val estimate = ExpeditionEstimator.estimate(
+        party = partyHeroes,
+        quest = quest,
+        equipment = session.equippedLoot,
+        facilityPowerBonus = session.trainingYardPowerBonus(),
+    )
+    val activeSpecials = HeroSpecialCatalog.activeHeroes(partyHeroes, quest)
+    val unlocked = session.isQuestUnlocked(quest)
+    val canLaunch = session.phase == PlayPhase.Idle && partyHeroes.isNotEmpty() && unlocked
+    val launchLabel = when {
+        !unlocked -> stringResource(R.string.quest_locked_action)
+        canLaunch -> stringResource(R.string.launch_quest_action)
+        else -> stringResource(R.string.quest_blocked_action)
+    }
+    val previewGold = questBaseGoldWithNoticeBoard(session, quest, estimate.goldBonusPercent)
 
     ScreenScaffold(title = stringResource(R.string.prep_title), status = stringResource(R.string.prep_status)) {
         QuestCardArt(
@@ -623,7 +910,16 @@ private fun ExpeditionPrepScreen(
             frameResourceId = questFrameResource(quest.difficulty),
             borderStyle = questDifficultyBorderStyle(quest.difficulty),
         )
-        DarkPanel(title = stringResource(R.string.quest_card_title), body = stringResource(R.string.prep_summary)) {
+        DarkPanel(title = questTitle(quest), body = questSummary(quest)) {
+            if (!unlocked) {
+                Text(
+                    text = questUnlockDetail(session, quest),
+                    color = Color(0xFFFFD27D),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
             ActionRow(
                 primaryLabel = launchLabel,
                 secondaryLabel = stringResource(R.string.party_action),
@@ -632,6 +928,7 @@ private fun ExpeditionPrepScreen(
                 primaryEnabled = canLaunch,
             )
         }
+        RecommendedHeroesPanel(session = session, quest = quest, selectedPartyIds = selectedPartyIds)
         InfoRow(
             title = stringResource(R.string.prep_success_title),
             detail = stringResource(R.string.prep_success_detail, estimate.partyPower, estimate.targetPower),
@@ -643,18 +940,28 @@ private fun ExpeditionPrepScreen(
             value = stringResource(R.string.prep_target_value, estimate.targetPower),
         )
         InfoRow(
+            title = stringResource(R.string.prep_difficulty_title),
+            detail = questTagsLabel(quest.tags),
+            value = questDifficultyLabel(quest.difficultyTier),
+        )
+        InfoRow(
+            title = stringResource(R.string.prep_special_title),
+            detail = specialEstimateDetail(activeSpecials, estimate),
+            value = if (estimate.specialPowerBonus == 0) "-" else formatSignedCount(estimate.specialPowerBonus),
+        )
+        InfoRow(
             title = stringResource(R.string.prep_reward_title),
-            detail = stringResource(R.string.prep_reward_detail, quest.pityGold, 3),
+            detail = stringResource(R.string.prep_reward_detail, quest.pityGold, 3 + estimate.bonusLootRolls),
             value = stringResource(R.string.gold_value, previewGold),
         )
         Text(
-            text = stringResource(R.string.prep_party_title, partyHeroes.size, quest.partySlots),
+            text = stringResource(R.string.prep_party_title, partyHeroes.size, partySlots),
             color = Color(0xFFFFF0BD),
             fontSize = 16.sp,
             fontWeight = FontWeight.Black,
             modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
         )
-        repeat(quest.partySlots) { index ->
+        repeat(partySlots) { index ->
             PartySlotRow(
                 slotNumber = index + 1,
                 hero = partyHeroes.getOrNull(index),
@@ -666,21 +973,68 @@ private fun ExpeditionPrepScreen(
             color = Color(0xFFFFF0BD),
             fontSize = 16.sp,
             fontWeight = FontWeight.Black,
-            modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
+            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
         )
-        session.heroes.forEach { hero ->
-            val selected = hero.id in selectedPartyIds
-            HeroPartyChoiceRow(
-                hero = hero,
-                selected = selected,
-                enabled = selected || partyHeroes.size < quest.partySlots,
-                session = session,
-                onClick = { onToggleHero(hero.id) },
-            )
-        }
+        session.heroes
+            .sortedByDescending { hero -> hero.id in quest.recommendedHeroIds }
+            .forEach { hero ->
+                val selected = hero.id in selectedPartyIds
+                HeroPartyChoiceRow(
+                    hero = hero,
+                    selected = selected,
+                    recommended = hero.id in quest.recommendedHeroIds,
+                    enabled = selected || partyHeroes.size < partySlots,
+                    session = session,
+                    onClick = { onToggleHero(hero.id) },
+                )
+            }
     }
 }
+@Composable
+private fun RecommendedHeroesInline(session: PlaySessionState, quest: Quest) {
+    val names = recommendedHeroNames(session, quest)
+    if (names.isBlank()) return
 
+    Text(
+        text = stringResource(R.string.quest_recommended_heroes_detail, names),
+        color = Color(0xFFFFE08A),
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Black,
+        modifier = Modifier.padding(bottom = 8.dp),
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun RecommendedHeroesPanel(
+    session: PlaySessionState,
+    quest: Quest,
+    selectedPartyIds: List<String>,
+) {
+    val ownedRecommended = quest.recommendedHeroIds.filter { heroId -> session.heroes.any { it.id == heroId } }
+    val selectedRecommended = selectedPartyIds.count { it in ownedRecommended }
+    val names = recommendedHeroNames(session, quest)
+    if (names.isBlank()) return
+
+    PaperPanel(
+        title = stringResource(R.string.prep_recommended_heroes_title),
+        body = stringResource(
+            R.string.prep_recommended_heroes_detail,
+            selectedRecommended,
+            ownedRecommended.size,
+            names,
+        ),
+    )
+}
+
+private fun recommendedHeroNames(session: PlaySessionState, quest: Quest): String {
+    val names = quest.recommendedHeroIds.mapNotNull { heroId ->
+        val hero = session.heroes.firstOrNull { it.id == heroId } ?: HeroCatalog.byId[heroId]?.toHero()
+        hero?.name
+    }
+    return names.take(5).joinToString()
+}
 @Composable
 private fun PartySlotRow(slotNumber: Int, hero: Hero?, session: PlaySessionState) {
     InfoRow(
@@ -703,6 +1057,7 @@ private fun PartySlotRow(slotNumber: Int, hero: Hero?, session: PlaySessionState
 private fun HeroPartyChoiceRow(
     hero: Hero,
     selected: Boolean,
+    recommended: Boolean,
     enabled: Boolean,
     session: PlaySessionState,
     onClick: () -> Unit,
@@ -716,6 +1071,7 @@ private fun HeroPartyChoiceRow(
         .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
     val value = when {
         selected -> stringResource(R.string.prep_roster_selected_value)
+        recommended -> stringResource(R.string.prep_roster_recommended_value)
         enabled -> stringResource(R.string.prep_roster_pick_value)
         else -> stringResource(R.string.prep_roster_full_value)
     }
@@ -724,9 +1080,17 @@ private fun HeroPartyChoiceRow(
         modifier = cardModifier,
         shape = shape,
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) borderStyle.selectedSurfaceColor else Color(0xF4FFF1BF),
+            containerColor = when {
+                selected -> borderStyle.selectedSurfaceColor
+                recommended -> Color(0xFFFFF4C6)
+                else -> Color(0xF4FFF1BF)
+            },
         ),
-        border = if (selected) BorderStroke(borderStyle.strokeWidth, borderStyle.borderColor) else null,
+        border = when {
+            selected -> BorderStroke(borderStyle.strokeWidth, borderStyle.borderColor)
+            recommended -> BorderStroke(2.dp, Color(0xFFD0A24A))
+            else -> null
+        },
     ) {
         Row(
             modifier = Modifier.padding(9.dp),
@@ -998,6 +1362,8 @@ private fun HeroDetailDialog(
                     onRelease = { onReleaseHero(hero.id) },
                 )
                 Spacer(Modifier.height(8.dp))
+                HeroProgressionPanel(hero = hero, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
                 HeroPortraitWithEquipment(
                     hero = hero,
                     equipment = equipment,
@@ -1064,6 +1430,19 @@ private fun HeroDetailHeader(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                Text(
+                    text = stringResource(
+                        R.string.hero_progress_value,
+                        hero.level,
+                        hero.xp,
+                        HeroProgression.xpForNextLevel(hero.level),
+                    ),
+                    color = Color(0xFFFFF0BD),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             Text(
                 text = stringResource(R.string.hero_power_value, PartyPowerCalculator.basePower(hero) + session.equipmentBonus(hero.id)),
@@ -1111,6 +1490,68 @@ private fun HeroDetailHeader(
     }
 }
 
+@Composable
+private fun HeroProgressionPanel(hero: Hero, modifier: Modifier = Modifier) {
+    val nextXp = HeroProgression.xpForNextLevel(hero.level)
+    val progress = (hero.xp.toFloat() / nextXp.coerceAtLeast(1)).coerceIn(0f, 1f)
+    val xpRemaining = (nextXp - hero.xp).coerceAtLeast(0)
+    val nextLevelStats = HeroProgression.statGrowthForLevel(hero, hero.level + 1)
+    val nextStatSummary = statBonusSummary(nextLevelStats, maxItems = 4)
+
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xE624251F))
+            .border(1.dp, Color(0x88D0A24A), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 9.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.hero_progression_title),
+                color = Color(0xFFFFF1C0),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+            )
+            Text(
+                text = stringResource(R.string.hero_next_level_value, hero.level, hero.level + 1),
+                color = Color(0xFFE2CF93),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+            )
+        }
+        ProgressBar(progress = progress)
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = stringResource(R.string.hero_xp_remaining_detail, xpRemaining),
+            color = Color(0xFFDED0A2),
+            fontSize = 11.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = stringResource(R.string.hero_next_stats_detail, nextStatSummary),
+            color = Color(0xFFFFF0BD),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = stringResource(R.string.hero_special_detail, heroSpecialSummary(hero.special)),
+            color = Color(0xFFDED0A2),
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
 @Composable
 private fun HeroPortraitWithEquipment(
     hero: Hero,
@@ -1176,6 +1617,16 @@ private fun HeroPortraitWithEquipment(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = 10.dp),
+            )
+            HeroOverlayEquipmentSlot(
+                slot = LootSlot.Footwear,
+                item = equipment[LootSlot.Footwear],
+                selected = selectedSlot == LootSlot.Footwear,
+                onChoose = { onChoose(LootSlot.Footwear) },
+                onUnequip = { onUnequip(LootSlot.Footwear) },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 34.dp),
             )
             HeroOverlayEquipmentSlot(
                 slot = LootSlot.Consumable,
@@ -1388,6 +1839,7 @@ private fun emptySlotIconResource(slot: LootSlot): Int =
     when (slot) {
         LootSlot.Weapon -> R.drawable.loot_icon_weapon
         LootSlot.Armor -> R.drawable.ic_slot_armor
+        LootSlot.Footwear -> R.drawable.loot_icon_boots
         LootSlot.Trinket -> R.drawable.loot_icon_ring
         LootSlot.Headgear -> R.drawable.loot_icon_helmet
         LootSlot.Consumable -> R.drawable.loot_icon_potion
@@ -1942,7 +2394,12 @@ private fun RewardLootScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+                    colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2F695C),
+                    contentColor = Color(0xFFF8F1D8),
+                    disabledContainerColor = Color(0xFF6B5E3C),
+                    disabledContentColor = Color(0xFFFFF1C0),
+                ),
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(stringResource(R.string.guild_home_title), fontWeight = FontWeight.Black)
@@ -2055,7 +2512,12 @@ private fun LootScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2F695C),
+                    contentColor = Color(0xFFF8F1D8),
+                    disabledContainerColor = Color(0xFF6B5E3C),
+                    disabledContentColor = Color(0xFFFFF1C0),
+                ),
                 shape = RoundedCornerShape(8.dp),
             ) {
                 Text(stringResource(R.string.equip_action), fontWeight = FontWeight.Black)
@@ -2157,26 +2619,341 @@ private fun PerfectLootBadge() {
 }
 
 @Composable
-private fun UpgradesScreen(session: PlaySessionState, onBuy: () -> Unit) {
-    val canBuyNoticeBoard = session.gold >= 600
+private fun UpgradesScreen(
+    session: PlaySessionState,
+    onAchievements: () -> Unit,
+    onBuyNoticeBoard: () -> Unit,
+    onBuyTrainingYard: () -> Unit,
+    onBuyBunkRoom: () -> Unit,
+) {
+    val noticeBoardCost = session.noticeBoardUpgradeCost()
+    val trainingYardCost = session.trainingYardUpgradeCost()
+    val bunkRoomCost = session.bunkRoomUpgradeCost()
 
     ScreenScaffold(title = stringResource(R.string.upgrades_title), status = stringResource(R.string.guild_upgrade_status)) {
         InfoRow(
+            title = stringResource(R.string.upgrade_treasury_title),
+            detail = stringResource(R.string.upgrade_treasury_detail),
+            value = stringResource(R.string.gold_value, session.gold),
+        )
+        UpgradeRow(
             title = stringResource(R.string.notice_board_upgrade_title, session.noticeBoardLevel),
             detail = stringResource(R.string.notice_board_upgrade_detail),
-            value = "600g",
+            cost = noticeBoardCost,
+            currentGold = session.gold,
+            enabled = session.gold >= noticeBoardCost,
+            onBuy = onBuyNoticeBoard,
         )
-        InfoRow(title = "Training Rug Lv. 1", detail = "+5% hero XP", value = "420g")
-        InfoRow(title = "Accountant Stool Lv. 1", detail = "-3% mysterious losses", value = "500g")
-        DarkPanel(title = stringResource(R.string.next_unlock_title), body = stringResource(R.string.next_unlock_summary)) {
+        UpgradeRow(
+            title = stringResource(R.string.training_yard_upgrade_title, session.trainingYardLevel),
+            detail = stringResource(R.string.training_yard_upgrade_detail),
+            cost = trainingYardCost,
+            currentGold = session.gold,
+            enabled = session.gold >= trainingYardCost,
+            onBuy = onBuyTrainingYard,
+        )
+        UpgradeRow(
+            title = stringResource(R.string.bunk_room_upgrade_title, session.bunkRoomLevel),
+            detail = stringResource(R.string.bunk_room_upgrade_detail),
+            cost = bunkRoomCost,
+            currentGold = session.gold,
+            enabled = session.gold >= bunkRoomCost,
+            onBuy = onBuyBunkRoom,
+        )
+        DarkPanel(title = stringResource(R.string.next_unlock_title), body = stringResource(R.string.next_unlock_summary))
+        AchievementLedgerPanel(session = session, onOpen = onAchievements)
+    }
+}
+
+@Composable
+private fun AchievementsScreen(
+    session: PlaySessionState,
+    onClaim: (String) -> Unit,
+    onClaimAll: () -> Unit,
+    onBack: () -> Unit,
+) {
+    val claimable = session.claimableAchievementCount()
+    val definitions = AchievementCatalog.definitions.sortedWith(
+        compareByDescending<AchievementDefinition> { definition ->
+            val progress = session.achievementProgressFor(definition)
+            progress.isCompleted(definition) && !progress.isClaimed
+        }.thenBy { it.category.ordinal }.thenBy { it.title },
+    )
+    val nextMilestone = session.nextAchievementMilestone()
+
+    ScreenScaffold(
+        title = stringResource(R.string.achievements_title),
+        status = stringResource(R.string.achievements_status, session.achievementSeals()),
+    ) {
+        DarkPanel(
+            title = stringResource(R.string.achievements_summary_title),
+            body = stringResource(
+                R.string.achievements_completed_summary,
+                session.completedAchievementCount(),
+                AchievementCatalog.definitions.size,
+                claimable,
+            ),
+        ) {
+            if (nextMilestone != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(
+                        R.string.achievements_next_milestone_detail,
+                        nextMilestone.sealsRequired,
+                        nextMilestone.title,
+                    ),
+                    color = Color(0xFFDED0A2),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                )
+                Text(
+                    text = nextMilestone.summary,
+                    color = Color(0xFFBFAF7E),
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Button(
+                    onClick = onClaimAll,
+                    enabled = claimable > 0,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text(stringResource(R.string.achievements_claim_all_action), fontWeight = FontWeight.Black)
+                }
+                Button(
+                    onClick = onBack,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDEC777), contentColor = Color(0xFF211F1A)),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text(stringResource(R.string.upgrades_title), fontWeight = FontWeight.Black)
+                }
+            }
+        }
+
+        ArtSheet(resourceId = R.drawable.achievement_unlock_banner, aspectRatio = 2f)
+        ArtSheet(resourceId = R.drawable.achievement_badges_sheet, aspectRatio = 2.2f)
+
+        definitions.forEach { definition ->
+            AchievementRow(
+                definition = definition,
+                progress = session.achievementProgressFor(definition),
+                onClaim = onClaim,
+            )
+        }
+    }
+}
+
+@Composable
+private fun AchievementRow(
+    definition: AchievementDefinition,
+    progress: com.ayoshy.badventurers.game.AchievementProgress,
+    onClaim: (String) -> Unit,
+) {
+    val completed = progress.isCompleted(definition)
+    val claimable = completed && !progress.isClaimed
+    val progressValue = progress.current.coerceAtMost(definition.target)
+    val progressFraction = if (definition.target <= 0) 1f else progressValue.toFloat() / definition.target.toFloat()
+    val statusText = when {
+        claimable -> stringResource(R.string.achievements_ready_value)
+        progress.isClaimed -> stringResource(R.string.achievements_claimed_value)
+        else -> stringResource(R.string.achievements_progress_value, progressValue, definition.target)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = if (claimable) Color(0xFFFFF1BF) else Color(0xEEF8E7B5)),
+        border = BorderStroke(2.dp, if (claimable) Color(0xFFD0A24A) else Color(0xAA7B6A43)),
+    ) {
+        Row(
+            modifier = Modifier.padding(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (completed) Color(0xFF2F695C) else Color(0xFF7B6A43)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = achievementCategoryShort(definition.category),
+                    color = Color(0xFFFFF1C0),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Black,
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = definition.title,
+                    color = Color(0xFF211F1A),
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = "${achievementCategoryLabel(definition.category)} - ${definition.summary}",
+                    color = Color(0xFF756B54),
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(6.dp))
+                ProgressBar(progress = progressFraction.coerceIn(0f, 1f))
+                Text(
+                    text = achievementRewardSummary(definition),
+                    color = Color(0xFF493F2B),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (claimable) {
+                Button(
+                    onClick = { onClaim(definition.id) },
+                    modifier = Modifier
+                        .width(82.dp)
+                        .height(40.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.achievements_claim_action),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        maxLines = 1,
+                    )
+                }
+            } else {
+                Text(
+                    text = statusText,
+                    color = Color(0xFF211F1A),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.width(74.dp),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+private fun achievementCategoryShort(category: AchievementCategory): String =
+    when (category) {
+        AchievementCategory.Quest -> "Q"
+        AchievementCategory.Guild -> "G"
+        AchievementCategory.Hero -> "H"
+        AchievementCategory.Loot -> "L"
+        AchievementCategory.Result -> "R"
+        AchievementCategory.Idle -> "I"
+        AchievementCategory.Secret -> "?"
+    }
+
+private fun achievementCategoryLabel(category: AchievementCategory): String =
+    when (category) {
+        AchievementCategory.Quest -> "Quest"
+        AchievementCategory.Guild -> "Guild"
+        AchievementCategory.Hero -> "Hero"
+        AchievementCategory.Loot -> "Loot"
+        AchievementCategory.Result -> "Result"
+        AchievementCategory.Idle -> "Idle"
+        AchievementCategory.Secret -> "Secret"
+    }
+
+private fun achievementRewardSummary(definition: AchievementDefinition): String {
+    val reward = definition.reward
+    val parts = mutableListOf("+${definition.sealReward} seals")
+    fun addReward(item: com.ayoshy.badventurers.game.AchievementReward) {
+        when (item) {
+            is com.ayoshy.badventurers.game.AchievementReward.Currency -> {
+                if (item.gold > 0) parts += "+${item.gold}g"
+                if (item.reputation > 0) parts += "+${item.reputation} Rep"
+                if (item.lootRolls > 0) parts += "+${item.lootRolls} loot"
+            }
+            is com.ayoshy.badventurers.game.AchievementReward.Composite -> item.rewards.forEach(::addReward)
+            com.ayoshy.badventurers.game.AchievementReward.None -> Unit
+        }
+    }
+    addReward(reward)
+    return parts.joinToString(" / ")
+}
+@Composable
+private fun UpgradeRow(
+    title: String,
+    detail: String,
+    cost: Int,
+    currentGold: Int,
+    enabled: Boolean,
+    onBuy: () -> Unit,
+) {
+    val missingGold = (cost - currentGold).coerceAtLeast(0)
+    val buttonLabel = if (enabled) {
+        stringResource(R.string.buy_cost_action, cost)
+    } else {
+        stringResource(R.string.upgrade_missing_gold_action, missingGold)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xF4FFF1BF)),
+    ) {
+        Row(
+            modifier = Modifier.padding(9.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, color = Color(0xFF211F1A), fontWeight = FontWeight.Black, maxLines = 1)
+                Text(
+                    text = detail,
+                    color = Color(0xFF756B54),
+                    fontSize = 12.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             Button(
                 onClick = onBuy,
-                enabled = canBuyNoticeBoard,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+                enabled = enabled,
+                modifier = Modifier
+                    .width(112.dp)
+                    .height(40.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2F695C),
+                    contentColor = Color(0xFFF8F1D8),
+                    disabledContainerColor = Color(0xFF6B5E3C),
+                    disabledContentColor = Color(0xFFFFF1C0),
+                ),
                 shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp),
             ) {
-                Text(stringResource(R.string.buy_recommended_action), fontWeight = FontWeight.Black)
+                Text(
+                    text = buttonLabel,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }
@@ -2263,9 +3040,15 @@ private fun questFrameResource(difficulty: Int): Int =
 private fun questBannerResource(quest: Quest): Int =
     when (quest.id) {
         "cave_minor_regrets" -> R.drawable.quest_banner_cave_minor_regrets
-        else -> R.drawable.quest_banner_bandit_tax_office
+        "bandit_tax_office" -> R.drawable.quest_banner_bandit_tax_office_v2
+        "forest_of_wrong_turns" -> R.drawable.quest_banner_forest_of_wrong_turns
+        "salted_swamp_chapel" -> R.drawable.quest_banner_salted_swamp_chapel
+        "moonlit_smuggler_run" -> R.drawable.quest_banner_moonlit_smuggler_run
+        "the_hungry_siege" -> R.drawable.quest_banner_the_hungry_siege
+        "the_last_locked_door" -> R.drawable.quest_banner_the_last_locked_door
+        "crypt_of_unpaid_debts" -> R.drawable.quest_banner_crypt_of_unpaid_debts
+        else -> R.drawable.quest_banner_03
     }
-
 private fun rarityBorderStyle(
     border: Color,
     inner: Color,
@@ -2363,6 +3146,50 @@ private fun heroTraitLabel(trait: Trait): String =
     }
 
 @Composable
+private fun statBonusSummary(bonuses: List<StatBonus>, maxItems: Int = 3): String {
+    val visibleBonuses = bonuses.filter { it.value > 0 }.take(maxItems)
+    if (visibleBonuses.isEmpty()) return stringResource(R.string.hero_stat_gain_none)
+
+    val labels = mutableListOf<String>()
+    for (bonus in visibleBonuses) {
+        labels += stringResource(R.string.hero_stat_gain_value, statTypeLabel(bonus.type), bonus.value)
+    }
+
+    val extraCount = bonuses.size - visibleBonuses.size
+    val joined = labels.joinToString()
+    return if (extraCount > 0) {
+        stringResource(R.string.hero_stat_gain_more, joined, extraCount)
+    } else {
+        joined
+    }
+}
+
+@Composable
+private fun heroSpecialSummary(special: HeroSpecial): String =
+    when (special) {
+        HeroSpecial.RamshackleCharge -> stringResource(R.string.hero_special_ramshackle_charge)
+        HeroSpecial.GlyphReader -> stringResource(R.string.hero_special_glyph_reader)
+        HeroSpecial.LightFingers -> stringResource(R.string.hero_special_light_fingers)
+        HeroSpecial.HumanWall -> stringResource(R.string.hero_special_human_wall)
+        HeroSpecial.AggressiveMinutes -> stringResource(R.string.hero_special_aggressive_minutes)
+        HeroSpecial.TerrainManual -> stringResource(R.string.hero_special_terrain_manual)
+        HeroSpecial.UnstableLuck -> stringResource(R.string.hero_special_unstable_luck)
+        HeroSpecial.DirtyJackpot -> stringResource(R.string.hero_special_dirty_jackpot)
+        HeroSpecial.FreshTrail -> stringResource(R.string.hero_special_fresh_trail)
+        HeroSpecial.CleanBlessing -> stringResource(R.string.hero_special_clean_blessing)
+        HeroSpecial.NoTrace -> stringResource(R.string.hero_special_no_trace)
+        HeroSpecial.NecroLever -> stringResource(R.string.hero_special_necro_lever)
+        HeroSpecial.HostileAudit -> stringResource(R.string.hero_special_hostile_audit)
+        HeroSpecial.UnbreakableOath -> stringResource(R.string.hero_special_unbreakable_oath)
+        HeroSpecial.BalancedBooks -> stringResource(R.string.hero_special_balanced_books)
+        HeroSpecial.GreenThumb -> stringResource(R.string.hero_special_green_thumb)
+        HeroSpecial.DeathDiscount -> stringResource(R.string.hero_special_death_discount)
+        HeroSpecial.MoraleRations -> stringResource(R.string.hero_special_morale_rations)
+        HeroSpecial.PlanBExplosives -> stringResource(R.string.hero_special_plan_b_explosives)
+        HeroSpecial.PreservationSalt -> stringResource(R.string.hero_special_preservation_salt)
+        HeroSpecial.CreativeMisunderstanding -> stringResource(R.string.hero_special_creative_misunderstanding)
+    }
+@Composable
 private fun LootIconPanel(item: LootItem, contentDescription: String) {
     val borderStyle = lootBorderStyle(item.rarity)
     val shape = RoundedCornerShape(8.dp)
@@ -2413,6 +3240,8 @@ private fun lootIconResource(icon: LootIcon): Int =
 private fun journalEntryText(entry: JournalEntry): String {
     return when {
         entry.id.startsWith("outcome-") -> journalOutcomeText(entry.id)
+        entry.id.startsWith("quest-") -> journalQuestText(entry.id) ?: entry.text
+        entry.id.startsWith("special-") -> journalSpecialText(entry.id) ?: entry.text
         entry.id.startsWith("hero-") -> journalHeroText(entry.id) ?: entry.text
         entry.id.startsWith("reward-") -> journalRewardText(entry.id) ?: entry.text
         entry.id == "fallback-empty-ledger" -> stringResource(R.string.journal_fallback_empty_ledger)
@@ -2431,6 +3260,55 @@ private fun journalOutcomeText(id: String): String =
         else -> id
     }
 
+@Composable
+private fun journalQuestText(id: String): String? =
+    when (id.removePrefix("quest-")) {
+        "cave_minor_regrets" -> stringResource(R.string.journal_quest_cave_minor_regrets)
+        "forest_of_wrong_turns" -> stringResource(R.string.journal_quest_forest_of_wrong_turns)
+        "bandit_tax_office" -> stringResource(R.string.journal_quest_bandit_tax_office)
+        "salted_swamp_chapel" -> stringResource(R.string.journal_quest_salted_swamp_chapel)
+        "moonlit_smuggler_run" -> stringResource(R.string.journal_quest_moonlit_smuggler_run)
+        "the_hungry_siege" -> stringResource(R.string.journal_quest_the_hungry_siege)
+        "the_last_locked_door" -> stringResource(R.string.journal_quest_the_last_locked_door)
+        "crypt_of_unpaid_debts" -> stringResource(R.string.journal_quest_crypt_of_unpaid_debts)
+        else -> null
+    }
+
+@Composable
+private fun journalSpecialText(id: String): String? {
+    val parts = id.removePrefix("special-").split("-", limit = 2)
+    val heroId = parts.getOrNull(0) ?: return null
+    val questId = parts.getOrNull(1) ?: return null
+    val hero = HeroCatalog.byId[heroId]?.toHero() ?: return null
+    val quest = SeedGame.questById[questId] ?: return null
+    return when (hero.special) {
+        HeroSpecial.RamshackleCharge -> stringResource(R.string.journal_special_ramshackle_charge, hero.name)
+        HeroSpecial.GlyphReader -> stringResource(R.string.journal_special_glyph_reader, hero.name)
+        HeroSpecial.LightFingers -> stringResource(R.string.journal_special_light_fingers, hero.name)
+        HeroSpecial.HumanWall -> stringResource(R.string.journal_special_human_wall, hero.name)
+        HeroSpecial.AggressiveMinutes -> stringResource(R.string.journal_special_aggressive_minutes, hero.name)
+        HeroSpecial.TerrainManual -> stringResource(R.string.journal_special_terrain_manual, hero.name)
+        HeroSpecial.UnstableLuck -> stringResource(R.string.journal_special_unstable_luck, hero.name)
+        HeroSpecial.DirtyJackpot -> stringResource(R.string.journal_special_dirty_jackpot, hero.name)
+        HeroSpecial.FreshTrail -> stringResource(R.string.journal_special_fresh_trail, hero.name)
+        HeroSpecial.CleanBlessing -> stringResource(R.string.journal_special_clean_blessing, hero.name)
+        HeroSpecial.NoTrace -> stringResource(R.string.journal_special_no_trace, hero.name)
+        HeroSpecial.NecroLever -> stringResource(R.string.journal_special_necro_lever, hero.name)
+        HeroSpecial.HostileAudit -> stringResource(R.string.journal_special_hostile_audit, hero.name)
+        HeroSpecial.UnbreakableOath -> stringResource(R.string.journal_special_unbreakable_oath, hero.name)
+        HeroSpecial.BalancedBooks -> stringResource(R.string.journal_special_balanced_books, hero.name)
+        HeroSpecial.GreenThumb -> stringResource(R.string.journal_special_green_thumb, hero.name)
+        HeroSpecial.DeathDiscount -> stringResource(R.string.journal_special_death_discount, hero.name)
+        HeroSpecial.MoraleRations -> stringResource(R.string.journal_special_morale_rations, hero.name)
+        HeroSpecial.PlanBExplosives -> stringResource(R.string.journal_special_plan_b_explosives, hero.name)
+        HeroSpecial.PreservationSalt -> stringResource(R.string.journal_special_preservation_salt, hero.name)
+        HeroSpecial.CreativeMisunderstanding -> if (quest.hasAny(QuestTag.Paperwork, QuestTag.Contract)) {
+            stringResource(R.string.journal_special_creative_misunderstanding_paperwork, hero.name)
+        } else {
+            stringResource(R.string.journal_special_creative_misunderstanding, hero.name)
+        }
+    }
+}
 @Composable
 private fun journalHeroText(id: String): String? {
     val heroId = id.removePrefix("hero-")
@@ -2513,6 +3391,7 @@ private fun lootSlotLabel(slot: LootSlot): String =
     when (slot) {
         LootSlot.Weapon -> stringResource(R.string.loot_slot_weapon)
         LootSlot.Armor -> stringResource(R.string.loot_slot_armor)
+        LootSlot.Footwear -> stringResource(R.string.loot_slot_footwear)
         LootSlot.Trinket -> stringResource(R.string.loot_slot_trinket)
         LootSlot.Headgear -> stringResource(R.string.loot_slot_headgear)
         LootSlot.Consumable -> stringResource(R.string.loot_slot_consumable)
@@ -2637,12 +3516,140 @@ private fun remainingSeconds(session: PlaySessionState, nowMillis: Long): Long {
 
 
 private fun rewardGoldWithNoticeBoard(session: PlaySessionState): Int {
-    val rewardGold = session.expedition?.result?.reward?.gold ?: return 0
-    return rewardGold + rewardGold * (session.noticeBoardLevel - 1) / 10
+    val result = session.expedition?.result ?: return 0
+    return session.collectableRewardGold(result)
 }
 
-private fun questBaseGoldWithNoticeBoard(session: PlaySessionState, quest: Quest): Int =
-    quest.baseGold + quest.baseGold * (session.noticeBoardLevel - 1) / 10
+private fun questBaseGoldWithNoticeBoard(session: PlaySessionState, quest: Quest, goldBonusPercent: Int = 0): Int {
+    val specialGold = quest.baseGold + quest.baseGold * goldBonusPercent / 100
+    return session.questGoldWithNoticeBoard(specialGold)
+}
+
+@Composable
+private fun questUnlockDetail(session: PlaySessionState, quest: Quest): String {
+    val requirements = quest.unlockRequirement.conditions
+        .map { condition -> questUnlockConditionLabel(session, condition) }
+        .filter { label -> label.isNotBlank() }
+    return stringResource(
+        R.string.quest_unlock_detail,
+        requirements.joinToString(stringResource(R.string.quest_unlock_joiner)),
+    )
+}
+
+@Composable
+private fun questUnlockConditionLabel(session: PlaySessionState, condition: QuestUnlockCondition): String {
+    val parts = listOfNotNull(
+        condition.minReputation.takeIf { it > 0 }?.let {
+            stringResource(R.string.quest_unlock_reputation, session.reputation, it)
+        },
+        condition.minCompletedQuestCount.takeIf { it > 0 }?.let {
+            stringResource(R.string.quest_unlock_completed_quests, session.completedQuestCount, it)
+        },
+        condition.minNoticeBoardLevel.takeIf { it > 0 }?.let {
+            stringResource(R.string.quest_unlock_notice_board_level, session.noticeBoardLevel, it)
+        },
+        condition.minTrainingYardLevel.takeIf { it > 0 }?.let {
+            stringResource(R.string.quest_unlock_training_yard_level, session.trainingYardLevel, it)
+        },
+        condition.minBunkRoomLevel.takeIf { it > 0 }?.let {
+            stringResource(R.string.quest_unlock_bunk_room_level, session.bunkRoomLevel, it)
+        },
+    )
+    return parts.joinToString(stringResource(R.string.quest_unlock_condition_joiner))
+}
+private fun specialEstimateDetail(activeSpecials: List<Hero>, estimate: com.ayoshy.badventurers.game.ExpeditionEstimate): String {
+    if (activeSpecials.isEmpty()) return "No active specials for these tags."
+    val heroNames = activeSpecials.joinToString { it.name }
+    val effects = listOfNotNull(
+        estimate.specialRiskReduction.takeIf { it > 0 }?.let { "risk -$it" },
+        estimate.minimumRoll.takeIf { it > 0 }?.let { "roll floor $it" },
+        estimate.goldBonusPercent.takeIf { it > 0 }?.let { "gold +$it%" },
+        estimate.bonusLootRolls.takeIf { it > 0 }?.let { "loot +$it" },
+    ).joinToString()
+    return if (effects.isBlank()) heroNames else "$heroNames: $effects"
+}
+
+@Composable
+private fun questDifficultyLabel(tier: QuestDifficultyTier): String =
+    when (tier) {
+        QuestDifficultyTier.Errand -> stringResource(R.string.quest_difficulty_errand)
+        QuestDifficultyTier.Trouble -> stringResource(R.string.quest_difficulty_trouble)
+        QuestDifficultyTier.Hazard -> stringResource(R.string.quest_difficulty_hazard)
+        QuestDifficultyTier.Disaster -> stringResource(R.string.quest_difficulty_disaster)
+        QuestDifficultyTier.LegendaryMess -> stringResource(R.string.quest_difficulty_legendary_mess)
+    }
+
+@Composable
+private fun questTitle(quest: Quest): String =
+    when (quest.id) {
+        "cave_minor_regrets" -> stringResource(R.string.quest_title_cave_minor_regrets)
+        "forest_of_wrong_turns" -> stringResource(R.string.quest_title_forest_of_wrong_turns)
+        "bandit_tax_office" -> stringResource(R.string.quest_title_bandit_tax_office)
+        "salted_swamp_chapel" -> stringResource(R.string.quest_title_salted_swamp_chapel)
+        "moonlit_smuggler_run" -> stringResource(R.string.quest_title_moonlit_smuggler_run)
+        "the_hungry_siege" -> stringResource(R.string.quest_title_the_hungry_siege)
+        "the_last_locked_door" -> stringResource(R.string.quest_title_the_last_locked_door)
+        "crypt_of_unpaid_debts" -> stringResource(R.string.quest_title_crypt_of_unpaid_debts)
+        else -> quest.title
+    }
+
+@Composable
+private fun questSummary(quest: Quest): String =
+    when (quest.id) {
+        "cave_minor_regrets" -> stringResource(R.string.quest_summary_cave_minor_regrets)
+        "forest_of_wrong_turns" -> stringResource(R.string.quest_summary_forest_of_wrong_turns)
+        "bandit_tax_office" -> stringResource(R.string.quest_summary_bandit_tax_office)
+        "salted_swamp_chapel" -> stringResource(R.string.quest_summary_salted_swamp_chapel)
+        "moonlit_smuggler_run" -> stringResource(R.string.quest_summary_moonlit_smuggler_run)
+        "the_hungry_siege" -> stringResource(R.string.quest_summary_the_hungry_siege)
+        "the_last_locked_door" -> stringResource(R.string.quest_summary_the_last_locked_door)
+        "crypt_of_unpaid_debts" -> stringResource(R.string.quest_summary_crypt_of_unpaid_debts)
+        else -> quest.summary
+    }
+
+@Composable
+private fun questTagsLabel(tags: List<QuestTag>): String {
+    val labels = mutableListOf<String>()
+    for (index in 0 until minOf(tags.size, 4)) {
+        labels += questTagLabel(tags[index])
+    }
+    return labels.joinToString(" / ")
+}
+
+@Composable
+private fun questTagLabel(tag: QuestTag): String =
+    when (tag) {
+        QuestTag.Ancient -> stringResource(R.string.quest_tag_ancient)
+        QuestTag.Bandit -> stringResource(R.string.quest_tag_bandit)
+        QuestTag.Breach -> stringResource(R.string.quest_tag_breach)
+        QuestTag.Camp -> stringResource(R.string.quest_tag_camp)
+        QuestTag.Cave -> stringResource(R.string.quest_tag_cave)
+        QuestTag.Collapse -> stringResource(R.string.quest_tag_collapse)
+        QuestTag.Contract -> stringResource(R.string.quest_tag_contract)
+        QuestTag.Curse -> stringResource(R.string.quest_tag_curse)
+        QuestTag.Debt -> stringResource(R.string.quest_tag_debt)
+        QuestTag.Escort -> stringResource(R.string.quest_tag_escort)
+        QuestTag.Exploration -> stringResource(R.string.quest_tag_exploration)
+        QuestTag.Guard -> stringResource(R.string.quest_tag_guard)
+        QuestTag.Heist -> stringResource(R.string.quest_tag_heist)
+        QuestTag.Holy -> stringResource(R.string.quest_tag_holy)
+        QuestTag.Hunt -> stringResource(R.string.quest_tag_hunt)
+        QuestTag.LongQuest -> stringResource(R.string.quest_tag_long_quest)
+        QuestTag.Magic -> stringResource(R.string.quest_tag_magic)
+        QuestTag.Obstacle -> stringResource(R.string.quest_tag_obstacle)
+        QuestTag.Paperwork -> stringResource(R.string.quest_tag_paperwork)
+        QuestTag.Poison -> stringResource(R.string.quest_tag_poison)
+        QuestTag.Rot -> stringResource(R.string.quest_tag_rot)
+        QuestTag.Siege -> stringResource(R.string.quest_tag_siege)
+        QuestTag.Simple -> stringResource(R.string.quest_tag_simple)
+        QuestTag.Stealth -> stringResource(R.string.quest_tag_stealth)
+        QuestTag.Swamp -> stringResource(R.string.quest_tag_swamp)
+        QuestTag.Trap -> stringResource(R.string.quest_tag_trap)
+        QuestTag.Undead -> stringResource(R.string.quest_tag_undead)
+        QuestTag.Urban -> stringResource(R.string.quest_tag_urban)
+        QuestTag.Wall -> stringResource(R.string.quest_tag_wall)
+        QuestTag.Wilderness -> stringResource(R.string.quest_tag_wilderness)
+    }
 
 private fun formatCount(value: Int): String = "%,d".format(value)
 
@@ -2888,7 +3895,4 @@ private fun RowScope.BottomTab(
 private fun BadventurersAppPreview() {
     BadventurersApp()
 }
-
-
-
 

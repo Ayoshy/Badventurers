@@ -63,6 +63,25 @@ class LootGeneratorTest {
     }
 
     @Test
+    fun catalogSlotsMatchIconFamilies() {
+        LootCatalog.items.forEach { definition ->
+            when (definition.icon) {
+                LootIcon.Boots -> assertEquals("Boot icons should use the footwear slot.", LootSlot.Footwear, definition.slot)
+                LootIcon.Helmet -> assertEquals("Helmet icons should use the headgear slot.", LootSlot.Headgear, definition.slot)
+                LootIcon.Ring -> assertEquals("Ring icons should use the trinket slot.", LootSlot.Trinket, definition.slot)
+                LootIcon.Potion,
+                LootIcon.Tankard -> assertEquals("Drink icons should use the consumable slot.", LootSlot.Consumable, definition.slot)
+                LootIcon.Weapon,
+                LootIcon.Spoon -> assertEquals("Weapon-like icons should use the weapon slot.", LootSlot.Weapon, definition.slot)
+                LootIcon.Hood -> assertTrue(
+                    "Hood and cloak icons should be armor or headgear.",
+                    definition.slot == LootSlot.Armor || definition.slot == LootSlot.Headgear,
+                )
+            }
+        }
+    }
+
+    @Test
     fun generatedItemsStayTiedToCatalogDefinitions() {
         val items = LootGenerator.generate(100, seed = 17)
 

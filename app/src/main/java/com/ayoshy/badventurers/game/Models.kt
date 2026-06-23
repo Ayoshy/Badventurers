@@ -40,6 +40,83 @@ enum class QuestRisk {
     High,
 }
 
+enum class QuestTag {
+    Ancient,
+    Bandit,
+    Breach,
+    Camp,
+    Cave,
+    Collapse,
+    Contract,
+    Curse,
+    Debt,
+    Escort,
+    Exploration,
+    Guard,
+    Heist,
+    Holy,
+    Hunt,
+    LongQuest,
+    Magic,
+    Obstacle,
+    Paperwork,
+    Poison,
+    Rot,
+    Siege,
+    Simple,
+    Stealth,
+    Swamp,
+    Trap,
+    Undead,
+    Urban,
+    Wall,
+    Wilderness,
+}
+
+enum class QuestDifficultyTier {
+    Errand,
+    Trouble,
+    Hazard,
+    Disaster,
+    LegendaryMess,
+}
+
+data class QuestUnlockCondition(
+    val minReputation: Int = 0,
+    val minCompletedQuestCount: Int = 0,
+    val minNoticeBoardLevel: Int = 0,
+    val minTrainingYardLevel: Int = 0,
+    val minBunkRoomLevel: Int = 0,
+)
+
+data class QuestUnlockRequirement(
+    val conditions: List<QuestUnlockCondition> = emptyList(),
+)
+
+enum class HeroSpecial {
+    RamshackleCharge,
+    GlyphReader,
+    LightFingers,
+    HumanWall,
+    AggressiveMinutes,
+    TerrainManual,
+    UnstableLuck,
+    DirtyJackpot,
+    FreshTrail,
+    CleanBlessing,
+    NoTrace,
+    NecroLever,
+    HostileAudit,
+    UnbreakableOath,
+    BalancedBooks,
+    GreenThumb,
+    DeathDiscount,
+    MoraleRations,
+    PlanBExplosives,
+    PreservationSalt,
+    CreativeMisunderstanding,
+}
+
 enum class ExpeditionOutcome {
     GreatSuccess,
     Success,
@@ -106,8 +183,10 @@ data class Hero(
     val heroClass: HeroClass,
     val rarity: HeroRarity,
     val level: Int,
+    val xp: Int = 0,
     val stats: HeroStats,
     val trait: Trait,
+    val special: HeroSpecial = HeroSpecialCatalog.specialForHero(id),
 )
 
 data class EquippedLoot(
@@ -123,7 +202,23 @@ data class Quest(
     val baseGold: Int,
     val pityGold: Int,
     val partySlots: Int,
-)
+    val title: String = id,
+    val summary: String = "",
+    val tags: List<QuestTag> = emptyList(),
+    val recommendedHeroIds: List<String> = emptyList(),
+    val unlockRequirement: QuestUnlockRequirement = QuestUnlockRequirement(),
+) {
+    val difficultyTier: QuestDifficultyTier
+        get() = when {
+            difficulty < 100 -> QuestDifficultyTier.Errand
+            difficulty < 150 -> QuestDifficultyTier.Trouble
+            difficulty < 210 -> QuestDifficultyTier.Hazard
+            difficulty < 280 -> QuestDifficultyTier.Disaster
+            else -> QuestDifficultyTier.LegendaryMess
+        }
+
+    fun hasAny(vararg wantedTags: QuestTag): Boolean = wantedTags.any { it in tags }
+}
 
 data class Reward(
     val gold: Int,

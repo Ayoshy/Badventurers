@@ -1,10 +1,13 @@
-﻿package com.ayoshy.badventurers.game
+package com.ayoshy.badventurers.game
 
 data class PlaySessionState(
     val gold: Int = 9999999,
     val reputation: Int = 17,
     val guildLevel: Int = 3,
+    val completedQuestCount: Int = 0,
     val noticeBoardLevel: Int = 1,
+    val trainingYardLevel: Int = 1,
+    val bunkRoomLevel: Int = 1,
     val heroes: List<Hero> = HeroCatalog.starterHeroes,
     val lootRolls: Int = 0,
     val lootItems: List<LootItem> = emptyList(),
@@ -12,6 +15,7 @@ data class PlaySessionState(
     val equippedLoot: List<EquippedLoot> = emptyList(),
     val journalEntries: List<JournalEntry> = emptyList(),
     val expedition: ExpeditionRun? = null,
+    val achievementProgress: List<AchievementProgress> = AchievementCatalog.initialProgress(),
 ) {
     val phase: PlayPhase
         get() = when {
@@ -31,7 +35,7 @@ data class PlaySessionState(
     }
 
     fun startQuest(nowMillis: Long, quest: Quest, party: List<Hero> = heroes): PlaySessionState {
-        if (phase != PlayPhase.Idle) return this
+        if (phase != PlayPhase.Idle || !isQuestUnlocked(quest)) return this
         val selectedParty = selectedPartyForQuest(quest, party)
         return copy(
             expedition = ExpeditionRun(
@@ -50,7 +54,16 @@ data class PlaySessionState(
     ): PlaySessionState {
         val run = expedition ?: return this
         if (run.result != null || nowMillis < run.endsAtMillis) return this
-        return copy(expedition = run.copy(result = engine.resolve(party = partyForRun(run, party), quest = run.quest, equipment = equippedLoot)))
+        return copy(
+            expedition = run.copy(
+                result = engine.resolve(
+                    party = partyForRun(run, party),
+                    quest = run.quest,
+                    equipment = equippedLoot,
+                    facilityPowerBonus = trainingYardPowerBonus(),
+                ),
+            ),
+        )
     }
 
     fun finishQuestNow(
@@ -61,34 +74,73 @@ data class PlaySessionState(
         val run = expedition ?: return this
         if (run.result != null) return this
         val result = if (roll == null) {
-            engine.resolve(party = partyForRun(run, party), quest = run.quest, equipment = equippedLoot)
+            engine.resolve(
+                party = partyForRun(run, party),
+                quest = run.quest,
+                equipment = equippedLoot,
+                facilityPowerBonus = trainingYardPowerBonus(),
+            )
         } else {
-            engine.resolve(party = partyForRun(run, party), quest = run.quest, roll = roll, equipment = equippedLoot)
+            engine.resolve(
+                party = partyForRun(run, party),
+                quest = run.quest,
+                roll = roll,
+                equipment = equippedLoot,
+                facilityPowerBonus = trainingYardPowerBonus(),
+            )
         }
         return copy(expedition = run.copy(result = result))
     }
 
-    fun collectResult(party: List<Hero> = heroes): PlaySessionState {
+    fun collectResult(
+        party: List<Hero> = heroes,
+        fakeRewardedAdReward: FakeRewardedAdReward? = null,
+    ): PlaySessionState {
         val run = expedition ?: return this
         val result = run.result ?: return this
-        val noticeBoardBonus = result.reward.gold * (noticeBoardLevel - 1) / 10
-        val generatedLoot = LootGenerator.generate(result.reward.lootRolls, seed = lootSeed(result))
-        val generatedJournal = JournalGenerator.generate(result, partyForRun(run, party))
-        return copy(
-            gold = gold + result.reward.gold + noticeBoardBonus,
-            lootRolls = lootRolls + result.reward.lootRolls,
+        val baseGold = collectableRewardGold(result)
+        val extraGold = fakeRewardedAdReward?.extraGold ?: 0
+        val extraLootRolls = fakeRewardedAdReward?.extraLootRolls ?: 0
+        val totalLootRolls = collectableLootRolls(result) + extraLootRolls
+        val participatingParty = partyForRun(run, party)
+        val generatedLoot = LootGenerator.generate(totalLootRolls, seed = lootSeed(result) + extraLootRolls * 17)
+        val generatedJournal = JournalGenerator.generate(result, participatingParty, run.quest)
+        val collected = copy(
+            gold = gold + baseGold + extraGold,
+            lootRolls = lootRolls + totalLootRolls,
+            completedQuestCount = completedQuestCount + 1,
+            heroes = heroesWithQuestXp(participatingParty, result.reward.xp),
             pendingLootItems = pendingLootItems + generatedLoot,
             journalEntries = (journalEntries + generatedJournal).takeLast(12),
             expedition = null,
         )
+        return AchievementTracker.applyEvent(
+            state = collected,
+            event = AchievementEvent.QuestCollected(
+                quest = run.quest,
+                result = result,
+                partyHeroIds = run.partyHeroIds,
+            ),
+        )
     }
 
+    fun isQuestUnlocked(quest: Quest): Boolean {
+        val conditions = quest.unlockRequirement.conditions
+        return conditions.isEmpty() || conditions.any(::isUnlockConditionMet)
+    }
+
+    private fun isUnlockConditionMet(condition: QuestUnlockCondition): Boolean =
+        reputation >= condition.minReputation &&
+            completedQuestCount >= condition.minCompletedQuestCount &&
+            noticeBoardLevel >= condition.minNoticeBoardLevel &&
+            trainingYardLevel >= condition.minTrainingYardLevel &&
+            bunkRoomLevel >= condition.minBunkRoomLevel
     fun selectedPartyForQuest(quest: Quest, party: List<Hero>): List<Hero> {
         val rosterIds = heroes.map { it.id }.toSet()
         return party
             .distinctBy { it.id }
             .filter { it.id in rosterIds }
-            .take(quest.partySlots.coerceAtLeast(1))
+            .take(effectivePartySlots(quest))
     }
 
     private fun partyForRun(run: ExpeditionRun, fallbackParty: List<Hero>): List<Hero> {
@@ -96,14 +148,135 @@ data class PlaySessionState(
         return selectedPartyForQuest(run.quest, savedParty.ifEmpty { fallbackParty })
     }
 
+    private fun heroesWithQuestXp(party: List<Hero>, xp: Int): List<Hero> {
+        if (xp <= 0 || party.isEmpty()) return heroes
+        val participatingHeroIds = party.map { it.id }.toSet()
+        return heroes.map { hero ->
+            if (hero.id in participatingHeroIds) HeroProgression.grantXp(hero, xp) else hero
+        }
+    }
+
     private fun lootSeed(result: ExpeditionResult): Int =
         gold + lootRolls * 31 + noticeBoardLevel * 101 + result.scoreMargin
 
-    fun upgradeNoticeBoard(cost: Int = 600): PlaySessionState {
+    fun noticeBoardGoldBonusPercent(): Int = (noticeBoardLevel - 1).coerceAtLeast(0) * 10
+
+    fun questGoldWithNoticeBoard(baseGold: Int): Int =
+        baseGold + baseGold * (noticeBoardGoldBonusPercent() + achievementQuestGoldBonusPercent()) / 100
+
+    fun trainingYardPowerBonus(): Int =
+        (trainingYardLevel - 1).coerceAtLeast(0) * TRAINING_YARD_POWER_PER_LEVEL + achievementTrainingPowerBonus()
+
+    fun collectableRewardGold(result: ExpeditionResult): Int =
+        questGoldWithNoticeBoard(achievementAdjustedRewardGold(result))
+
+    fun collectableLootRolls(result: ExpeditionResult): Int =
+        result.reward.lootRolls + achievementRewardChoiceLootRolls(result)
+
+    fun achievementSeals(): Int = AchievementCatalog.claimedSeals(achievementProgress)
+
+    fun completedAchievementCount(): Int {
+        val normalized = refreshedAchievementProgress()
+        return AchievementCatalog.definitions.count { definition ->
+            normalized.firstOrNull { it.achievementId == definition.id }?.isCompleted(definition) == true
+        }
+    }
+
+    fun claimableAchievements(): List<AchievementDefinition> {
+        val progressById = refreshedAchievementProgress().associateBy { it.achievementId }
+        return AchievementCatalog.definitions.filter { definition ->
+            val progress = progressById[definition.id]
+            progress?.isCompleted(definition) == true && !progress.isClaimed
+        }
+    }
+
+    fun claimableAchievementCount(): Int = claimableAchievements().size
+
+    fun achievementProgressFor(definition: AchievementDefinition): AchievementProgress =
+        refreshedAchievementProgress()
+            .firstOrNull { it.achievementId == definition.id }
+            ?: AchievementProgress(achievementId = definition.id)
+
+    fun nextAchievementMilestone(): CharterMilestone? =
+        AchievementCatalog.nextMilestone(achievementProgress)
+
+    fun isAchievementFeatureUnlocked(feature: AchievementFeature): Boolean =
+        AchievementCatalog.isFeatureUnlocked(achievementProgress, feature)
+
+    fun claimAchievement(achievementId: String, nowMillis: Long = 0L): PlaySessionState {
+        val refreshed = AchievementTracker.refresh(this, nowMillis = nowMillis)
+        val definition = AchievementCatalog.byId[achievementId] ?: return this
+        val normalized = AchievementCatalog.normalizeProgress(refreshed.achievementProgress)
+        val progress = normalized.firstOrNull { it.achievementId == achievementId } ?: return this
+        if (!progress.isCompleted(definition) || progress.isClaimed) return this
+
+        val rewarded = refreshed.applyAchievementReward(definition.reward, achievementId)
+        val claimedAt = nowMillis.takeIf { it > 0L } ?: progress.completedAtMillis ?: 0L
+        val nextProgress = normalized.map { item ->
+            if (item.achievementId == achievementId) {
+                item.copy(
+                    current = definition.target,
+                    completedAtMillis = item.completedAtMillis ?: claimedAt,
+                    claimedAtMillis = claimedAt,
+                    seen = true,
+                )
+            } else {
+                item
+            }
+        }
+        return AchievementTracker.refresh(rewarded.copy(achievementProgress = nextProgress), nowMillis = nowMillis)
+    }
+
+    fun claimAllAchievements(nowMillis: Long = 0L): PlaySessionState =
+        claimableAchievements().fold(this) { nextState, definition ->
+            nextState.claimAchievement(definition.id, nowMillis)
+        }
+
+    fun effectivePartySlots(quest: Quest): Int =
+        quest.partySlots.coerceAtLeast(1) + (bunkRoomLevel - 1).coerceAtLeast(0)
+
+    fun noticeBoardUpgradeCost(): Int = upgradeCost(base = 600, level = noticeBoardLevel, step = 250)
+
+    fun trainingYardUpgradeCost(): Int = upgradeCost(base = 450, level = trainingYardLevel, step = 300)
+
+    fun bunkRoomUpgradeCost(): Int = upgradeCost(base = 750, level = bunkRoomLevel, step = 450)
+
+    fun upgradeNoticeBoard(): PlaySessionState {
+        val cost = noticeBoardUpgradeCost()
         if (gold < cost) return this
-        return copy(
+        val upgraded = copy(
             gold = gold - cost,
             noticeBoardLevel = noticeBoardLevel + 1,
+        )
+        return AchievementTracker.applyEvent(
+            state = upgraded,
+            event = AchievementEvent.FacilityUpgraded(AchievementCatalog.NOTICE_BOARD_FACILITY, upgraded.noticeBoardLevel),
+        )
+    }
+
+    fun upgradeTrainingYard(): PlaySessionState {
+        val cost = trainingYardUpgradeCost()
+        if (gold < cost) return this
+        val upgraded = copy(
+            gold = gold - cost,
+            trainingYardLevel = trainingYardLevel + 1,
+        )
+        return AchievementTracker.applyEvent(
+            state = upgraded,
+            event = AchievementEvent.FacilityUpgraded(AchievementCatalog.TRAINING_YARD_FACILITY, upgraded.trainingYardLevel),
+        )
+    }
+
+    fun upgradeBunkRoom(): PlaySessionState {
+        val cost = bunkRoomUpgradeCost()
+        if (gold < cost) return this
+        val upgraded = copy(
+            gold = gold - cost,
+            bunkRoomLevel = bunkRoomLevel + 1,
+        )
+        return AchievementTracker.applyEvent(
+            state = upgraded,
+            event = AchievementEvent.FacilityUpgraded(AchievementCatalog.BUNK_ROOM_FACILITY, upgraded.bunkRoomLevel),
         )
     }
 
@@ -114,7 +287,7 @@ data class PlaySessionState(
         equippedItems(heroId).sumOf { it.bonus }
 
     fun totalPartyPower(): Int =
-        PartyPowerCalculator.totalPower(heroes, equippedLoot)
+        PartyPowerCalculator.totalPower(heroes, equippedLoot) + if (heroes.isEmpty()) 0 else trainingYardPowerBonus()
 
     fun equipLoot(heroId: String, item: LootItem): PlaySessionState {
         if (heroes.none { it.id == heroId }) return this
@@ -132,16 +305,22 @@ data class PlaySessionState(
             .filterNot { equipped -> equipped.heroId == heroId && equipped.item.slot == item.slot }
             .plus(EquippedLoot(heroId = heroId, item = item))
 
-        return copy(lootItems = nextInventory, equippedLoot = nextEquipment)
+        return AchievementTracker.applyEvent(
+            state = copy(lootItems = nextInventory, equippedLoot = nextEquipment),
+            event = AchievementEvent.LootEquipped(heroId = heroId, item = item),
+        )
     }
 
     fun keepPendingLoot(item: LootItem): PlaySessionState {
         val itemIndex = pendingLootItems.indexOf(item)
         if (itemIndex < 0) return this
         val nextPending = pendingLootItems.toMutableList().also { it.removeAt(itemIndex) }
-        return copy(
-            pendingLootItems = nextPending,
-            lootItems = lootItems + item,
+        return AchievementTracker.applyEvent(
+            state = copy(
+                pendingLootItems = nextPending,
+                lootItems = lootItems + item,
+            ),
+            event = AchievementEvent.LootKept(item),
         )
     }
 
@@ -190,12 +369,17 @@ data class PlaySessionState(
         val hero = HeroGacha.summon(pulls = 1, seed = seed).single()
         val duplicate = heroes.any { it.id == hero.id }
         val reputationReward = if (duplicate) HeroGacha.DUPLICATE_REPUTATION_REWARD else 0
+        val recruited = copy(
+            gold = gold - HeroGacha.RECRUIT_COST,
+            reputation = reputation + reputationReward,
+            heroes = if (duplicate) heroes else heroes + hero,
+        )
+        val tracked = AchievementTracker.applyEvent(
+            state = recruited,
+            event = AchievementEvent.HeroRecruited(hero = hero, duplicate = duplicate),
+        )
         return HeroRecruitmentResult(
-            session = copy(
-                gold = gold - HeroGacha.RECRUIT_COST,
-                reputation = reputation + reputationReward,
-                heroes = if (duplicate) heroes else heroes + hero,
-            ),
+            session = tracked,
             hero = hero,
             cost = HeroGacha.RECRUIT_COST,
             duplicate = duplicate,
@@ -204,8 +388,80 @@ data class PlaySessionState(
     }
 
     companion object {
+        private const val TRAINING_YARD_POWER_PER_LEVEL = 8
+        private const val ACHIEVEMENT_TRAINING_POWER_BONUS = 12
+        private const val ACHIEVEMENT_INSURANCE_PITY_GOLD_BONUS_PERCENT = 30
+        private const val ACHIEVEMENT_CHARTER_QUEST_GOLD_BONUS_PERCENT = 10
+
         fun initial(): PlaySessionState = PlaySessionState()
+
+        private fun upgradeCost(base: Int, level: Int, step: Int): Int =
+            base + (level - 1).coerceAtLeast(0) * step
     }
+
+    private fun refreshedAchievementProgress(nowMillis: Long = 0L): List<AchievementProgress> =
+        AchievementTracker.refresh(this, nowMillis = nowMillis).achievementProgress
+
+    private fun achievementAdjustedRewardGold(result: ExpeditionResult): Int {
+        val pityBonusPercent = if (
+            isAchievementFeatureUnlocked(AchievementFeature.InsuranceDesk) &&
+            (result.outcome == ExpeditionOutcome.Failure || result.outcome == ExpeditionOutcome.RidiculousFailure)
+        ) {
+            ACHIEVEMENT_INSURANCE_PITY_GOLD_BONUS_PERCENT
+        } else {
+            0
+        }
+        return result.reward.gold + result.reward.gold * pityBonusPercent / 100
+    }
+
+    private fun achievementRewardChoiceLootRolls(result: ExpeditionResult): Int =
+        if (
+            isAchievementFeatureUnlocked(AchievementFeature.RewardChoice) &&
+            result.outcome == ExpeditionOutcome.GreatSuccess
+        ) {
+            1
+        } else {
+            0
+        }
+
+    private fun achievementQuestGoldBonusPercent(): Int =
+        if (isAchievementFeatureUnlocked(AchievementFeature.GuildCharterBonuses)) {
+            ACHIEVEMENT_CHARTER_QUEST_GOLD_BONUS_PERCENT
+        } else {
+            0
+        }
+
+    private fun achievementTrainingPowerBonus(): Int =
+        if (isAchievementFeatureUnlocked(AchievementFeature.HeroMentorship)) {
+            ACHIEVEMENT_TRAINING_POWER_BONUS
+        } else {
+            0
+        }
+
+    private fun applyAchievementReward(
+        reward: AchievementReward,
+        achievementId: String,
+    ): PlaySessionState = when (reward) {
+        is AchievementReward.Currency -> {
+            val generatedLoot = LootGenerator.generate(
+                reward.lootRolls,
+                seed = achievementRewardSeed(achievementId),
+            )
+            copy(
+                gold = gold + reward.gold,
+                reputation = reputation + reward.reputation,
+                lootRolls = lootRolls + reward.lootRolls,
+                pendingLootItems = pendingLootItems + generatedLoot,
+            )
+        }
+        is AchievementReward.Composite -> reward.rewards.fold(this) { state, item ->
+            state.applyAchievementReward(item, achievementId)
+        }
+        AchievementReward.None -> this
+    }
+
+    private fun achievementRewardSeed(achievementId: String): Int =
+        achievementId.fold(lootRolls * 31 + gold) { acc, char -> acc * 31 + char.code }
 }
 
 data class ExpeditionRun(
