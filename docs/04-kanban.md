@@ -99,7 +99,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [x] Define the MVP facility set: Notice Board, Training Yard, Bunk Room, Armory/Forge, Infirmary, Scout Table, Tavern/Kitchen, and Accountant Office.
 - [ ] Map each facility to clear gameplay effects: quest unlocks, party slots, hero XP gain, risk mitigation, expedition duration, loot quality, offline cap, recruit pool quality, and gold/reputation yield.
 - [ ] Add facility unlock gates using reputation, completed quests, guild level, and previous facility levels.
-- [ ] Add upgrade recommendations on Guild Home based on the player's current bottleneck.
+- [x] Add upgrade recommendations on Guild Home based on the player's current bottleneck.
 - [ ] Add visible Guild Home facility state changes or badges so upgrades feel concrete, not just numeric.
 - [ ] Add facility persistence, migration, and unit tests once the model is implemented.
 - [ ] Balance upgrade costs and effects for the first 30 minutes, first return session, and first high-risk quest unlock.

@@ -96,6 +96,9 @@ import com.ayoshy.badventurers.game.LootSlot
 import com.ayoshy.badventurers.game.PartyPowerCalculator
 import com.ayoshy.badventurers.game.PlayPhase
 import com.ayoshy.badventurers.game.PlaySessionState
+import com.ayoshy.badventurers.game.ProgressionAdvice
+import com.ayoshy.badventurers.game.ProgressionAdviceKind
+import com.ayoshy.badventurers.game.ProgressionAdvisor
 import com.ayoshy.badventurers.game.Quest
 import com.ayoshy.badventurers.game.QuestDifficultyTier
 import com.ayoshy.badventurers.game.QuestRisk
@@ -476,11 +479,9 @@ private fun GuildScreen(
                 }
             }
         }
-        GuildFacilitiesPanel(session, SeedGame.firstQuest)
+        GuildFacilitiesPanel(session, selectedQuest)
         AchievementLedgerPanel(session = session, onOpen = onAchievements)
-        PaperPanel(title = stringResource(R.string.recommended_title), body = stringResource(R.string.recommended_upgrade)) {
-            ProgressBar(progress = 0.72f)
-        }
+        ProgressionAdvicePanel(session = session, selectedQuest = selectedQuest)
         val journalLines = session.journalEntries.takeLast(5).map { journalEntryText(it) }
         if (journalLines.isEmpty()) {
             JournalLine(stringResource(R.string.journal_01))
@@ -491,6 +492,86 @@ private fun GuildScreen(
         }
     }
 }
+
+@Composable
+private fun ProgressionAdvicePanel(session: PlaySessionState, selectedQuest: Quest) {
+    val advice = ProgressionAdvisor.recommend(state = session, selectedQuest = selectedQuest)
+    PaperPanel(
+        title = stringResource(R.string.recommended_title),
+        body = progressionAdviceBody(session, advice),
+    ) {
+        ProgressBar(progress = progressionAdviceProgress(session, advice))
+    }
+}
+
+@Composable
+private fun progressionAdviceBody(session: PlaySessionState, advice: ProgressionAdvice): String =
+    when (advice.kind) {
+        ProgressionAdviceKind.ViewQuestReport -> stringResource(R.string.progression_advice_view_report)
+        ProgressionAdviceKind.HandleLootRewards -> stringResource(R.string.progression_advice_handle_loot)
+        ProgressionAdviceKind.UpgradeNoticeBoard -> stringResource(
+            R.string.progression_advice_upgrade_notice_board,
+            advice.cost,
+            advice.missingGold,
+        )
+        ProgressionAdviceKind.UpgradeTrainingYard -> stringResource(
+            R.string.progression_advice_upgrade_training_yard,
+            advice.cost,
+            advice.missingGold,
+        )
+        ProgressionAdviceKind.UpgradeBunkRoom -> stringResource(
+            R.string.progression_advice_upgrade_bunk_room,
+            advice.cost,
+            advice.missingGold,
+        )
+        ProgressionAdviceKind.ImprovePartyFit -> stringResource(
+            R.string.progression_advice_improve_party,
+            heroNamesForAdvice(session, advice),
+            advice.currentSuccessChancePercent ?: 0,
+            advice.projectedSuccessChancePercent ?: 0,
+        )
+        ProgressionAdviceKind.EquipLoot -> stringResource(
+            R.string.progression_advice_equip_loot,
+            lootNameForAdvice(session, advice),
+            heroNamesForAdvice(session, advice),
+        )
+        ProgressionAdviceKind.RecruitHero -> stringResource(R.string.progression_advice_recruit_hero, advice.cost)
+        ProgressionAdviceKind.ClaimAchievement -> stringResource(R.string.progression_advice_claim_achievement)
+        ProgressionAdviceKind.EarnReputation -> stringResource(R.string.progression_advice_earn_reputation, advice.missingReputation)
+        ProgressionAdviceKind.CompleteQuests -> stringResource(R.string.progression_advice_complete_quests, advice.missingCompletedQuests)
+        ProgressionAdviceKind.StartQuest -> stringResource(R.string.progression_advice_start_quest, questNameForAdvice(advice))
+    }
+
+private fun progressionAdviceProgress(session: PlaySessionState, advice: ProgressionAdvice): Float =
+    when (advice.kind) {
+        ProgressionAdviceKind.UpgradeNoticeBoard,
+        ProgressionAdviceKind.UpgradeTrainingYard,
+        ProgressionAdviceKind.UpgradeBunkRoom -> if (advice.cost <= 0) 1f else (session.gold.toFloat() / advice.cost).coerceIn(0f, 1f)
+        ProgressionAdviceKind.ImprovePartyFit -> ((advice.projectedSuccessChancePercent ?: 0).toFloat() / 100f).coerceIn(0f, 1f)
+        ProgressionAdviceKind.EarnReputation -> (session.reputation.toFloat() / (session.reputation + advice.missingReputation).coerceAtLeast(1)).coerceIn(0f, 1f)
+        ProgressionAdviceKind.CompleteQuests -> (session.completedQuestCount.toFloat() / (session.completedQuestCount + advice.missingCompletedQuests).coerceAtLeast(1)).coerceIn(0f, 1f)
+        ProgressionAdviceKind.ViewQuestReport,
+        ProgressionAdviceKind.HandleLootRewards,
+        ProgressionAdviceKind.ClaimAchievement -> 1f
+        ProgressionAdviceKind.EquipLoot,
+        ProgressionAdviceKind.RecruitHero,
+        ProgressionAdviceKind.StartQuest -> 0.72f
+    }
+
+private fun heroNamesForAdvice(session: PlaySessionState, advice: ProgressionAdvice): String =
+    advice.heroIds
+        .mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } ?: HeroCatalog.byId[heroId]?.toHero() }
+        .joinToString { it.name }
+        .ifBlank { "-" }
+
+private fun lootNameForAdvice(session: PlaySessionState, advice: ProgressionAdvice): String =
+    (session.pendingLootItems + session.lootItems + session.equippedLoot.map { it.item })
+        .firstOrNull { it.id == advice.itemId }
+        ?.name
+        ?: "loot"
+
+private fun questNameForAdvice(advice: ProgressionAdvice): String =
+    advice.questId?.let { questId -> SeedGame.questById[questId]?.title } ?: SeedGame.firstQuest.title
 
 @Composable
 private fun AchievementLedgerPanel(session: PlaySessionState, onOpen: () -> Unit) {
