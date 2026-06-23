@@ -18,6 +18,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - Competitor patterns and monetization warnings are captured in [Competitive research](13-competitive-research.md).
 - Concrete monetization guardrails live in [Monetization guardrails](14-monetization-guardrails.md).
 - Hero XP curve candidates are captured in [Hero XP progression curves](16-hero-xp-progression.md).
+- Progression resource roles and reward-to-action rules are captured in [Progression economy matrix](17-progression-economy-matrix.md).
 - Current core screens are Guild, Quests, Heroes, Loot, and Upgrades.
 - Future MVP screens to preserve in planning: Expedition Prep, Offline Summary, Quest Result, Reward Choice, Item Detail, Equip Item, Hero Detail, Settings, and a fake Rewarded Ad Prompt.
 - Longer-term future screens: Shop, Events / seasonal quests, and Prestige / charter bonuses.
@@ -95,7 +96,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 ### Guild Facilities
 
 - [ ] Split the current basic facility pass into a real upgrade model with level caps, unlock requirements, costs, and visible effects.
-- [ ] Define the MVP facility set: Notice Board, Training Yard, Bunk Room, Armory/Forge, Infirmary, Scout Table, Tavern/Kitchen, and Accountant Office.
+- [x] Define the MVP facility set: Notice Board, Training Yard, Bunk Room, Armory/Forge, Infirmary, Scout Table, Tavern/Kitchen, and Accountant Office.
 - [ ] Map each facility to clear gameplay effects: quest unlocks, party slots, hero XP gain, risk mitigation, expedition duration, loot quality, offline cap, recruit pool quality, and gold/reputation yield.
 - [ ] Add facility unlock gates using reputation, completed quests, guild level, and previous facility levels.
 - [ ] Add upgrade recommendations on Guild Home based on the player's current bottleneck.
@@ -117,10 +118,10 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 
 ### Upgrade Economy And UX
 
-- [ ] Create a single progression economy matrix covering gold, reputation, guild XP, hero XP, duplicate compensation, and optional future supplies.
+- [x] Create a single progression economy matrix covering gold, reputation, guild XP, hero XP, duplicate compensation, and optional future supplies.
 - [ ] Make every major reward answer "what can I improve now?" through upgrade prompts, hero suggestions, or equip suggestions.
 - [x] Replace manual recommended heroes with a dynamic hybrid score using active specials, quest tags, hero stats, equipment, and estimated success gain.
-- [ ] Define when the game should encourage upgrading guild facilities versus leveling heroes versus equipping loot.
+- [x] Define when the game should encourage upgrading guild facilities versus leveling heroes versus equipping loot.
 - [ ] Add upgrade preview copy in English and French before implementation to keep the systems readable.
 - [ ] Keep paid/random monetization out of hero power progression; rewarded ads may boost optional rewards only under the monetization guardrails.
 
