@@ -29,14 +29,18 @@ data class PlaySessionSnapshot(
             }
             .ifEmpty { HeroCatalog.starterHeroes }
 
+        val migratedNoticeBoardLevel = migratedFacilityLevel(GuildFacility.NoticeBoard, noticeBoardLevel)
+        val migratedTrainingYardLevel = migratedFacilityLevel(GuildFacility.TrainingYard, trainingYardLevel)
+        val migratedBunkRoomLevel = migratedFacilityLevel(GuildFacility.BunkRoom, bunkRoomLevel)
+
         return PlaySessionState(
             gold = gold,
             reputation = reputation,
             guildLevel = guildLevel,
             completedQuestCount = completedQuestCount,
-            noticeBoardLevel = noticeBoardLevel,
-            trainingYardLevel = trainingYardLevel,
-            bunkRoomLevel = bunkRoomLevel,
+            noticeBoardLevel = migratedNoticeBoardLevel,
+            trainingYardLevel = migratedTrainingYardLevel,
+            bunkRoomLevel = migratedBunkRoomLevel,
             heroes = restoredHeroes,
             lootRolls = lootRolls,
             lootItems = lootItems.map { it.toItem() },
@@ -75,6 +79,11 @@ data class PlaySessionSnapshot(
                 expedition = state.expedition?.let { ExpeditionRunSnapshot.fromRun(it) },
                 achievementProgress = AchievementCatalog.normalizeProgress(state.achievementProgress),
             )
+        }
+
+        private fun migratedFacilityLevel(facility: GuildFacility, level: Int): Int {
+            val definition = GuildFacilityCatalog.definition(facility)
+            return level.coerceIn(1, definition.maxLevel)
         }
     }
 }

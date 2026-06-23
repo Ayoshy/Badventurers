@@ -101,7 +101,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [x] Add facility unlock gates using reputation, completed quests, guild level, and previous facility levels.
 - [x] Add upgrade recommendations on Guild Home based on the player's current bottleneck.
 - [x] Add visible Guild Home facility state changes or badges so upgrades feel concrete, not just numeric.
-- [ ] Add facility persistence, migration, and unit tests once the model is implemented.
+- [x] Add facility persistence, migration, and unit tests once the model is implemented.
 - [ ] Balance upgrade costs and effects for the first 30 minutes, first return session, and first high-risk quest unlock.
 
 ### Hero Growth

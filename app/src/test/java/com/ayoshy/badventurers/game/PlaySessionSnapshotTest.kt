@@ -97,6 +97,27 @@ class PlaySessionSnapshotTest {
     }
 
     @Test
+    fun snapshotMigratesFacilityLevelsIntoCatalogBounds() {
+        val snapshot = PlaySessionSnapshot.initial().copy(
+            noticeBoardLevel = 0,
+            trainingYardLevel = 99,
+            bunkRoomLevel = 99,
+        )
+
+        val restored = snapshot.toState()
+
+        assertEquals(1, restored.noticeBoardLevel)
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.TrainingYard).maxLevel,
+            restored.trainingYardLevel,
+        )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.BunkRoom).maxLevel,
+            restored.bunkRoomLevel,
+        )
+    }
+
+    @Test
     fun snapshotVersionIsExplicitlyCurrent() {
         val snapshot = PlaySessionSnapshot.initial()
 
