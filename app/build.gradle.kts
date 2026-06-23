@@ -18,6 +18,21 @@ android {
     buildFeatures {
         compose = true
     }
+
+    sourceSets {
+        getByName("main") {
+            res.srcDirs(
+                "src/main/res",
+                "src/main/res-guild",
+                "src/main/res-heroes",
+                "src/main/res-loot",
+                "src/main/res-quests",
+                "src/main/res-resources",
+                "src/main/res-ui",
+                "src/main/res-achievements",
+            )
+        }
+    }
 }
 
 kotlin {

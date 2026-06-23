@@ -10,7 +10,7 @@ This batch extends the starter hero portrait set from 4 to 8 class artworks whil
 
 ## Android Slices
 
-Generated Android-ready PNGs live in `app/src/main/res/drawable-nodpi/`:
+Generated Android-ready PNGs live in `app/src/main/res-heroes/drawable-nodpi/`:
 
 - `hero_portrait_ninja.png`
 - `hero_portrait_hunter.png`

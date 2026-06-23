@@ -1,4 +1,4 @@
-﻿# Batch 03: New Hero Portraits
+# Batch 03: New Hero Portraits
 
 Generated: 2026-06-22
 
@@ -6,7 +6,7 @@ This batch adds the next eight hero portraits to expand the roster from the orig
 
 ## Files
 
-Android-ready portraits live in `app/src/main/res/drawable-nodpi/`:
+Android-ready portraits live in `app/src/main/res-heroes/drawable-nodpi/`:
 
 - `hero_portrait_paladin.png`
 - `hero_portrait_comptable.png`
