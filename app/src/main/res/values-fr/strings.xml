@@ -102,6 +102,7 @@
     <string name="progression_advice_start_quest">Lance %1$s ; c est le meilleur paiement ouvert maintenant.</string>
     <string name="guild_facilities_title">Salles</string>
     <string name="guild_facilities_summary">La guilde devient utile par accident. Les salles changent les recompenses, la puissance de preparation et la taille de l equipe.</string>
+    <string name="guild_facility_level_effect">Nv. %1$d/%2$d - %3$s</string>
     <string name="guild_facility_notice_board">Panneau des quetes</string>
     <string name="guild_facility_notice_effect">+%1$d%% or de quete</string>
     <string name="guild_facility_training_yard">Terrain d entrainement</string>

@@ -22,7 +22,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - Current core screens are Guild, Quests, Heroes, Loot, and Upgrades.
 - Future MVP screens to preserve in planning: Expedition Prep, Offline Summary, Quest Result, Reward Choice, Item Detail, Equip Item, Hero Detail, Settings, and a fake Rewarded Ad Prompt.
 - Longer-term future screens: Shop, Events / seasonal quests, and Prestige / charter bonuses.
-- Current guild upgrades are only a basic facility-effect pass. A fuller guild/hero progression system is tracked separately under Progression / Upgrade V2 below.
+- Guild upgrades now use a facility catalog for current levels, costs, caps, gates, and effects. Deeper guild/hero progression work remains tracked under Progression / Upgrade V2 below.
 
 ## Now
 
@@ -95,12 +95,12 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 
 ### Guild Facilities
 
-- [ ] Split the current basic facility pass into a real upgrade model with level caps, unlock requirements, costs, and visible effects.
+- [x] Split the current basic facility pass into a real upgrade model with level caps, unlock requirements, costs, and visible effects.
 - [x] Define the MVP facility set: Notice Board, Training Yard, Bunk Room, Armory/Forge, Infirmary, Scout Table, Tavern/Kitchen, and Accountant Office.
-- [ ] Map each facility to clear gameplay effects: quest unlocks, party slots, hero XP gain, risk mitigation, expedition duration, loot quality, offline cap, recruit pool quality, and gold/reputation yield.
-- [ ] Add facility unlock gates using reputation, completed quests, guild level, and previous facility levels.
+- [x] Map each facility to clear gameplay effects: quest unlocks, party slots, hero XP gain, risk mitigation, expedition duration, loot quality, offline cap, recruit pool quality, and gold/reputation yield.
+- [x] Add facility unlock gates using reputation, completed quests, guild level, and previous facility levels.
 - [x] Add upgrade recommendations on Guild Home based on the player's current bottleneck.
-- [ ] Add visible Guild Home facility state changes or badges so upgrades feel concrete, not just numeric.
+- [x] Add visible Guild Home facility state changes or badges so upgrades feel concrete, not just numeric.
 - [ ] Add facility persistence, migration, and unit tests once the model is implemented.
 - [ ] Balance upgrade costs and effects for the first 30 minutes, first return session, and first high-risk quest unlock.
 

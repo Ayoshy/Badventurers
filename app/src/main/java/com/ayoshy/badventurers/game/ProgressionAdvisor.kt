@@ -15,17 +15,13 @@ enum class ProgressionAdviceKind {
     StartQuest,
 }
 
-enum class ProgressionFacility {
-    NoticeBoard,
-    TrainingYard,
-    BunkRoom,
-}
+
 
 data class ProgressionAdvice(
     val kind: ProgressionAdviceKind,
     val priority: Int,
     val questId: String? = null,
-    val facility: ProgressionFacility? = null,
+    val facility: GuildFacility? = null,
     val heroIds: List<String> = emptyList(),
     val itemId: String? = null,
     val cost: Int = 0,
@@ -114,13 +110,13 @@ object ProgressionAdvisor {
         condition: QuestUnlockCondition,
     ): List<ProgressionAdvice> = buildList {
         if (state.bunkRoomLevel < condition.minBunkRoomLevel) {
-            add(facilityAdvice(state, quest, ProgressionFacility.BunkRoom, state.bunkRoomUpgradeCost(), priority = 90))
+            add(facilityAdvice(state, quest, GuildFacility.BunkRoom, state.bunkRoomUpgradeCost(), priority = 90))
         }
         if (state.trainingYardLevel < condition.minTrainingYardLevel) {
-            add(facilityAdvice(state, quest, ProgressionFacility.TrainingYard, state.trainingYardUpgradeCost(), priority = 88))
+            add(facilityAdvice(state, quest, GuildFacility.TrainingYard, state.trainingYardUpgradeCost(), priority = 88))
         }
         if (state.noticeBoardLevel < condition.minNoticeBoardLevel) {
-            add(facilityAdvice(state, quest, ProgressionFacility.NoticeBoard, state.noticeBoardUpgradeCost(), priority = 86))
+            add(facilityAdvice(state, quest, GuildFacility.NoticeBoard, state.noticeBoardUpgradeCost(), priority = 86))
         }
         if (state.reputation < condition.minReputation) {
             add(
@@ -147,15 +143,20 @@ object ProgressionAdvisor {
     private fun facilityAdvice(
         state: PlaySessionState,
         quest: Quest?,
-        facility: ProgressionFacility,
+        facility: GuildFacility,
         cost: Int,
         priority: Int,
     ): ProgressionAdvice =
         ProgressionAdvice(
             kind = when (facility) {
-                ProgressionFacility.NoticeBoard -> ProgressionAdviceKind.UpgradeNoticeBoard
-                ProgressionFacility.TrainingYard -> ProgressionAdviceKind.UpgradeTrainingYard
-                ProgressionFacility.BunkRoom -> ProgressionAdviceKind.UpgradeBunkRoom
+                GuildFacility.NoticeBoard -> ProgressionAdviceKind.UpgradeNoticeBoard
+                GuildFacility.TrainingYard -> ProgressionAdviceKind.UpgradeTrainingYard
+                GuildFacility.BunkRoom -> ProgressionAdviceKind.UpgradeBunkRoom
+                GuildFacility.ArmoryForge,
+                GuildFacility.Infirmary,
+                GuildFacility.ScoutTable,
+                GuildFacility.TavernKitchen,
+                GuildFacility.AccountantOffice -> error("Unsupported facility advice: $facility")
             },
             priority = priority,
             questId = quest?.id,
@@ -214,7 +215,7 @@ object ProgressionAdvisor {
         return facilityAdvice(
             state = state,
             quest = quest,
-            facility = ProgressionFacility.TrainingYard,
+            facility = GuildFacility.TrainingYard,
             cost = state.trainingYardUpgradeCost(),
             priority = 78,
         )
@@ -227,13 +228,13 @@ object ProgressionAdvisor {
         }
         val candidates = buildList {
             if (state.noticeBoardLevel <= 2) {
-                add(facilityAdvice(state, null, ProgressionFacility.NoticeBoard, state.noticeBoardUpgradeCost(), priority = 60))
+                add(facilityAdvice(state, null, GuildFacility.NoticeBoard, state.noticeBoardUpgradeCost(), priority = 60))
             }
             if (state.trainingYardLevel <= 2) {
-                add(facilityAdvice(state, null, ProgressionFacility.TrainingYard, state.trainingYardUpgradeCost(), priority = 58))
+                add(facilityAdvice(state, null, GuildFacility.TrainingYard, state.trainingYardUpgradeCost(), priority = 58))
             }
             if (futureLockedByBunkRoom) {
-                add(facilityAdvice(state, null, ProgressionFacility.BunkRoom, state.bunkRoomUpgradeCost(), priority = 56))
+                add(facilityAdvice(state, null, GuildFacility.BunkRoom, state.bunkRoomUpgradeCost(), priority = 56))
             }
         }
 

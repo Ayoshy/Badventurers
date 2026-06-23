@@ -235,48 +235,59 @@ data class PlaySessionState(
     fun effectivePartySlots(quest: Quest): Int =
         quest.partySlots.coerceAtLeast(1) + (bunkRoomLevel - 1).coerceAtLeast(0)
 
-    fun noticeBoardUpgradeCost(): Int = upgradeCost(base = 600, level = noticeBoardLevel, step = 250)
+    fun facilityLevel(facility: GuildFacility): Int =
+        when (facility) {
+            GuildFacility.NoticeBoard -> noticeBoardLevel
+            GuildFacility.TrainingYard -> trainingYardLevel
+            GuildFacility.BunkRoom -> bunkRoomLevel
+            GuildFacility.ArmoryForge,
+            GuildFacility.Infirmary,
+            GuildFacility.ScoutTable,
+            GuildFacility.TavernKitchen,
+            GuildFacility.AccountantOffice -> 0
+        }
 
-    fun trainingYardUpgradeCost(): Int = upgradeCost(base = 450, level = trainingYardLevel, step = 300)
+    fun facilityUpgradeState(facility: GuildFacility): GuildFacilityUpgradeState =
+        GuildFacilityCatalog.upgradeState(facility, this)
 
-    fun bunkRoomUpgradeCost(): Int = upgradeCost(base = 750, level = bunkRoomLevel, step = 450)
+    fun facilityUpgradeCost(facility: GuildFacility): Int =
+        facilityUpgradeState(facility).nextCost ?: 0
 
-    fun upgradeNoticeBoard(): PlaySessionState {
-        val cost = noticeBoardUpgradeCost()
-        if (gold < cost) return this
-        val upgraded = copy(
-            gold = gold - cost,
-            noticeBoardLevel = noticeBoardLevel + 1,
-        )
-        return AchievementTracker.applyEvent(
-            state = upgraded,
-            event = AchievementEvent.FacilityUpgraded(AchievementCatalog.NOTICE_BOARD_FACILITY, upgraded.noticeBoardLevel),
-        )
+    fun canUpgradeFacility(facility: GuildFacility): Boolean {
+        val state = facilityUpgradeState(facility)
+        return state.definition.implemented && state.unlocked && !state.maxed && state.missingGold == 0
     }
 
-    fun upgradeTrainingYard(): PlaySessionState {
-        val cost = trainingYardUpgradeCost()
-        if (gold < cost) return this
-        val upgraded = copy(
-            gold = gold - cost,
-            trainingYardLevel = trainingYardLevel + 1,
-        )
-        return AchievementTracker.applyEvent(
-            state = upgraded,
-            event = AchievementEvent.FacilityUpgraded(AchievementCatalog.TRAINING_YARD_FACILITY, upgraded.trainingYardLevel),
-        )
-    }
+    fun noticeBoardUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.NoticeBoard)
 
-    fun upgradeBunkRoom(): PlaySessionState {
-        val cost = bunkRoomUpgradeCost()
-        if (gold < cost) return this
-        val upgraded = copy(
-            gold = gold - cost,
-            bunkRoomLevel = bunkRoomLevel + 1,
-        )
+    fun trainingYardUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.TrainingYard)
+
+    fun bunkRoomUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.BunkRoom)
+
+    fun upgradeNoticeBoard(): PlaySessionState = upgradeFacility(GuildFacility.NoticeBoard)
+
+    fun upgradeTrainingYard(): PlaySessionState = upgradeFacility(GuildFacility.TrainingYard)
+
+    fun upgradeBunkRoom(): PlaySessionState = upgradeFacility(GuildFacility.BunkRoom)
+
+    fun upgradeFacility(facility: GuildFacility): PlaySessionState {
+        if (!canUpgradeFacility(facility)) return this
+        val upgradeState = facilityUpgradeState(facility)
+        val cost = upgradeState.nextCost ?: return this
+        val nextLevel = upgradeState.level + 1
+        val upgraded = when (facility) {
+            GuildFacility.NoticeBoard -> copy(gold = gold - cost, noticeBoardLevel = nextLevel)
+            GuildFacility.TrainingYard -> copy(gold = gold - cost, trainingYardLevel = nextLevel)
+            GuildFacility.BunkRoom -> copy(gold = gold - cost, bunkRoomLevel = nextLevel)
+            GuildFacility.ArmoryForge,
+            GuildFacility.Infirmary,
+            GuildFacility.ScoutTable,
+            GuildFacility.TavernKitchen,
+            GuildFacility.AccountantOffice -> return this
+        }
         return AchievementTracker.applyEvent(
             state = upgraded,
-            event = AchievementEvent.FacilityUpgraded(AchievementCatalog.BUNK_ROOM_FACILITY, upgraded.bunkRoomLevel),
+            event = AchievementEvent.FacilityUpgraded(upgradeState.definition.achievementFacilityId, nextLevel),
         )
     }
 
@@ -395,8 +406,7 @@ data class PlaySessionState(
 
         fun initial(): PlaySessionState = PlaySessionState()
 
-        private fun upgradeCost(base: Int, level: Int, step: Int): Int =
-            base + (level - 1).coerceAtLeast(0) * step
+
     }
 
     private fun refreshedAchievementProgress(nowMillis: Long = 0L): List<AchievementProgress> =

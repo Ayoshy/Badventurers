@@ -93,6 +93,6 @@ The UI copy should stay concrete: "Upgrade Bunk Room for 4th slot" beats "Improv
 
 - Replace the current hardcoded Guild Home recommendation with a `ProgressionAdvisor`.
 - Give quest result and loot reward screens a single `nextAction` prompt.
-- Add facility model caps/costs before tuning the first 30-minute pacing numerically.
+- Tune facility costs numerically against the first 30-minute pacing now that the facility catalog owns caps, costs, gates, and effects.
 - Add duplicate contract fields only when promotion rules are finalized.
 - Keep rewarded-ad bonus copy separate from all advisor decisions.

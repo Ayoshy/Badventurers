@@ -54,7 +54,7 @@ class ProgressionAdvisorTest {
         val advice = ProgressionAdvisor.recommend(state, selectedQuest = quest)
 
         assertEquals(ProgressionAdviceKind.UpgradeBunkRoom, advice.kind)
-        assertEquals(ProgressionFacility.BunkRoom, advice.facility)
+        assertEquals(GuildFacility.BunkRoom, advice.facility)
         assertEquals(0, advice.missingGold)
     }
 
@@ -71,7 +71,7 @@ class ProgressionAdvisorTest {
         val advice = ProgressionAdvisor.recommend(state, selectedQuest = quest)
 
         assertEquals(ProgressionAdviceKind.UpgradeTrainingYard, advice.kind)
-        assertEquals(ProgressionFacility.TrainingYard, advice.facility)
+        assertEquals(GuildFacility.TrainingYard, advice.facility)
         assertTrue(advice.missingGold > 0)
     }
 
@@ -121,7 +121,7 @@ class ProgressionAdvisorTest {
         )
 
         assertEquals(ProgressionAdviceKind.UpgradeTrainingYard, advice.kind)
-        assertEquals(ProgressionFacility.TrainingYard, advice.facility)
+        assertEquals(GuildFacility.TrainingYard, advice.facility)
     }
 
     @Test
@@ -131,7 +131,7 @@ class ProgressionAdvisorTest {
         val advice = ProgressionAdvisor.recommend(state)
 
         assertEquals(ProgressionAdviceKind.UpgradeNoticeBoard, advice.kind)
-        assertEquals(ProgressionFacility.NoticeBoard, advice.facility)
+        assertEquals(GuildFacility.NoticeBoard, advice.facility)
     }
 
     @Test

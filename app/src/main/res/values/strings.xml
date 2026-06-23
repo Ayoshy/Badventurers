@@ -102,6 +102,7 @@
     <string name="progression_advice_start_quest">Start %1$s; it is the best open payday right now.</string>
     <string name="guild_facilities_title">Facilities</string>
     <string name="guild_facilities_summary">The guild is becoming useful by accident. Facilities now change quest rewards, prep power, and party size.</string>
+    <string name="guild_facility_level_effect">Lv. %1$d/%2$d - %3$s</string>
     <string name="guild_facility_notice_board">Notice Board</string>
     <string name="guild_facility_notice_effect">+%1$d%% quest gold</string>
     <string name="guild_facility_training_yard">Training Yard</string>

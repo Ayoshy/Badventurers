@@ -75,6 +75,7 @@ import com.ayoshy.badventurers.game.ExpeditionEngine
 import com.ayoshy.badventurers.game.ExpeditionEstimator
 import com.ayoshy.badventurers.game.ExpeditionOutcome
 import com.ayoshy.badventurers.game.FakeRewardedAdService
+import com.ayoshy.badventurers.game.GuildFacility
 import com.ayoshy.badventurers.game.Hero
 import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroClass
@@ -620,18 +621,31 @@ private fun GuildFacilitiesPanel(session: PlaySessionState, selectedQuest: Quest
         Spacer(Modifier.height(8.dp))
         FacilityLine(
             label = stringResource(R.string.guild_facility_notice_board),
-            value = stringResource(R.string.guild_facility_notice_effect, session.noticeBoardGoldBonusPercent()),
+            value = facilityLevelEffect(
+                state = session.facilityUpgradeState(GuildFacility.NoticeBoard),
+                effect = stringResource(R.string.guild_facility_notice_effect, session.noticeBoardGoldBonusPercent()),
+            ),
         )
         FacilityLine(
             label = stringResource(R.string.guild_facility_training_yard),
-            value = stringResource(R.string.guild_facility_training_effect, session.trainingYardPowerBonus()),
+            value = facilityLevelEffect(
+                state = session.facilityUpgradeState(GuildFacility.TrainingYard),
+                effect = stringResource(R.string.guild_facility_training_effect, session.trainingYardPowerBonus()),
+            ),
         )
         FacilityLine(
             label = stringResource(R.string.guild_facility_bunk_room),
-            value = stringResource(R.string.guild_facility_bunk_effect, session.effectivePartySlots(selectedQuest)),
+            value = facilityLevelEffect(
+                state = session.facilityUpgradeState(GuildFacility.BunkRoom),
+                effect = stringResource(R.string.guild_facility_bunk_effect, session.effectivePartySlots(selectedQuest)),
+            ),
         )
     }
 }
+
+@Composable
+private fun facilityLevelEffect(state: com.ayoshy.badventurers.game.GuildFacilityUpgradeState, effect: String): String =
+    stringResource(R.string.guild_facility_level_effect, state.level, state.definition.maxLevel, effect)
 
 @Composable
 private fun FacilityLine(label: String, value: String) {
@@ -2791,7 +2805,7 @@ private fun UpgradesScreen(
             detail = stringResource(R.string.notice_board_upgrade_detail),
             cost = noticeBoardCost,
             currentGold = session.gold,
-            enabled = session.gold >= noticeBoardCost,
+            enabled = session.canUpgradeFacility(GuildFacility.NoticeBoard),
             onBuy = onBuyNoticeBoard,
         )
         UpgradeRow(
@@ -2799,7 +2813,7 @@ private fun UpgradesScreen(
             detail = stringResource(R.string.training_yard_upgrade_detail),
             cost = trainingYardCost,
             currentGold = session.gold,
-            enabled = session.gold >= trainingYardCost,
+            enabled = session.canUpgradeFacility(GuildFacility.TrainingYard),
             onBuy = onBuyTrainingYard,
         )
         UpgradeRow(
@@ -2807,7 +2821,7 @@ private fun UpgradesScreen(
             detail = stringResource(R.string.bunk_room_upgrade_detail),
             cost = bunkRoomCost,
             currentGold = session.gold,
-            enabled = session.gold >= bunkRoomCost,
+            enabled = session.canUpgradeFacility(GuildFacility.BunkRoom),
             onBuy = onBuyBunkRoom,
         )
         DarkPanel(title = stringResource(R.string.next_unlock_title), body = stringResource(R.string.next_unlock_summary))
