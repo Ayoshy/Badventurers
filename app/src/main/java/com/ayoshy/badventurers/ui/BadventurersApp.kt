@@ -80,6 +80,8 @@ import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroClass
 import com.ayoshy.badventurers.game.HeroGacha
 import com.ayoshy.badventurers.game.HeroProgression
+import com.ayoshy.badventurers.game.HeroRecommendation
+import com.ayoshy.badventurers.game.HeroRecommendationScorer
 import com.ayoshy.badventurers.game.HeroRarity
 import com.ayoshy.badventurers.game.HeroXpPreview
 import com.ayoshy.badventurers.game.HeroSpecial
@@ -888,6 +890,19 @@ private fun ExpeditionPrepScreen(
 ) {
     val partySlots = session.effectivePartySlots(quest)
     val partyHeroes = selectedPartyIds.mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }.take(partySlots)
+    val heroRecommendations = HeroRecommendationScorer.rankHeroes(
+        roster = session.heroes,
+        quest = quest,
+        selectedParty = partyHeroes,
+        equipment = session.equippedLoot,
+        facilityPowerBonus = session.trainingYardPowerBonus(),
+        partySlots = partySlots,
+    )
+    val heroRecommendationById = heroRecommendations.associateBy { it.hero.id }
+    val topRecommendedHeroIds = heroRecommendations
+        .take(maxOf(3, partySlots))
+        .map { it.hero.id }
+        .toSet()
     val estimate = ExpeditionEstimator.estimate(
         party = partyHeroes,
         quest = quest,
@@ -928,7 +943,12 @@ private fun ExpeditionPrepScreen(
                 primaryEnabled = canLaunch,
             )
         }
-        RecommendedHeroesPanel(session = session, quest = quest, selectedPartyIds = selectedPartyIds)
+        RecommendedHeroesPanel(
+            session = session,
+            quest = quest,
+            selectedPartyIds = selectedPartyIds,
+            recommendations = heroRecommendations,
+        )
         InfoRow(
             title = stringResource(R.string.prep_success_title),
             detail = stringResource(R.string.prep_success_detail, estimate.partyPower, estimate.targetPower),
@@ -976,13 +996,21 @@ private fun ExpeditionPrepScreen(
             modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
         )
         session.heroes
-            .sortedByDescending { hero -> hero.id in quest.recommendedHeroIds }
+            .sortedWith(
+                compareByDescending<Hero> { it.id in selectedPartyIds }
+                    .thenByDescending { hero -> heroRecommendationById[hero.id]?.score ?: 0 }
+                    .thenByDescending { hero -> PartyPowerCalculator.basePower(hero) + session.equipmentBonus(hero.id) }
+                    .thenBy { it.name },
+            )
             .forEach { hero ->
                 val selected = hero.id in selectedPartyIds
+                val recommendation = heroRecommendationById[hero.id]
+                val recommended = hero.id in topRecommendedHeroIds
                 HeroPartyChoiceRow(
                     hero = hero,
                     selected = selected,
-                    recommended = hero.id in quest.recommendedHeroIds,
+                    recommended = recommended,
+                    recommendation = recommendation,
                     enabled = selected || partyHeroes.size < partySlots,
                     session = session,
                     onClick = { onToggleHero(hero.id) },
@@ -992,7 +1020,7 @@ private fun ExpeditionPrepScreen(
 }
 @Composable
 private fun RecommendedHeroesInline(session: PlaySessionState, quest: Quest) {
-    val names = recommendedHeroNames(session, quest)
+    val names = recommendedHeroNames(session, quest, selectedParty = emptyList())
     if (names.isBlank()) return
 
     Text(
@@ -1011,10 +1039,12 @@ private fun RecommendedHeroesPanel(
     session: PlaySessionState,
     quest: Quest,
     selectedPartyIds: List<String>,
+    recommendations: List<HeroRecommendation>,
 ) {
-    val ownedRecommended = quest.recommendedHeroIds.filter { heroId -> session.heroes.any { it.id == heroId } }
-    val selectedRecommended = selectedPartyIds.count { it in ownedRecommended }
-    val names = recommendedHeroNames(session, quest)
+    val topRecommendations = recommendations.take(maxOf(3, session.effectivePartySlots(quest)))
+    val topRecommendedIds = topRecommendations.map { it.hero.id }.toSet()
+    val selectedRecommended = selectedPartyIds.count { it in topRecommendedIds }
+    val names = recommendationNames(topRecommendations)
     if (names.isBlank()) return
 
     PaperPanel(
@@ -1022,19 +1052,30 @@ private fun RecommendedHeroesPanel(
         body = stringResource(
             R.string.prep_recommended_heroes_detail,
             selectedRecommended,
-            ownedRecommended.size,
+            topRecommendedIds.size,
             names,
         ),
     )
 }
 
-private fun recommendedHeroNames(session: PlaySessionState, quest: Quest): String {
-    val names = quest.recommendedHeroIds.mapNotNull { heroId ->
-        val hero = session.heroes.firstOrNull { it.id == heroId } ?: HeroCatalog.byId[heroId]?.toHero()
-        hero?.name
-    }
-    return names.take(5).joinToString()
-}
+private fun recommendedHeroNames(
+    session: PlaySessionState,
+    quest: Quest,
+    selectedParty: List<Hero>,
+): String =
+    recommendationNames(
+        HeroRecommendationScorer.rankHeroes(
+            roster = session.heroes,
+            quest = quest,
+            selectedParty = selectedParty,
+            equipment = session.equippedLoot,
+            facilityPowerBonus = session.trainingYardPowerBonus(),
+            partySlots = session.effectivePartySlots(quest),
+        ).take(maxOf(3, session.effectivePartySlots(quest))),
+    )
+
+private fun recommendationNames(recommendations: List<HeroRecommendation>): String =
+    recommendations.joinToString { it.hero.name }
 @Composable
 private fun PartySlotRow(slotNumber: Int, hero: Hero?, session: PlaySessionState) {
     InfoRow(
@@ -1058,6 +1099,7 @@ private fun HeroPartyChoiceRow(
     hero: Hero,
     selected: Boolean,
     recommended: Boolean,
+    recommendation: HeroRecommendation?,
     enabled: Boolean,
     session: PlaySessionState,
     onClick: () -> Unit,
@@ -1071,6 +1113,8 @@ private fun HeroPartyChoiceRow(
         .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
     val value = when {
         selected -> stringResource(R.string.prep_roster_selected_value)
+        recommended && recommendation != null && recommendation.successGainPercent > 0 ->
+            stringResource(R.string.prep_roster_recommendation_gain_value, recommendation.successGainPercent)
         recommended -> stringResource(R.string.prep_roster_recommended_value)
         enabled -> stringResource(R.string.prep_roster_pick_value)
         else -> stringResource(R.string.prep_roster_full_value)
@@ -1100,7 +1144,7 @@ private fun HeroPartyChoiceRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = hero.name, color = Color(0xFF211F1A), fontWeight = FontWeight.Black, maxLines = 1)
                 Text(
-                    text = heroRosterDetail(hero),
+                    text = heroRosterRecommendationDetail(hero, if (recommended) recommendation else null),
                     color = if (enabled) Color(0xFF756B54) else Color(0x99756B54),
                     fontSize = 12.sp,
                     maxLines = 1,
@@ -1118,6 +1162,31 @@ private fun HeroPartyChoiceRow(
             }
         }
     }
+}
+
+@Composable
+private fun heroRosterRecommendationDetail(hero: Hero, recommendation: HeroRecommendation?): String {
+    val base = heroRosterDetail(hero)
+    if (recommendation == null) return base
+
+    val reasons = listOfNotNull(
+        if (recommendation.successGainPercent > 0) {
+            stringResource(R.string.prep_recommendation_odds_reason, recommendation.successGainPercent)
+        } else null,
+        if (recommendation.activeSpecial) stringResource(R.string.prep_recommendation_special_reason) else null,
+        if (recommendation.statAffinity >= 60) {
+            stringResource(R.string.prep_recommendation_stats_reason, recommendation.matchingStats.size)
+        } else null,
+        if (recommendation.equipmentBonus > 0) {
+            stringResource(R.string.prep_recommendation_gear_reason, recommendation.equipmentBonus)
+        } else null,
+    ).take(2)
+
+    val detail = reasons.ifEmpty {
+        listOf(stringResource(R.string.prep_recommendation_power_reason, recommendation.power))
+    }.joinToString(" | ")
+
+    return stringResource(R.string.prep_roster_recommendation_detail, base, detail)
 }
 
 @Composable

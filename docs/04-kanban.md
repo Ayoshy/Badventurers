@@ -119,7 +119,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 
 - [ ] Create a single progression economy matrix covering gold, reputation, guild XP, hero XP, duplicate compensation, and optional future supplies.
 - [ ] Make every major reward answer "what can I improve now?" through upgrade prompts, hero suggestions, or equip suggestions.
-- [ ] Replace manual recommended heroes with a dynamic hybrid score using active specials, quest tags, hero stats, equipment, and estimated success gain.
+- [x] Replace manual recommended heroes with a dynamic hybrid score using active specials, quest tags, hero stats, equipment, and estimated success gain.
 - [ ] Define when the game should encourage upgrading guild facilities versus leveling heroes versus equipping loot.
 - [ ] Add upgrade preview copy in English and French before implementation to keep the systems readable.
 - [ ] Keep paid/random monetization out of hero power progression; rewarded ads may boost optional rewards only under the monetization guardrails.

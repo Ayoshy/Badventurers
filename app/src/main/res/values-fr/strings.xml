@@ -414,8 +414,15 @@
     <string name="achievements_ready_value">Pret</string>
     <string name="achievements_claimed_value">Reclame</string>
     <string name="achievements_progress_value">%1$d/%2$d</string>
-    <string name="quest_recommended_heroes_detail">Recommandes : %1$s</string>
+    <string name="quest_recommended_heroes_detail">Meilleurs profils : %1$s</string>
     <string name="prep_recommended_heroes_title">Heros recommandes</string>
-    <string name="prep_recommended_heroes_detail">%1$d/%2$d recommandations disponibles selectionnees. Bons choix : %3$s.</string>
-    <string name="prep_roster_recommended_value">Recommande</string>
+    <string name="prep_recommended_heroes_detail">%1$d/%2$d meilleurs profils selectionnes. Bons choix : %3$s.</string>
+    <string name="prep_roster_recommended_value">Profil top</string>
+    <string name="prep_roster_recommendation_gain_value">+%1$d%% chances</string>
+    <string name="prep_roster_recommendation_detail">%1$s | %2$s</string>
+    <string name="prep_recommendation_odds_reason">+%1$d%% chances</string>
+    <string name="prep_recommendation_special_reason">special actif</string>
+    <string name="prep_recommendation_stats_reason">%1$d stats tag</string>
+    <string name="prep_recommendation_gear_reason">equip. +%1$d</string>
+    <string name="prep_recommendation_power_reason">pui. %1$d</string>
 </resources>
