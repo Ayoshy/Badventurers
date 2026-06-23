@@ -88,6 +88,9 @@
     <string name="completed_quest_summary">Termine. Le groupe revient avec du butin, de la boue, et un rapport que personne n\'a signe.</string>
     <string name="recommended_title">Recommande</string>
     <string name="recommended_upgrade">Ameliorer le panneau des quetes pour gagner plus de recompenses.</string>
+    <string name="debug_progress_title">Outils test</string>
+    <string name="debug_progress_summary">Reinitialise heros, objets, perks de guilde, hauts faits, quetes et expedition active. Or, reputation et niveau restent modifiables en haut.</string>
+    <string name="debug_reset_progress_action">Reset progression</string>
     <string name="progression_advice_view_report">Ouvre le rapport d expedition avant de planifier le prochain desastre.</string>
     <string name="progression_advice_handle_loot">Trie le tas de recompenses avant de relancer une mission.</string>
     <string name="progression_advice_upgrade_notice_board">Ameliore le panneau pour %1$dg. Manque %2$dg.</string>

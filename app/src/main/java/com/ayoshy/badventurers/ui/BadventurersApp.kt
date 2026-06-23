@@ -233,7 +233,14 @@ fun BadventurersApp(
                     .statusBarsPadding()
                     .navigationBarsPadding(),
             ) {
-                if (selectedTab == GameTab.Guild) TopBar(session = session)
+                if (selectedTab == GameTab.Guild) {
+                    TopBar(
+                        session = session,
+                        onGoldDelta = { updateSession(session.adjustGold(it)) },
+                        onReputationDelta = { updateSession(session.adjustReputation(it)) },
+                        onGuildLevelDelta = { updateSession(session.adjustGuildLevel(it)) },
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -251,6 +258,7 @@ fun BadventurersApp(
                                 updateSession(session.finishQuestNow(expeditionEngine, session.heroes))
                                 nowMillis = System.currentTimeMillis()
                             },
+                            onResetProgress = { updateSession(session.resetProgressForTesting()) },
                         )
                         GameTab.Quests -> QuestsScreen(
                             session = session,
@@ -365,7 +373,12 @@ fun BadventurersApp(
 }
 
 @Composable
-private fun TopBar(session: PlaySessionState) {
+private fun TopBar(
+    session: PlaySessionState,
+    onGoldDelta: (Int) -> Unit,
+    onReputationDelta: (Int) -> Unit,
+    onGuildLevelDelta: (Int) -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -394,24 +407,94 @@ private fun TopBar(session: PlaySessionState) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            ResourceChip(label = stringResource(R.string.gold_label), value = formatCount(session.gold))
-            ResourceChip(label = stringResource(R.string.reputation_label), value = session.reputation.toString())
-            ResourceChip(label = stringResource(R.string.guild_level_label), value = "Lv. ${session.guildLevel}")
+            ResourceChip(
+                label = stringResource(R.string.gold_label),
+                value = formatCount(session.gold),
+                onDecrease = { onGoldDelta(-500) },
+                onIncrease = { onGoldDelta(500) },
+            )
+            ResourceChip(
+                label = stringResource(R.string.reputation_label),
+                value = session.reputation.toString(),
+                onDecrease = { onReputationDelta(-1) },
+                onIncrease = { onReputationDelta(1) },
+            )
+            ResourceChip(
+                label = stringResource(R.string.guild_level_label),
+                value = "Lv. ${session.guildLevel}",
+                onDecrease = { onGuildLevelDelta(-1) },
+                onIncrease = { onGuildLevelDelta(1) },
+            )
         }
     }
 }
 
 @Composable
-private fun RowScope.ResourceChip(label: String, value: String) {
+private fun RowScope.ResourceChip(
+    label: String,
+    value: String,
+    onDecrease: (() -> Unit)? = null,
+    onIncrease: (() -> Unit)? = null,
+) {
     Card(
         modifier = Modifier.weight(1f),
         shape = RoundedCornerShape(7.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xEEF8E7B5)),
     ) {
         Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
-            Text(text = label, color = Color(0xFF4F4630), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            Text(text = value, color = Color(0xFF211F1A), fontSize = 15.sp, fontWeight = FontWeight.Black)
+            Text(
+                text = label,
+                color = Color(0xFF4F4630),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(3.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = value,
+                    color = Color(0xFF211F1A),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                val decrease = onDecrease
+                val increase = onIncrease
+                if (decrease != null && increase != null) {
+                    ResourceStepButton(text = "-", onClick = decrease)
+                    ResourceStepButton(text = "+", onClick = increase)
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun ResourceStepButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.size(width = 24.dp, height = 24.dp),
+        contentPadding = PaddingValues(0.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFF7B5531),
+            contentColor = Color(0xFFFFF1C0),
+        ),
+        shape = RoundedCornerShape(6.dp),
+    ) {
+        Text(
+            text = text,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Black,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
     }
 }
 
@@ -424,6 +507,7 @@ private fun GuildScreen(
     onNextQuest: () -> Unit,
     onAchievements: () -> Unit,
     onFinishQuestNow: () -> Unit,
+    onResetProgress: () -> Unit,
 ) {
     ScreenScaffold(title = stringResource(R.string.guild_home_title), status = phaseStatus(session.phase)) {
         when (session.phase) {
@@ -483,6 +567,9 @@ private fun GuildScreen(
         GuildFacilitiesPanel(session, selectedQuest)
         AchievementLedgerPanel(session = session, onOpen = onAchievements)
         ProgressionAdvicePanel(session = session, selectedQuest = selectedQuest)
+        if (booleanResource(R.bool.debug_tools_enabled)) {
+            TestProgressPanel(onResetProgress = onResetProgress)
+        }
         val journalLines = session.journalEntries.takeLast(5).map { journalEntryText(it) }
         if (journalLines.isEmpty()) {
             JournalLine(stringResource(R.string.journal_01))
@@ -490,6 +577,25 @@ private fun GuildScreen(
             JournalLine(stringResource(R.string.journal_03))
         } else {
             journalLines.forEach { line -> JournalLine(line) }
+        }
+    }
+}
+
+@Composable
+private fun TestProgressPanel(onResetProgress: () -> Unit) {
+    PaperPanel(
+        title = stringResource(R.string.debug_progress_title),
+        body = stringResource(R.string.debug_progress_summary),
+    ) {
+        Button(
+            onClick = onResetProgress,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B5531)),
+            shape = RoundedCornerShape(8.dp),
+        ) {
+            Text(stringResource(R.string.debug_reset_progress_action), fontWeight = FontWeight.Black)
         }
     }
 }

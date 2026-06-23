@@ -232,6 +232,31 @@ data class PlaySessionState(
             nextState.claimAchievement(definition.id, nowMillis)
         }
 
+    fun adjustGold(delta: Int): PlaySessionState =
+        copy(gold = (gold + delta).coerceAtLeast(0))
+
+    fun adjustReputation(delta: Int): PlaySessionState =
+        copy(reputation = (reputation + delta).coerceAtLeast(0))
+
+    fun adjustGuildLevel(delta: Int): PlaySessionState =
+        copy(guildLevel = (guildLevel + delta).coerceAtLeast(1))
+
+    fun resetProgressForTesting(): PlaySessionState =
+        copy(
+            completedQuestCount = 0,
+            noticeBoardLevel = 1,
+            trainingYardLevel = 1,
+            bunkRoomLevel = 1,
+            heroes = HeroCatalog.starterHeroes,
+            lootRolls = 0,
+            lootItems = emptyList(),
+            pendingLootItems = emptyList(),
+            equippedLoot = emptyList(),
+            journalEntries = emptyList(),
+            expedition = null,
+            achievementProgress = AchievementCatalog.initialProgress(),
+        )
+
     fun effectivePartySlots(quest: Quest): Int =
         quest.partySlots.coerceAtLeast(1) + (bunkRoomLevel - 1).coerceAtLeast(0)
 

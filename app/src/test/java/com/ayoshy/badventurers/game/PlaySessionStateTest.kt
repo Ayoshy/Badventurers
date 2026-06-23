@@ -405,6 +405,63 @@ class PlaySessionStateTest {
         assertEquals(emptyList<LootItem>(), sold.lootItems)
         assertEquals(state.gold + LootEconomy.sellValue(item), sold.gold)
     }
+
+    @Test
+    fun debugAdjustmentsClampResources() {
+        val state = PlaySessionState.initial().copy(gold = 10, reputation = 1, guildLevel = 1)
+        val clamped = state.adjustGold(-50).adjustReputation(-10).adjustGuildLevel(-3)
+
+        assertEquals(0, clamped.gold)
+        assertEquals(0, clamped.reputation)
+        assertEquals(1, clamped.guildLevel)
+
+        val raised = clamped.adjustGold(500).adjustReputation(2).adjustGuildLevel(4)
+
+        assertEquals(500, raised.gold)
+        assertEquals(2, raised.reputation)
+        assertEquals(5, raised.guildLevel)
+    }
+
+    @Test
+    fun resetProgressForTestingClearsHeroesItemsFacilitiesAndPerks() {
+        val item = testLoot(id = "weapon_reset_spoon", bonus = 7)
+        val dirty = PlaySessionState.initial()
+            .startQuest(1_000L, SeedGame.firstQuest)
+            .copy(
+                gold = 1_234,
+                reputation = 9,
+                guildLevel = 4,
+                completedQuestCount = 12,
+                noticeBoardLevel = 3,
+                trainingYardLevel = 2,
+                bunkRoomLevel = 3,
+                heroes = emptyList(),
+                lootRolls = 8,
+                lootItems = listOf(item),
+                pendingLootItems = listOf(item),
+                equippedLoot = listOf(EquippedLoot(heroId = party.first().id, item = item)),
+                achievementProgress = emptyList(),
+            )
+
+        val reset = dirty.resetProgressForTesting()
+
+        assertEquals(1_234, reset.gold)
+        assertEquals(9, reset.reputation)
+        assertEquals(4, reset.guildLevel)
+        assertEquals(0, reset.completedQuestCount)
+        assertEquals(1, reset.noticeBoardLevel)
+        assertEquals(1, reset.trainingYardLevel)
+        assertEquals(1, reset.bunkRoomLevel)
+        assertEquals(HeroCatalog.starterHeroes, reset.heroes)
+        assertEquals(0, reset.lootRolls)
+        assertEquals(emptyList<LootItem>(), reset.lootItems)
+        assertEquals(emptyList<LootItem>(), reset.pendingLootItems)
+        assertEquals(emptyList<EquippedLoot>(), reset.equippedLoot)
+        assertEquals(emptyList<JournalEntry>(), reset.journalEntries)
+        assertEquals(null, reset.expedition)
+        assertEquals(AchievementCatalog.initialProgress(), reset.achievementProgress)
+    }
+
     private fun testLoot(id: String, bonus: Int): LootItem = LootItem(
         id = id,
         name = id,

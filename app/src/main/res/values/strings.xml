@@ -88,6 +88,9 @@
     <string name="completed_quest_summary">Finished. The party returned with loot, mud, and a report nobody signed.</string>
     <string name="recommended_title">Recommended</string>
     <string name="recommended_upgrade">Upgrade the Notice Board for better quest rewards.</string>
+    <string name="debug_progress_title">Test controls</string>
+    <string name="debug_progress_summary">Reset heroes, items, guild perks, achievements, quest progress, and active runs. Gold, reputation, and guild level stay editable above.</string>
+    <string name="debug_reset_progress_action">Reset progress</string>
     <string name="progression_advice_view_report">Open the expedition report before planning the next disaster.</string>
     <string name="progression_advice_handle_loot">Sort the reward loot pile before launching another job.</string>
     <string name="progression_advice_upgrade_notice_board">Upgrade Notice Board for %1$dg. Missing %2$dg.</string>
