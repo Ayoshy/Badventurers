@@ -152,7 +152,7 @@ class PlaySessionStateTest {
     }
     @Test
     fun upgradeNoticeBoardConsumesGoldAndIncreasesLevel() {
-        val state = PlaySessionState.initial()
+        val state = PlaySessionState.initial().copy(gold = 600)
         val upgraded = state.upgradeNoticeBoard()
 
         assertEquals(state.gold - 600, upgraded.gold)
@@ -190,7 +190,7 @@ class PlaySessionStateTest {
 
     @Test
     fun upgradeTrainingYardConsumesGoldAndIncreasesPowerBonus() {
-        val state = PlaySessionState.initial()
+        val state = PlaySessionState.initial().copy(gold = 450)
         val upgraded = state.upgradeTrainingYard()
 
         assertEquals(state.gold - state.trainingYardUpgradeCost(), upgraded.gold)
@@ -201,7 +201,7 @@ class PlaySessionStateTest {
     @Test
     fun upgradeBunkRoomAddsEffectiveQuestPartySlot() {
         val upgraded = PlaySessionState.initial()
-            .copy(heroes = HeroCatalog.heroes.map { it.toHero() })
+            .copy(gold = 750, heroes = HeroCatalog.heroes.map { it.toHero() })
             .upgradeBunkRoom()
 
         val selectedParty = upgraded.selectedPartyForQuest(SeedGame.firstQuest, upgraded.heroes)
@@ -215,6 +215,7 @@ class PlaySessionStateTest {
         val quest = SeedGame.firstQuest.copy(tags = emptyList(), recommendedHeroIds = emptyList())
         val selectedParty = listOf(party.first())
         val running = PlaySessionState.initial()
+            .copy(gold = 450)
             .upgradeTrainingYard()
             .startQuest(1_000L, quest, selectedParty)
         val finished = running.finishQuestNow(engine, party, roll = 0)
@@ -285,7 +286,7 @@ class PlaySessionStateTest {
 
     @Test
     fun recruitHeroConsumesGoldAndAddsSummonedHero() {
-        val state = PlaySessionState.initial().copy(heroes = emptyList())
+        val state = PlaySessionState.initial().copy(gold = HeroGacha.RECRUIT_COST, heroes = emptyList())
         val recruitment = requireNotNull(state.recruitHero(seed = 42))
 
         assertEquals(HeroGacha.RECRUIT_COST, recruitment.cost)
@@ -307,6 +308,7 @@ class PlaySessionStateTest {
     @Test
     fun recruitHeroConvertsDuplicateIntoReputation() {
         val state = PlaySessionState.initial().copy(
+            gold = HeroGacha.RECRUIT_COST,
             heroes = HeroCatalog.heroes.map { it.toHero() },
         )
         val recruitment = requireNotNull(state.recruitHero(seed = 42))

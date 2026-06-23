@@ -84,7 +84,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [x] Add UI treatment for recommended heroes per quest.
 - [ ] Visual QA the new quest banners on emulator once image preview/screenshot ACL issues are solved.
 - [ ] Design Progression / Upgrade V2: guild facilities, hero XP, level-ups, promotions, and duplicate-use rules.
-- [ ] Define first 30-minute progression pacing across quests, gold, reputation, hero XP, and upgrade costs.
+- [x] Define first 30-minute progression pacing across quests, gold, reputation, hero XP, and upgrade costs.
 - [ ] Create initial GitHub issues once GitHub CLI/connector access works.
 
 ## Blocked

@@ -35,6 +35,16 @@ The first 30 minutes should alternate between immediate action and clear anticip
 | 15-25 min | Medium-risk quests visible, some locked | Reputation and facility gates become readable | Show exact missing gate: rep, completed quests, or facility level. |
 | 25-30 min | Player has seen at least one real upgrade outcome | Hero XP, better-fit hero prompts, loot suggestions | Point to the bottleneck: hero fit, facility unlock, or equipment. |
 
+## Calibrated 30-Minute Prototype Path
+
+Implemented baseline as of 2026-06-23:
+
+- New sessions start at 0 gold, 0 reputation, guild level 1, and level-1 implemented facilities. The debug top-bar +/- controls replace the old rich debug start.
+- A deterministic first-session route can clear Cave of Minor Regrets, Forest of Wrong Turns, Bandit Tax Office, Salted Swamp Chapel, Moonlit Smuggler Run, and The Hungry Siege in 855 quest seconds, leaving room inside the 30-minute target for reward handling and upgrade decisions.
+- The route affords Notice Board 2 after the first clear, Training Yard 2 after the second clear, and Bunk Room 2 after the third clear while still leaving enough gold for a recruit or another meaningful action by the first high-risk unlock.
+- Six clears unlock the first high-risk quests through completed-quest pacing, and starter heroes gain visible XP plus at least one level-up along the route.
+- This is covered by `FirstThirtyMinutePacingTest`; first-return/offline pacing still needs its own pass once offline rewards are tuned.
+
 ## Reward-To-Action Rules
 
 Each major reward surface should recommend one useful next action, not three competing lectures.

@@ -1,9 +1,9 @@
 package com.ayoshy.badventurers.game
 
 data class PlaySessionState(
-    val gold: Int = 9999999,
-    val reputation: Int = 17,
-    val guildLevel: Int = 3,
+    val gold: Int = 0,
+    val reputation: Int = 0,
+    val guildLevel: Int = 1,
     val completedQuestCount: Int = 0,
     val noticeBoardLevel: Int = 1,
     val trainingYardLevel: Int = 1,
