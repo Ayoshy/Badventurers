@@ -103,6 +103,8 @@
     <string name="progression_advice_earn_reputation">Earn %1$d more reputation to unlock the next mess.</string>
     <string name="progression_advice_complete_quests">Complete %1$d more quests to unlock the next mess.</string>
     <string name="progression_advice_start_quest">Start %1$s; it is the best open payday right now.</string>
+    <string name="reward_next_action_title">Next improvement</string>
+    <string name="reward_equip_target_missing">No immediate equip upgrade. Selling can fund the next guild spend.</string>
     <string name="guild_facilities_title">Facilities</string>
     <string name="guild_facilities_summary">The guild is becoming useful by accident. Facilities now change quest rewards, prep power, hero XP, and party size.</string>
     <string name="guild_facility_level_effect">Lv. %1$d/%2$d - %3$s</string>

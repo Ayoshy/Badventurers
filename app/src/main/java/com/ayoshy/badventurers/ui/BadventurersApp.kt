@@ -824,6 +824,8 @@ private fun QuestResultScreen(
         val levelUpPreviews = resultParty
             .map { hero -> hero to HeroProgression.previewGrantXp(hero, session.collectableHeroXp(result)) }
             .filter { (_, preview) -> preview.levelsGained > 0 }
+        val postCollectSession = session.collectResult()
+        val postCollectAdvice = ProgressionAdvisor.recommend(postCollectSession, selectedQuest = run.quest)
 
         QuestCardArt(
             bannerResourceId = questBannerResource(run.quest),
@@ -875,6 +877,7 @@ private fun QuestResultScreen(
             detail = stringResource(R.string.result_loot_reveal_detail, session.collectableLootRolls(result)),
             value = session.collectableLootRolls(result).toString(),
         )
+        RewardNextActionPanel(session = postCollectSession, advice = postCollectAdvice)
         InfoRow(
             title = stringResource(R.string.result_party_title),
             detail = partyNames,
@@ -903,6 +906,16 @@ private fun resultRewardDetail(session: PlaySessionState, result: ExpeditionResu
         bonusPercent,
     )
 }
+@Composable
+private fun RewardNextActionPanel(session: PlaySessionState, advice: ProgressionAdvice) {
+    PaperPanel(
+        title = stringResource(R.string.reward_next_action_title),
+        body = progressionAdviceBody(session, advice),
+    ) {
+        ProgressBar(progress = progressionAdviceProgress(session, advice))
+    }
+}
+
 @Composable
 private fun HeroLevelUpRevealPanel(levelUps: List<Pair<Hero, HeroXpPreview>>) {
     if (levelUps.isEmpty()) return
@@ -2700,11 +2713,27 @@ private fun RewardLootScreen(
 
         val selectedItemName = lootItemName(selectedItem)
         val sellValue = LootEconomy.sellValue(selectedItem)
+        val suggestedTarget = bestEquipSuggestion(session, selectedItem)?.takeIf { it.gain > 0 }
+        val equipTargetDetail = suggestedTarget?.let {
+            stringResource(
+                R.string.equip_target_detail,
+                it.hero.name,
+                heroClassLabel(it.hero.heroClass),
+                formatSignedCount(it.gain),
+            )
+        } ?: stringResource(R.string.reward_equip_target_missing)
+        val nextAdviceSession = if (pendingRewards.size == 1) session.keepPendingLoot(selectedItem) else session
+        val nextAdvice = ProgressionAdvisor.recommend(nextAdviceSession)
         LootIconPanel(item = selectedItem, contentDescription = selectedItemName)
         InfoRow(
             title = stringResource(R.string.sell_value_title),
             detail = stringResource(R.string.sell_value_detail),
             value = stringResource(R.string.gold_value, sellValue),
+        )
+        InfoRow(
+            title = stringResource(R.string.equip_target_title),
+            detail = equipTargetDetail,
+            value = suggestedTarget?.let { formatSignedCount(it.gain) } ?: "-",
         )
         DarkPanel(
             title = selectedItemName,
@@ -2717,6 +2746,7 @@ private fun RewardLootScreen(
                 onSecondary = { onSell(selectedItem) },
             )
         }
+        RewardNextActionPanel(session = nextAdviceSession, advice = nextAdvice)
 
         Text(
             text = stringResource(R.string.loot_reward_title),

@@ -120,7 +120,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 ### Upgrade Economy And UX
 
 - [x] Create a single progression economy matrix covering gold, reputation, guild XP, hero XP, duplicate compensation, and optional future supplies.
-- [ ] Make every major reward answer "what can I improve now?" through upgrade prompts, hero suggestions, or equip suggestions.
+- [x] Make every major reward answer "what can I improve now?" through upgrade prompts, hero suggestions, or equip suggestions.
 - [x] Replace manual recommended heroes with a dynamic hybrid score using active specials, quest tags, hero stats, equipment, and estimated success gain.
 - [x] Define when the game should encourage upgrading guild facilities versus leveling heroes versus equipping loot.
 - [x] Add upgrade preview copy in English and French before implementation to keep the systems readable.
