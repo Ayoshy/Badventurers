@@ -312,6 +312,7 @@ fun BadventurersApp(
                             session = session,
                             nowMillis = nowMillis,
                             onViewReport = { selectedTab = GameTab.QuestResult },
+                            onAchievements = { selectedTab = GameTab.Achievements },
                             onGuild = { selectedTab = GameTab.Guild },
                         )
                         GameTab.QuestResult -> QuestResultScreen(
@@ -1055,6 +1056,7 @@ private fun OfflineSummaryScreen(
     session: PlaySessionState,
     nowMillis: Long,
     onViewReport: () -> Unit,
+    onAchievements: () -> Unit,
     onGuild: () -> Unit,
 ) {
     val run = session.expedition
@@ -1087,6 +1089,8 @@ private fun OfflineSummaryScreen(
             .ifEmpty { session.heroes.take(session.effectivePartySlots(run.quest)) }
         val partyNames = resultParty.joinToString { it.name }
         val resultCauses = ResultCauseGenerator.generate(session, run, resultParty, maxCauses = 3)
+        val postCollectSession = session.collectResult()
+        val postCollectAdvice = ProgressionAdvisor.recommend(postCollectSession, selectedQuest = run.quest)
 
         QuestCardArt(
             bannerResourceId = questBannerResource(run.quest),
@@ -1104,6 +1108,11 @@ private fun OfflineSummaryScreen(
                 onSecondary = onGuild,
             )
         }
+        InfoRow(
+            title = stringResource(R.string.offline_expedition_title),
+            detail = stringResource(R.string.offline_expedition_detail, questTitle(run.quest)),
+            value = outcomeLabel(result.outcome),
+        )
         InfoRow(
             title = stringResource(R.string.offline_away_title),
             detail = stringResource(R.string.offline_away_detail, secondsLate),
@@ -1131,6 +1140,47 @@ private fun OfflineSummaryScreen(
             detail = partyNames,
             value = stringResource(R.string.result_party_value, resultParty.size),
         )
+        OfflineAchievementProgressPanel(session = session, onAchievements = onAchievements)
+        RewardNextActionPanel(session = postCollectSession, advice = postCollectAdvice)
+    }
+}
+
+@Composable
+private fun OfflineAchievementProgressPanel(session: PlaySessionState, onAchievements: () -> Unit) {
+    val claimableCount = session.claimableAchievementCount()
+    val nextMilestone = session.nextAchievementMilestone()
+    val milestoneLine = nextMilestone?.let { milestone ->
+        stringResource(R.string.achievements_next_milestone_detail, milestone.sealsRequired, milestone.title)
+    } ?: stringResource(R.string.achievements_all_milestones_done)
+
+    PaperPanel(
+        title = stringResource(R.string.offline_achievements_title),
+        body = stringResource(
+            R.string.achievements_home_summary,
+            session.completedAchievementCount(),
+            claimableCount,
+            session.achievementSeals(),
+        ),
+    ) {
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = milestoneLine,
+            color = Color(0xFF493F2B),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Black,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Button(
+            onClick = onAchievements,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+            shape = RoundedCornerShape(8.dp),
+        ) {
+            Text(stringResource(R.string.achievements_open_action), fontWeight = FontWeight.Black)
+        }
     }
 }
 

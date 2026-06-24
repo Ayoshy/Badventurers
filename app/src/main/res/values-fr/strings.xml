@@ -158,6 +158,9 @@
     <string name="offline_summary_status">Hors ligne</string>
     <string name="offline_summary_panel_title">Succes sans supervision</string>
     <string name="offline_summary_panel_body">La guilde a continue sans toi. Tout le monde est maintenant beaucoup trop confiant.</string>
+    <string name="offline_expedition_title">Expedition terminee</string>
+    <string name="offline_expedition_detail">%1$s est revenue pendant ton absence.</string>
+    <string name="offline_achievements_title">Progression de charte</string>
     <string name="offline_away_title">Pendant ton absence</string>
     <string name="offline_away_detail">L equipe a eu %1$d s pour repeter ses excuses apres le retour.</string>
     <string name="offline_seconds_value">%1$d s</string>

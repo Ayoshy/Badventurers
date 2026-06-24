@@ -158,6 +158,9 @@
     <string name="offline_summary_status">Offline</string>
     <string name="offline_summary_panel_title">Unsupervised success</string>
     <string name="offline_summary_panel_body">The guild continued without you. This has made everyone dangerously confident.</string>
+    <string name="offline_expedition_title">Expedition completed</string>
+    <string name="offline_expedition_detail">%1$s came back while you were away.</string>
+    <string name="offline_achievements_title">Charter progress</string>
     <string name="offline_away_title">While you were out</string>
     <string name="offline_away_detail">The party had %1$d s to rehearse excuses after returning.</string>
     <string name="offline_seconds_value">%1$d s</string>

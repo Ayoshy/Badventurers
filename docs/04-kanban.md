@@ -116,12 +116,12 @@ These are the next implementation priorities.
 
 ### 3. Offline Summary 2.0
 
-- [ ] Rework Offline Summary into a combined return report.
-- [ ] Include active expedition completion.
+- [x] Rework Offline Summary into a combined return report. 2026-06-24: Offline Summary now combines completed expedition, away time, result causes, rewards, party, charter progress, and a projected next action.
+- [x] Include active expedition completion. 2026-06-24: The return report explicitly names the completed quest and outcome.
 - [ ] Include passive guild income once Core Crew exists.
 - [ ] Include passive incidents.
-- [ ] Include achievement/ticket progress.
-- [ ] End with one concrete next action.
+- [ ] Include achievement/ticket progress. 2026-06-24: Charter achievement progress now appears in the return report; ticket progress remains pending until ticket types exist.
+- [x] End with one concrete next action. 2026-06-24: The report ends with the same projected next-action panel used after quest rewards.
 
 ### 4. Reward Choice / Loot Recovery Friction
 
