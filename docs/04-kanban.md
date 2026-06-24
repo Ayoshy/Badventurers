@@ -102,7 +102,7 @@ These are the next implementation priorities.
   - Loot Priority: harder success check, extra loot roll on success.
   - Audit Everything: longer duration, better gold/reputation on paperwork-friendly quests.
 - [x] 2026-06-24: Generic contract plans implemented in code, UI, save migration, and tests; quest-specific plans remain next.
-- [ ] Add 1 to 2 quest-specific plans for the first 8 quests.
+- [x] Add 1 to 2 quest-specific plans for the first 8 quests. 2026-06-24: Added one authored quest-specific contract clause for each of the 8 current quests, with UI copy and estimate coverage.
 - [x] Add balance tests proving plans change risk/reward without making one plan always optimal.
 
 ### 2. Result Causality Cards
@@ -145,7 +145,7 @@ Goal: expand from 8 quests to 16 quests with meaningful paliers.
 
 - [x] 8 current quests playable.
 - [ ] Rebalance current unlocks after Expedition Plans exist.
-- [ ] Add plan hooks to every current quest.
+- [x] Add plan hooks to every current quest. 2026-06-24: Every current quest now exposes a unique contract clause alongside the generic plans.
 
 ### Palier 2: Licensed Trouble
 

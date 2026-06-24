@@ -116,6 +116,56 @@ class QuestCatalogueBalanceTest {
         }
     }
 
+    @Test
+    fun everyCurrentQuestOffersAQuestSpecificContractClause() {
+        SeedGame.quests.forEach { quest ->
+            val available = ExpeditionPlanCatalog.availableFor(quest)
+            val questSpecificPlans = available.filter { quest.id in it.questIds }
+
+            assertTrue("${quest.id} should keep generic plans", available.any { it.id == ExpeditionPlanCatalog.rushTheJobId })
+            assertTrue("${quest.id} should expose one or two quest clauses", questSpecificPlans.size in 1..2)
+        }
+    }
+
+    @Test
+    fun questSpecificPlansDoNotApplyToOtherQuests() {
+        val cave = SeedGame.firstQuest
+        val lockedDoor = SeedGame.questById.getValue("the_last_locked_door")
+
+        assertEquals(
+            ExpeditionPlanModifiers(),
+            ExpeditionPlanCatalog.modifiersFor(ExpeditionPlanCatalog.bringDoorFormsId, cave),
+        )
+        assertTrue(
+            ExpeditionPlanCatalog.modifiersFor(ExpeditionPlanCatalog.bringDoorFormsId, lockedDoor).scoreBonus > 0,
+        )
+        assertEquals(
+            ExpeditionPlanCatalog.rushTheJobId,
+            ExpeditionPlanCatalog.selectedPlanForUi(ExpeditionPlanCatalog.bringDoorFormsId, cave).id,
+        )
+    }
+
+    @Test
+    fun questSpecificPlansChangeRealEstimateLevers() {
+        SeedGame.quests.forEach { quest ->
+            val plan = ExpeditionPlanCatalog.availableFor(quest).first { quest.id in it.questIds }
+            val standard = ExpeditionEstimator.estimate(party = SeedGame.heroes, quest = quest)
+            val planned = ExpeditionEstimator.estimate(
+                party = SeedGame.heroes,
+                quest = quest,
+                planId = plan.id,
+            )
+
+            val changed = planned.durationSeconds != standard.durationSeconds ||
+                planned.partyPower != standard.partyPower ||
+                planned.riskPenalty != standard.riskPenalty ||
+                planned.planGoldBonusPercent != standard.planGoldBonusPercent ||
+                planned.planBonusLootRolls != standard.planBonusLootRolls ||
+                planned.greatSuccessTargetMargin != standard.greatSuccessTargetMargin
+
+            assertTrue("${quest.id} clause ${plan.id} should change estimate levers", changed)
+        }
+    }
     private fun bestEstimate(
         roster: List<Hero>,
         quest: Quest,

@@ -3638,27 +3638,92 @@ private fun riskLabel(risk: QuestRisk): String =
 @Composable
 private fun resultIncidentText(planId: String, outcome: ExpeditionOutcome): String =
     when (ExpeditionPlanCatalog.coercePlanId(planId)) {
-        ExpeditionPlanCatalog.rushTheJobId -> when (outcome.resultTone()) {
-            ResultTone.Win -> stringResource(R.string.result_plan_rush_win)
-            ResultTone.Mixed -> stringResource(R.string.result_plan_rush_mixed)
-            ResultTone.Fail -> stringResource(R.string.result_plan_rush_fail)
-        }
-        ExpeditionPlanCatalog.safetyFirstId -> when (outcome.resultTone()) {
-            ResultTone.Win -> stringResource(R.string.result_plan_safety_win)
-            ResultTone.Mixed -> stringResource(R.string.result_plan_safety_mixed)
-            ResultTone.Fail -> stringResource(R.string.result_plan_safety_fail)
-        }
-        ExpeditionPlanCatalog.lootPriorityId -> when (outcome.resultTone()) {
-            ResultTone.Win -> stringResource(R.string.result_plan_loot_win)
-            ResultTone.Mixed -> stringResource(R.string.result_plan_loot_mixed)
-            ResultTone.Fail -> stringResource(R.string.result_plan_loot_fail)
-        }
-        ExpeditionPlanCatalog.auditEverythingId -> when (outcome.resultTone()) {
-            ResultTone.Win -> stringResource(R.string.result_plan_audit_win)
-            ResultTone.Mixed -> stringResource(R.string.result_plan_audit_mixed)
-            ResultTone.Fail -> stringResource(R.string.result_plan_audit_fail)
-        }
+        ExpeditionPlanCatalog.rushTheJobId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_rush_win,
+            R.string.result_plan_rush_mixed,
+            R.string.result_plan_rush_fail,
+        )
+        ExpeditionPlanCatalog.safetyFirstId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_safety_win,
+            R.string.result_plan_safety_mixed,
+            R.string.result_plan_safety_fail,
+        )
+        ExpeditionPlanCatalog.lootPriorityId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_loot_win,
+            R.string.result_plan_loot_mixed,
+            R.string.result_plan_loot_fail,
+        )
+        ExpeditionPlanCatalog.auditEverythingId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_audit_win,
+            R.string.result_plan_audit_mixed,
+            R.string.result_plan_audit_fail,
+        )
+        ExpeditionPlanCatalog.sealSideTunnelId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_seal_side_tunnel_win,
+            R.string.result_plan_seal_side_tunnel_mixed,
+            R.string.result_plan_seal_side_tunnel_fail,
+        )
+        ExpeditionPlanCatalog.followWorstMapId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_follow_worst_map_win,
+            R.string.result_plan_follow_worst_map_mixed,
+            R.string.result_plan_follow_worst_map_fail,
+        )
+        ExpeditionPlanCatalog.demandReceiptsId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_demand_receipts_win,
+            R.string.result_plan_demand_receipts_mixed,
+            R.string.result_plan_demand_receipts_fail,
+        )
+        ExpeditionPlanCatalog.blessTheBrineId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_bless_the_brine_win,
+            R.string.result_plan_bless_the_brine_mixed,
+            R.string.result_plan_bless_the_brine_fail,
+        )
+        ExpeditionPlanCatalog.moonlessShortcutId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_moonless_shortcut_win,
+            R.string.result_plan_moonless_shortcut_mixed,
+            R.string.result_plan_moonless_shortcut_fail,
+        )
+        ExpeditionPlanCatalog.rationTheBiscuitsId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_ration_the_biscuits_win,
+            R.string.result_plan_ration_the_biscuits_mixed,
+            R.string.result_plan_ration_the_biscuits_fail,
+        )
+        ExpeditionPlanCatalog.bringDoorFormsId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_bring_door_forms_win,
+            R.string.result_plan_bring_door_forms_mixed,
+            R.string.result_plan_bring_door_forms_fail,
+        )
+        ExpeditionPlanCatalog.itemizedLastRitesId -> resultPlanToneText(
+            outcome,
+            R.string.result_plan_itemized_last_rites_win,
+            R.string.result_plan_itemized_last_rites_mixed,
+            R.string.result_plan_itemized_last_rites_fail,
+        )
         else -> resultIncidentText(outcome)
+    }
+
+@Composable
+private fun resultPlanToneText(
+    outcome: ExpeditionOutcome,
+    winStringId: Int,
+    mixedStringId: Int,
+    failStringId: Int,
+): String =
+    when (outcome.resultTone()) {
+        ResultTone.Win -> stringResource(winStringId)
+        ResultTone.Mixed -> stringResource(mixedStringId)
+        ResultTone.Fail -> stringResource(failStringId)
     }
 
 @Composable
@@ -4217,6 +4282,14 @@ private fun expeditionPlanTitle(plan: ExpeditionPlan): String =
         ExpeditionPlanCatalog.safetyFirstId -> stringResource(R.string.plan_title_safety_first)
         ExpeditionPlanCatalog.lootPriorityId -> stringResource(R.string.plan_title_loot_priority)
         ExpeditionPlanCatalog.auditEverythingId -> stringResource(R.string.plan_title_audit_everything)
+        ExpeditionPlanCatalog.sealSideTunnelId -> stringResource(R.string.plan_title_seal_side_tunnel)
+        ExpeditionPlanCatalog.followWorstMapId -> stringResource(R.string.plan_title_follow_worst_map)
+        ExpeditionPlanCatalog.demandReceiptsId -> stringResource(R.string.plan_title_demand_receipts)
+        ExpeditionPlanCatalog.blessTheBrineId -> stringResource(R.string.plan_title_bless_the_brine)
+        ExpeditionPlanCatalog.moonlessShortcutId -> stringResource(R.string.plan_title_moonless_shortcut)
+        ExpeditionPlanCatalog.rationTheBiscuitsId -> stringResource(R.string.plan_title_ration_the_biscuits)
+        ExpeditionPlanCatalog.bringDoorFormsId -> stringResource(R.string.plan_title_bring_door_forms)
+        ExpeditionPlanCatalog.itemizedLastRitesId -> stringResource(R.string.plan_title_itemized_last_rites)
         ExpeditionPlanCatalog.defaultPlanId -> stringResource(R.string.plan_title_standard_contract)
         else -> plan.title
     }
@@ -4228,6 +4301,14 @@ private fun expeditionPlanSummary(plan: ExpeditionPlan): String =
         ExpeditionPlanCatalog.safetyFirstId -> stringResource(R.string.plan_summary_safety_first)
         ExpeditionPlanCatalog.lootPriorityId -> stringResource(R.string.plan_summary_loot_priority)
         ExpeditionPlanCatalog.auditEverythingId -> stringResource(R.string.plan_summary_audit_everything)
+        ExpeditionPlanCatalog.sealSideTunnelId -> stringResource(R.string.plan_summary_seal_side_tunnel)
+        ExpeditionPlanCatalog.followWorstMapId -> stringResource(R.string.plan_summary_follow_worst_map)
+        ExpeditionPlanCatalog.demandReceiptsId -> stringResource(R.string.plan_summary_demand_receipts)
+        ExpeditionPlanCatalog.blessTheBrineId -> stringResource(R.string.plan_summary_bless_the_brine)
+        ExpeditionPlanCatalog.moonlessShortcutId -> stringResource(R.string.plan_summary_moonless_shortcut)
+        ExpeditionPlanCatalog.rationTheBiscuitsId -> stringResource(R.string.plan_summary_ration_the_biscuits)
+        ExpeditionPlanCatalog.bringDoorFormsId -> stringResource(R.string.plan_summary_bring_door_forms)
+        ExpeditionPlanCatalog.itemizedLastRitesId -> stringResource(R.string.plan_summary_itemized_last_rites)
         ExpeditionPlanCatalog.defaultPlanId -> stringResource(R.string.plan_summary_standard_contract)
         else -> plan.summary
     }

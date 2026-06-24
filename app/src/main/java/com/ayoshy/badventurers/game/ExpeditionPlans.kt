@@ -6,6 +6,7 @@ data class ExpeditionPlan(
     val id: String,
     val title: String,
     val summary: String,
+    val questIds: Set<String> = emptySet(),
     val modifiers: ExpeditionPlanModifiers = ExpeditionPlanModifiers(),
 )
 
@@ -26,6 +27,14 @@ object ExpeditionPlanCatalog {
     const val safetyFirstId: String = "safety_first"
     const val lootPriorityId: String = "loot_priority"
     const val auditEverythingId: String = "audit_everything"
+    const val sealSideTunnelId: String = "seal_side_tunnel"
+    const val followWorstMapId: String = "follow_worst_map"
+    const val demandReceiptsId: String = "demand_receipts"
+    const val blessTheBrineId: String = "bless_the_brine"
+    const val moonlessShortcutId: String = "moonless_shortcut"
+    const val rationTheBiscuitsId: String = "ration_the_biscuits"
+    const val bringDoorFormsId: String = "bring_door_forms"
+    const val itemizedLastRitesId: String = "itemized_last_rites"
 
     private val standard = ExpeditionPlan(
         id = defaultPlanId,
@@ -77,7 +86,122 @@ object ExpeditionPlanCatalog {
         ),
     )
 
-    private val visiblePlans = listOf(rushTheJob, safetyFirst, lootPriority, auditEverything)
+    private val sealSideTunnel = ExpeditionPlan(
+        id = sealSideTunnelId,
+        title = "Seal the Side Tunnel",
+        summary = "Spend time closing the suspicious route before it becomes the main route.",
+        questIds = setOf("cave_minor_regrets"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 15,
+            scoreBonus = 10,
+            riskPenaltyDelta = -8,
+        ),
+    )
+
+    private val followWorstMap = ExpeditionPlan(
+        id = followWorstMapId,
+        title = "Follow the Worst Map",
+        summary = "Trust the map everyone hates. It is faster, stranger, and occasionally full of loot.",
+        questIds = setOf("forest_of_wrong_turns"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = -15,
+            scoreBonus = -4,
+            riskPenaltyDelta = 8,
+            successLootBonus = 1,
+        ),
+    )
+
+    private val demandReceipts = ExpeditionPlan(
+        id = demandReceiptsId,
+        title = "Demand Receipts",
+        summary = "Fight bandit bureaucracy with better bureaucracy and a very sharp stamp.",
+        questIds = setOf("bandit_tax_office"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 20,
+            scoreBonus = 6,
+            riskPenaltyDelta = 4,
+            goldBonusPercent = 30,
+            greatSuccessMarginDelta = 10,
+        ),
+    )
+
+    private val blessTheBrine = ExpeditionPlan(
+        id = blessTheBrineId,
+        title = "Bless the Brine",
+        summary = "Turn swamp water into a defensive asset, or at least a less personal insult.",
+        questIds = setOf("salted_swamp_chapel"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 10,
+            scoreBonus = 12,
+            riskPenaltyDelta = -6,
+            greatSuccessMarginDelta = 8,
+        ),
+    )
+
+    private val moonlessShortcut = ExpeditionPlan(
+        id = moonlessShortcutId,
+        title = "Moonless Shortcut",
+        summary = "Cut through darker alleys for quicker delivery and a higher chance of regrettable extras.",
+        questIds = setOf("moonlit_smuggler_run"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = -20,
+            scoreBonus = -6,
+            riskPenaltyDelta = 10,
+            successLootBonus = 1,
+        ),
+    )
+
+    private val rationTheBiscuits = ExpeditionPlan(
+        id = rationTheBiscuitsId,
+        title = "Ration the Biscuits",
+        summary = "Stretch the siege supplies into morale, discipline, and several formal biscuit audits.",
+        questIds = setOf("the_hungry_siege"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 15,
+            scoreBonus = 12,
+            riskPenaltyDelta = -6,
+            greatSuccessMarginDelta = 10,
+        ),
+    )
+
+    private val bringDoorForms = ExpeditionPlan(
+        id = bringDoorFormsId,
+        title = "Bring the Door Forms",
+        summary = "Confront the final lock with paperwork so complete the hinges feel supervised.",
+        questIds = setOf("the_last_locked_door"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 20,
+            scoreBonus = 16,
+            riskPenaltyDelta = -4,
+            goldBonusPercent = 10,
+        ),
+    )
+
+    private val itemizedLastRites = ExpeditionPlan(
+        id = itemizedLastRitesId,
+        title = "Itemized Last Rites",
+        summary = "Read the undead debt ledger aloud and charge a documentation fee.",
+        questIds = setOf("crypt_of_unpaid_debts"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 25,
+            scoreBonus = 10,
+            riskPenaltyDelta = 4,
+            goldBonusPercent = 25,
+        ),
+    )
+
+    private val genericPlans = listOf(rushTheJob, safetyFirst, lootPriority, auditEverything)
+    private val questSpecificPlans = listOf(
+        sealSideTunnel,
+        followWorstMap,
+        demandReceipts,
+        blessTheBrine,
+        moonlessShortcut,
+        rationTheBiscuits,
+        bringDoorForms,
+        itemizedLastRites,
+    )
+    private val visiblePlans = genericPlans + questSpecificPlans
     val all: List<ExpeditionPlan> = listOf(standard) + visiblePlans
     private val byId = all.associateBy { it.id }
 
@@ -85,7 +209,8 @@ object ExpeditionPlanCatalog {
 
     fun coercePlanId(planId: String?): String = byId(planId).id
 
-    fun availableFor(quest: Quest): List<ExpeditionPlan> = visiblePlans
+    fun availableFor(quest: Quest): List<ExpeditionPlan> =
+        genericPlans + questSpecificPlans.filter { quest.id in it.questIds }
 
     fun selectedPlanForUi(planId: String?, quest: Quest): ExpeditionPlan {
         val available = availableFor(quest)
@@ -94,7 +219,14 @@ object ExpeditionPlanCatalog {
             ?: standard
     }
 
-    fun modifiersFor(planId: String?, quest: Quest): ExpeditionPlanModifiers = byId(planId).modifiers
+    fun modifiersFor(planId: String?, quest: Quest): ExpeditionPlanModifiers {
+        val plan = byId(planId)
+        return if (plan.questIds.isNotEmpty() && quest.id !in plan.questIds) {
+            standard.modifiers
+        } else {
+            plan.modifiers
+        }
+    }
 
     fun durationSeconds(quest: Quest, planId: String?): Int {
         val durationPercent = 100 + modifiersFor(planId, quest).durationPercentDelta
