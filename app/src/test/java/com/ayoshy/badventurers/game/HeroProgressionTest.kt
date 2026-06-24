@@ -44,6 +44,34 @@ class HeroProgressionTest {
     }
 
     @Test
+    fun previewGrantXpReportsAuthoredLootRecoveryRewards() {
+        val lootSpecialist = HeroCatalog.byId.getValue("nell").toHero()
+        val specialistPreview = HeroProgression.previewGrantXp(
+            lootSpecialist,
+            HeroProgression.xpForNextLevel(lootSpecialist.level),
+        )
+        val veteran = HeroProgression.withProgress(lootSpecialist, level = 4, xp = 0)
+        val veteranPreview = HeroProgression.previewGrantXp(
+            veteran,
+            HeroProgression.xpForNextLevel(veteran.level),
+        )
+        val nonSpecialist = HeroProgression.withProgress(HeroCatalog.byId.getValue("darrik").toHero(), level = 2, xp = 0)
+        val nonSpecialistPreview = HeroProgression.previewGrantXp(
+            nonSpecialist,
+            HeroProgression.xpForNextLevel(nonSpecialist.level),
+        )
+
+        assertEquals(
+            listOf(HeroLevelRewardUnlock(3, HeroLevelRewardType.SpecialistLootRecovery)),
+            specialistPreview.rewardUnlocks,
+        )
+        assertEquals(
+            listOf(HeroLevelRewardUnlock(5, HeroLevelRewardType.VeteranLootRecovery)),
+            veteranPreview.rewardUnlocks,
+        )
+        assertEquals(emptyList<HeroLevelRewardUnlock>(), nonSpecialistPreview.rewardUnlocks)
+    }
+    @Test
     fun levelUpAppliesClassTraitAndQuirkStatGrowth() {
         val hero = HeroCatalog.byId.getValue("mira").toHero()
         val advanced = HeroProgression.grantXp(hero, HeroProgression.xpForNextLevel(hero.level))

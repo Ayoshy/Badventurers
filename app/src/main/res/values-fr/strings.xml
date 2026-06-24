@@ -271,6 +271,8 @@
     <string name="hero_next_level_value">Nv. %1$d -&gt; %2$d</string>
     <string name="hero_xp_remaining_detail">%1$d XP avant le prochain niveau</string>
     <string name="hero_next_stats_detail">Prochain niveau: %1$s</string>
+    <string name="hero_level_reward_specialist_loot_recovery">Niv. %1$d : +1 emplacement de recuperation specialiste</string>
+    <string name="hero_level_reward_veteran_loot_recovery">Niv. %1$d : +1 emplacement de recuperation veteran</string>
     <string name="hero_special_detail">Special: %1$s</string>
     <string name="hero_stat_gain_none">paperasse stable</string>
     <string name="hero_stat_gain_value">+%2$d %1$s</string>

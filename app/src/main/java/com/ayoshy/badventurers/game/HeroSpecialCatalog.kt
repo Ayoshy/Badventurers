@@ -1,4 +1,4 @@
-﻿package com.ayoshy.badventurers.game
+package com.ayoshy.badventurers.game
 
 import kotlin.math.max
 
@@ -53,6 +53,14 @@ object HeroSpecialCatalog {
 
     fun activeHeroes(party: List<Hero>, quest: Quest): List<Hero> =
         party.filter { modifierFor(it, quest) != ExpeditionSpecialModifiers() }
+
+    fun isLootRecoverySpecial(special: HeroSpecial): Boolean = special in lootRecoverySpecials
+
+    private val lootRecoverySpecials = setOf(
+        HeroSpecial.LightFingers,
+        HeroSpecial.DirtyJackpot,
+        HeroSpecial.PreservationSalt,
+    )
 
     private fun modifierFor(hero: Hero, quest: Quest): ExpeditionSpecialModifiers = when (hero.special) {
         HeroSpecial.RamshackleCharge -> if (quest.hasAny(QuestTag.Breach, QuestTag.Wall, QuestTag.Obstacle, QuestTag.Simple)) {

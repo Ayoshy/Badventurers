@@ -88,6 +88,8 @@ import com.ayoshy.badventurers.game.HeroProgression
 import com.ayoshy.badventurers.game.HeroRecommendation
 import com.ayoshy.badventurers.game.HeroRecommendationScorer
 import com.ayoshy.badventurers.game.HeroRarity
+import com.ayoshy.badventurers.game.HeroLevelRewardType
+import com.ayoshy.badventurers.game.HeroLevelRewardUnlock
 import com.ayoshy.badventurers.game.HeroXpPreview
 import com.ayoshy.badventurers.game.HeroSpecial
 import com.ayoshy.badventurers.game.HeroSpecialCatalog
@@ -1048,9 +1050,38 @@ private fun HeroLevelUpRevealRow(hero: Hero, preview: HeroXpPreview) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (preview.rewardUnlocks.isNotEmpty()) {
+                Text(
+                    text = heroLevelRewardSummary(preview.rewardUnlocks),
+                    color = Color(0xFF493F2B),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
+
+@Composable
+private fun heroLevelRewardSummary(rewards: List<HeroLevelRewardUnlock>): String {
+    val lines = mutableListOf<String>()
+    rewards.forEach { reward ->
+        lines += when (reward.type) {
+            HeroLevelRewardType.SpecialistLootRecovery -> stringResource(
+                R.string.hero_level_reward_specialist_loot_recovery,
+                reward.level,
+            )
+            HeroLevelRewardType.VeteranLootRecovery -> stringResource(
+                R.string.hero_level_reward_veteran_loot_recovery,
+                reward.level,
+            )
+        }
+    }
+    return lines.joinToString(" / ")
+}
+
 @Composable
 private fun OfflineSummaryScreen(
     session: PlaySessionState,
@@ -2022,6 +2053,7 @@ private fun HeroProgressionPanel(hero: Hero, modifier: Modifier = Modifier) {
     val xpRemaining = (nextXp - hero.xp).coerceAtLeast(0)
     val nextLevelStats = HeroProgression.statGrowthForLevel(hero, hero.level + 1)
     val nextStatSummary = statBonusSummary(nextLevelStats, maxItems = 4)
+    val nextLevelRewards = HeroProgression.rewardUnlocksBetween(hero, hero.level, hero.level + 1)
 
     Column(
         modifier = modifier
@@ -2067,6 +2099,16 @@ private fun HeroProgressionPanel(hero: Hero, modifier: Modifier = Modifier) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        if (nextLevelRewards.isNotEmpty()) {
+            Text(
+                text = heroLevelRewardSummary(nextLevelRewards),
+                color = Color(0xFFFFF0BD),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         Text(
             text = stringResource(R.string.hero_special_detail, heroSpecialSummary(hero.special)),
             color = Color(0xFFDED0A2),

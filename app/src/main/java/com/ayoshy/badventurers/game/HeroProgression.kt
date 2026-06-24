@@ -1,5 +1,15 @@
 package com.ayoshy.badventurers.game
 
+enum class HeroLevelRewardType {
+    SpecialistLootRecovery,
+    VeteranLootRecovery,
+}
+
+data class HeroLevelRewardUnlock(
+    val level: Int,
+    val type: HeroLevelRewardType,
+)
+
 data class HeroXpPreview(
     val beforeLevel: Int,
     val afterLevel: Int,
@@ -8,10 +18,13 @@ data class HeroXpPreview(
     val xpForNextLevel: Int,
     val levelsGained: Int,
     val statGains: List<StatBonus>,
+    val rewardUnlocks: List<HeroLevelRewardUnlock> = emptyList(),
 )
 
 object HeroProgression {
     const val MIN_LEVEL = 1
+    const val SPECIALIST_LOOT_RECOVERY_LEVEL = 3
+    const val VETERAN_LOOT_RECOVERY_LEVEL = 5
 
     fun xpForNextLevel(level: Int): Int {
         val n = level.coerceAtLeast(MIN_LEVEL) - MIN_LEVEL
@@ -51,7 +64,19 @@ object HeroProgression {
             xpForNextLevel = xpForNextLevel(advanced.level),
             levelsGained = (advanced.level - normalized.level).coerceAtLeast(0),
             statGains = statGains,
+            rewardUnlocks = rewardUnlocksBetween(normalized, normalized.level, advanced.level),
         )
+    }
+
+    fun rewardUnlocksBetween(hero: Hero, beforeLevel: Int, afterLevel: Int): List<HeroLevelRewardUnlock> =
+        (beforeLevel + 1..afterLevel).mapNotNull { level -> rewardUnlockAtLevel(hero, level) }
+
+    fun rewardUnlockAtLevel(hero: Hero, level: Int): HeroLevelRewardUnlock? = when {
+        level == SPECIALIST_LOOT_RECOVERY_LEVEL && HeroSpecialCatalog.isLootRecoverySpecial(hero.special) -> {
+            HeroLevelRewardUnlock(level, HeroLevelRewardType.SpecialistLootRecovery)
+        }
+        level == VETERAN_LOOT_RECOVERY_LEVEL -> HeroLevelRewardUnlock(level, HeroLevelRewardType.VeteranLootRecovery)
+        else -> null
     }
 
     fun withProgress(hero: Hero, level: Int, xp: Int): Hero {

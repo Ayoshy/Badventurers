@@ -504,11 +504,6 @@ data class PlaySessionState(
         private const val BASE_LOOT_KEEP_LIMIT = 1
         private const val VETERAN_LOOT_CARRY_LEVEL = 5
         private const val SPECIALIST_LOOT_CARRY_LEVEL = 3
-        private val LOOT_CARRY_SPECIALS = setOf(
-            HeroSpecial.LightFingers,
-            HeroSpecial.DirtyJackpot,
-            HeroSpecial.PreservationSalt,
-        )
 
         fun initial(): PlaySessionState = PlaySessionState()
 
@@ -538,7 +533,7 @@ data class PlaySessionState(
         if (party.any { it.level >= VETERAN_LOOT_CARRY_LEVEL }) 1 else 0
 
     private fun specialistLootCarryBonus(party: List<Hero>): Int =
-        if (party.any { it.level >= SPECIALIST_LOOT_CARRY_LEVEL && it.special in LOOT_CARRY_SPECIALS }) 1 else 0
+        if (party.any { it.level >= SPECIALIST_LOOT_CARRY_LEVEL && HeroSpecialCatalog.isLootRecoverySpecial(it.special) }) 1 else 0
 
     private fun achievementAdjustedRewardGold(result: ExpeditionResult): Int {
         val pityBonusPercent = if (

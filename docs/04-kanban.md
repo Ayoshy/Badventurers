@@ -130,7 +130,7 @@ These are the next implementation priorities.
 - [x] 2026-06-24: Add first capacity bonuses: Bunk Room levels increase recovery capacity, veteran heroes can add a slot, and loot-specialist heroes get a level-gated hook.
 - [x] Keep the Reward Choice charter unlock meaningful by making it add an extra loot candidate on Great Success, not an automatic extra kept item.
 - [x] Add visible UI breakdown for why the party can recover N items: base, Bunk Room, veteran, specialist. 2026-06-24: Reward Loot now shows persisted recovery sources for base, Bunk Room, veteran heroes, and loot specialists.
-- [ ] Add authored hero/level-up rewards that explicitly increase loot recovery capacity.
+- [x] Add authored hero/level-up rewards that explicitly increase loot recovery capacity. 2026-06-24: Hero progression now announces specialist and veteran recovery-slot unlocks, with result and hero-detail UI copy.
 - [ ] Later reward-choice variants:
   - item A vs item B;
   - gold vs reputation;
