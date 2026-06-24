@@ -8,8 +8,8 @@ This file is the first stop for future Codex work on this repo. Read it before d
 
 This workspace repeatedly hits Windows sandbox/ACL failures when Codex uses `apply_patch`, `git diff`, or normal file reads on otherwise valid repo files. Typical errors mention `windows sandbox`, `helper_unknown_error`, `apply deny-read ACLs`, or `orchestrator_helper_exit_nonzero`.
 
-- Do not spend repeated attempts on the same failing operation. One normal attempt is enough.
-- If `apply_patch` fails with one of those ACL errors, switch immediately to a narrow guarded PowerShell edit:
+- For text/code edits in this workspace, skip `apply_patch` and use a narrow guarded PowerShell edit directly. The ACL failure is recurring enough that trying `apply_patch` first usually just wastes time and tokens.
+- Use this fallback shape:
   - read with `[System.IO.File]::ReadAllText($p)`;
   - replace exact known text blocks only;
   - check `Contains(...)` or an exact match count before writing;
