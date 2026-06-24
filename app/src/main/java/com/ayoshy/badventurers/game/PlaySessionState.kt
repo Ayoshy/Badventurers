@@ -14,6 +14,7 @@ data class PlaySessionState(
     val pendingLootItems: List<LootItem> = emptyList(),
     val pendingLootKeepLimit: Int = 0,
     val pendingLootKeptCount: Int = 0,
+    val pendingLootCarryBreakdown: LootCarryBreakdown = LootCarryBreakdown(),
     val equippedLoot: List<EquippedLoot> = emptyList(),
     val journalEntries: List<JournalEntry> = emptyList(),
     val expedition: ExpeditionRun? = null,
@@ -127,7 +128,7 @@ data class PlaySessionState(
             heroes = advancedHeroes,
             journalEntries = (journalEntries + generatedJournal).takeLast(12),
             expedition = null,
-        ).appendPendingLoot(generatedLoot, lootCarryLimit(advancedParty))
+        ).appendPendingLoot(generatedLoot, lootCarryBreakdown(advancedParty))
         return AchievementTracker.applyEvent(
             state = collected,
             event = AchievementEvent.QuestCollected(
@@ -202,13 +203,27 @@ data class PlaySessionState(
         result.reward.lootRolls + achievementRewardChoiceLootRolls(result)
 
     fun lootCarryLimit(party: List<Hero> = heroes): Int =
-        (BASE_LOOT_KEEP_LIMIT + bunkRoomLootCarryBonus() + veteranLootCarryBonus(party) + specialistLootCarryBonus(party))
-            .coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
+        lootCarryBreakdown(party).total.coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
+
+    fun lootCarryBreakdown(party: List<Hero> = heroes): LootCarryBreakdown = LootCarryBreakdown(
+        base = BASE_LOOT_KEEP_LIMIT,
+        bunkRoom = bunkRoomLootCarryBonus(),
+        veteran = veteranLootCarryBonus(party),
+        specialist = specialistLootCarryBonus(party),
+    )
 
     fun bunkRoomLootCarryBonus(): Int = (bunkRoomLevel - 1).coerceAtLeast(0)
 
     fun pendingLootEffectiveKeepLimit(): Int =
         if (pendingLootItems.isEmpty()) 0 else pendingLootKeepLimit.coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
+
+    fun pendingLootRecoveryBreakdown(): LootCarryBreakdown =
+        if (pendingLootItems.isEmpty()) {
+            LootCarryBreakdown()
+        } else {
+            pendingLootCarryBreakdown.takeIf { it.total > 0 }
+                ?: LootCarryBreakdown(base = pendingLootEffectiveKeepLimit())
+        }
 
     fun pendingLootRemainingChoices(): Int =
         (pendingLootEffectiveKeepLimit() - pendingLootKeptCount.coerceAtLeast(0)).coerceAtLeast(0)
@@ -296,6 +311,7 @@ data class PlaySessionState(
             pendingLootItems = emptyList(),
             pendingLootKeepLimit = 0,
             pendingLootKeptCount = 0,
+            pendingLootCarryBreakdown = LootCarryBreakdown(),
             equippedLoot = emptyList(),
             journalEntries = emptyList(),
             expedition = null,
@@ -405,6 +421,7 @@ data class PlaySessionState(
             pendingLootItems = if (shouldDestroyRest) emptyList() else nextPending,
             pendingLootKeepLimit = if (shouldDestroyRest) 0 else keepLimit,
             pendingLootKeptCount = if (shouldDestroyRest) 0 else nextKeptCount,
+            pendingLootCarryBreakdown = if (shouldDestroyRest) LootCarryBreakdown() else pendingLootRecoveryBreakdown(),
             lootItems = lootItems + item,
         )
         return AchievementTracker.applyEvent(
@@ -420,6 +437,7 @@ data class PlaySessionState(
             pendingLootItems = emptyList(),
             pendingLootKeepLimit = 0,
             pendingLootKeptCount = 0,
+            pendingLootCarryBreakdown = LootCarryBreakdown(),
         )
     }
 
@@ -500,17 +518,19 @@ data class PlaySessionState(
     private fun refreshedAchievementProgress(nowMillis: Long = 0L): List<AchievementProgress> =
         AchievementTracker.refresh(this, nowMillis = nowMillis).achievementProgress
 
-    private fun appendPendingLoot(items: List<LootItem>, keepLimit: Int): PlaySessionState {
+    private fun appendPendingLoot(items: List<LootItem>, carryBreakdown: LootCarryBreakdown): PlaySessionState {
         if (items.isEmpty()) return this
-        val nextKeepLimit = if (pendingLootItems.isEmpty()) {
-            keepLimit.coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
+        val normalizedBreakdown = carryBreakdown.withMinimumBase(BASE_LOOT_KEEP_LIMIT)
+        val nextBreakdown = if (pendingLootItems.isEmpty()) {
+            normalizedBreakdown
         } else {
-            pendingLootEffectiveKeepLimit() + keepLimit.coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
+            pendingLootRecoveryBreakdown() + normalizedBreakdown
         }
         return copy(
             pendingLootItems = pendingLootItems + items,
-            pendingLootKeepLimit = nextKeepLimit,
+            pendingLootKeepLimit = nextBreakdown.total.coerceAtLeast(BASE_LOOT_KEEP_LIMIT),
             pendingLootKeptCount = if (pendingLootItems.isEmpty()) 0 else pendingLootKeptCount.coerceAtLeast(0),
+            pendingLootCarryBreakdown = nextBreakdown,
         )
     }
 
@@ -569,7 +589,7 @@ data class PlaySessionState(
                 gold = gold + reward.gold,
                 reputation = reputation + reward.reputation,
                 lootRolls = lootRolls + reward.lootRolls,
-            ).appendPendingLoot(generatedLoot, lootCarryLimit())
+            ).appendPendingLoot(generatedLoot, lootCarryBreakdown())
         }
         is AchievementReward.Composite -> reward.rewards.fold(this) { state, item ->
             state.applyAchievementReward(item, achievementId)
@@ -579,6 +599,26 @@ data class PlaySessionState(
 
     private fun achievementRewardSeed(achievementId: String): Int =
         achievementId.fold(lootRolls * 31 + gold) { acc, char -> acc * 31 + char.code }
+}
+
+data class LootCarryBreakdown(
+    val base: Int = 0,
+    val bunkRoom: Int = 0,
+    val veteran: Int = 0,
+    val specialist: Int = 0,
+) {
+    val total: Int
+        get() = base + bunkRoom + veteran + specialist
+
+    operator fun plus(other: LootCarryBreakdown): LootCarryBreakdown = LootCarryBreakdown(
+        base = base + other.base,
+        bunkRoom = bunkRoom + other.bunkRoom,
+        veteran = veteran + other.veteran,
+        specialist = specialist + other.specialist,
+    )
+
+    fun withMinimumBase(minimumBase: Int): LootCarryBreakdown =
+        if (total >= minimumBase) this else copy(base = base + minimumBase - total)
 }
 
 data class ExpeditionRun(

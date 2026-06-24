@@ -9,6 +9,7 @@ import com.ayoshy.badventurers.game.ExpeditionRunSnapshot
 import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroProgressSnapshot
 import com.ayoshy.badventurers.game.JournalEntrySnapshot
+import com.ayoshy.badventurers.game.LootCarryBreakdown
 import com.ayoshy.badventurers.game.LootIcon
 import com.ayoshy.badventurers.game.LootItemSnapshot
 import com.ayoshy.badventurers.game.LootRarity
@@ -38,6 +39,7 @@ internal object PlaySessionSnapshotJson {
         .put("pendingLootItems", JSONArray().also { array -> snapshot.pendingLootItems.forEach { array.put(encodeLootItem(it)) } })
         .put("pendingLootKeepLimit", snapshot.pendingLootKeepLimit)
         .put("pendingLootKeptCount", snapshot.pendingLootKeptCount)
+        .put("pendingLootCarryBreakdown", encodeLootCarryBreakdown(snapshot.pendingLootCarryBreakdown))
         .put("equippedLoot", JSONArray().also { array -> snapshot.equippedLoot.forEach { array.put(encodeEquippedLoot(it)) } })
         .put("journalEntries", JSONArray().also { array -> snapshot.journalEntries.forEach { array.put(encodeJournalEntry(it)) } })
         .put("expedition", snapshot.expedition?.let { encodeExpedition(it) })
@@ -63,6 +65,7 @@ internal object PlaySessionSnapshotJson {
             pendingLootItems = decodeObjectArray(json.optJSONArray("pendingLootItems"), ::decodeLootItem),
             pendingLootKeepLimit = json.optInt("pendingLootKeepLimit", 0),
             pendingLootKeptCount = json.optInt("pendingLootKeptCount", 0),
+            pendingLootCarryBreakdown = json.optJSONObject("pendingLootCarryBreakdown")?.let(::decodeLootCarryBreakdown) ?: LootCarryBreakdown(),
             equippedLoot = decodeObjectArray(json.optJSONArray("equippedLoot"), ::decodeEquippedLoot),
             journalEntries = decodeObjectArray(json.optJSONArray("journalEntries"), ::decodeJournalEntry),
             expedition = json.optJSONObject("expedition")?.let(::decodeExpedition),
@@ -103,6 +106,19 @@ internal object PlaySessionSnapshotJson {
             seen = json.optBoolean("seen"),
         )
     }
+
+    private fun encodeLootCarryBreakdown(breakdown: LootCarryBreakdown): JSONObject = JSONObject()
+        .put("base", breakdown.base)
+        .put("bunkRoom", breakdown.bunkRoom)
+        .put("veteran", breakdown.veteran)
+        .put("specialist", breakdown.specialist)
+
+    private fun decodeLootCarryBreakdown(json: JSONObject): LootCarryBreakdown = LootCarryBreakdown(
+        base = json.optInt("base"),
+        bunkRoom = json.optInt("bunkRoom"),
+        veteran = json.optInt("veteran"),
+        specialist = json.optInt("specialist"),
+    )
 
     private fun encodeLootItem(item: LootItemSnapshot): JSONObject = JSONObject()
         .put("id", item.id)

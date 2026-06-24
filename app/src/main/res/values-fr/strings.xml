@@ -204,6 +204,14 @@
     <string name="loot_carry_title">Capacite</string>
     <string name="loot_carry_detail">%1$d/%2$d emplacements utilises. Le butin non choisi est detruit quand le sac est plein.</string>
     <string name="loot_carry_value">%1$d restants</string>
+    <string name="loot_carry_breakdown_title">Sources de recuperation</string>
+    <string name="loot_carry_breakdown_body">Ce tas permet de recuperer %1$d objet(s) avant de perdre le reste.</string>
+    <string name="loot_carry_source_base">Sac de base</string>
+    <string name="loot_carry_source_bunk_room">Dortoir</string>
+    <string name="loot_carry_source_veteran">Heros veteran</string>
+    <string name="loot_carry_source_specialist">Specialiste du butin</string>
+    <string name="loot_carry_source_base_value">%1$d</string>
+    <string name="loot_carry_source_bonus_value">+%1$d</string>
     <string name="loot_choose_action">Ramener cet objet</string>
     <string name="loot_discard_rest_action">Abandonner le reste</string>
     <string name="loot_inventory_status">%1$d objets</string>

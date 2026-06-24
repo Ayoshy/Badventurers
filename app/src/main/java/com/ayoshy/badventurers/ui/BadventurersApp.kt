@@ -93,6 +93,7 @@ import com.ayoshy.badventurers.game.HeroSpecial
 import com.ayoshy.badventurers.game.HeroSpecialCatalog
 import com.ayoshy.badventurers.game.HeroRecruitmentResult
 import com.ayoshy.badventurers.game.JournalEntry
+import com.ayoshy.badventurers.game.LootCarryBreakdown
 import com.ayoshy.badventurers.game.LootEconomy
 import com.ayoshy.badventurers.game.LootIcon
 import com.ayoshy.badventurers.game.LootItem
@@ -2856,6 +2857,7 @@ private fun RewardLootScreen(
     val pendingRewards = session.pendingLootItems.asReversed()
     val remainingChoices = minOf(session.pendingLootRemainingChoices(), pendingRewards.size)
     val keepLimit = session.pendingLootEffectiveKeepLimit()
+    val carryBreakdown = session.pendingLootRecoveryBreakdown()
     var selectedIndex by remember(pendingRewards.size) { mutableStateOf(0) }
     val selectedItem = pendingRewards.getOrNull(selectedIndex)
 
@@ -2902,6 +2904,7 @@ private fun RewardLootScreen(
             detail = stringResource(R.string.loot_carry_detail, session.pendingLootSelectedCount(), keepLimit),
             value = stringResource(R.string.loot_carry_value, remainingChoices),
         )
+        LootCarryBreakdownPanel(carryBreakdown)
         InfoRow(
             title = stringResource(R.string.equip_target_title),
             detail = equipTargetDetail,
@@ -2934,6 +2937,60 @@ private fun RewardLootScreen(
                 onClick = { selectedIndex = index },
             )
         }
+    }
+}
+
+@Composable
+private fun LootCarryBreakdownPanel(breakdown: LootCarryBreakdown) {
+    DarkPanel(
+        title = stringResource(R.string.loot_carry_breakdown_title),
+        body = stringResource(R.string.loot_carry_breakdown_body, breakdown.total),
+    ) {
+        Spacer(Modifier.height(8.dp))
+        LootCarryBreakdownRow(
+            label = stringResource(R.string.loot_carry_source_base),
+            value = stringResource(R.string.loot_carry_source_base_value, breakdown.base),
+        )
+        LootCarryBreakdownRow(
+            label = stringResource(R.string.loot_carry_source_bunk_room),
+            value = stringResource(R.string.loot_carry_source_bonus_value, breakdown.bunkRoom),
+        )
+        LootCarryBreakdownRow(
+            label = stringResource(R.string.loot_carry_source_veteran),
+            value = stringResource(R.string.loot_carry_source_bonus_value, breakdown.veteran),
+        )
+        LootCarryBreakdownRow(
+            label = stringResource(R.string.loot_carry_source_specialist),
+            value = stringResource(R.string.loot_carry_source_bonus_value, breakdown.specialist),
+        )
+    }
+}
+
+@Composable
+private fun LootCarryBreakdownRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            color = Color(0xFFDED0A2),
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = value,
+            color = Color(0xFFFFF1C0),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Black,
+            maxLines = 1,
+            modifier = Modifier.padding(start = 8.dp),
+        )
     }
 }
 

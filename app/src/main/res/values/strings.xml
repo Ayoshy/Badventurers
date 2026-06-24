@@ -204,6 +204,14 @@
     <string name="loot_carry_title">Carry limit</string>
     <string name="loot_carry_detail">%1$d/%2$d recovery slots used. Unchosen loot is destroyed when the pack is full.</string>
     <string name="loot_carry_value">%1$d left</string>
+    <string name="loot_carry_breakdown_title">Recovery sources</string>
+    <string name="loot_carry_breakdown_body">This reward pile can recover %1$d item(s) before the rest is lost.</string>
+    <string name="loot_carry_source_base">Base pack</string>
+    <string name="loot_carry_source_bunk_room">Bunk Room</string>
+    <string name="loot_carry_source_veteran">Veteran hero</string>
+    <string name="loot_carry_source_specialist">Loot specialist</string>
+    <string name="loot_carry_source_base_value">%1$d</string>
+    <string name="loot_carry_source_bonus_value">+%1$d</string>
     <string name="loot_choose_action">Bring this back</string>
     <string name="loot_discard_rest_action">Leave the rest</string>
     <string name="loot_inventory_status">%1$d items</string>

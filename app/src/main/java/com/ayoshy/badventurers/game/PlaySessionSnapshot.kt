@@ -16,6 +16,7 @@ data class PlaySessionSnapshot(
     val pendingLootItems: List<LootItemSnapshot> = emptyList(),
     val pendingLootKeepLimit: Int = 0,
     val pendingLootKeptCount: Int = 0,
+    val pendingLootCarryBreakdown: LootCarryBreakdown = LootCarryBreakdown(),
     val equippedLoot: List<EquippedLootSnapshot> = emptyList(),
     val journalEntries: List<JournalEntrySnapshot> = emptyList(),
     val expedition: ExpeditionRunSnapshot? = null,
@@ -60,6 +61,7 @@ data class PlaySessionSnapshot(
             pendingLootItems = restoredPendingLootItems,
             pendingLootKeepLimit = restoredPendingLootKeepLimit,
             pendingLootKeptCount = restoredPendingLootKeptCount,
+            pendingLootCarryBreakdown = if (restoredPendingLootItems.isEmpty()) LootCarryBreakdown() else pendingLootCarryBreakdown,
             equippedLoot = equippedLoot.mapNotNull { it.toEquippedLoot(restoredHeroes) },
             journalEntries = journalEntries.map { it.toEntry() },
             expedition = expedition?.toRun(),
@@ -68,7 +70,7 @@ data class PlaySessionSnapshot(
     }
 
     companion object {
-        const val CURRENT_VERSION = 12
+        const val CURRENT_VERSION = 13
 
         fun initial(): PlaySessionSnapshot {
             return fromState(PlaySessionState.initial())
@@ -91,6 +93,7 @@ data class PlaySessionSnapshot(
                 pendingLootItems = state.pendingLootItems.map { LootItemSnapshot.fromItem(it) },
                 pendingLootKeepLimit = state.pendingLootEffectiveKeepLimit(),
                 pendingLootKeptCount = state.pendingLootSelectedCount(),
+                pendingLootCarryBreakdown = state.pendingLootCarryBreakdown,
                 equippedLoot = state.equippedLoot.map { EquippedLootSnapshot.fromEquippedLoot(it) },
                 journalEntries = state.journalEntries.map { JournalEntrySnapshot.fromEntry(it) },
                 expedition = state.expedition?.let { ExpeditionRunSnapshot.fromRun(it) },

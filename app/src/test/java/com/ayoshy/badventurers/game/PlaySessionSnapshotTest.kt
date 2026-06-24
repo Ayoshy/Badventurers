@@ -149,6 +149,23 @@ class PlaySessionSnapshotTest {
         assertEquals(1, restored.pendingLootRemainingChoices())
     }
     @Test
+    fun snapshotRoundTripsPendingLootCarryBreakdown() {
+        val pendingLoot = LootGenerator.generate(2, seed = 31)
+        val breakdown = LootCarryBreakdown(base = 1, bunkRoom = 1, veteran = 1)
+        val state = PlaySessionState.initial().copy(
+            pendingLootItems = pendingLoot,
+            pendingLootKeepLimit = breakdown.total,
+            pendingLootKeptCount = 0,
+            pendingLootCarryBreakdown = breakdown,
+        )
+
+        val restored = PlaySessionSnapshot.fromState(state).toState()
+
+        assertEquals(breakdown, restored.pendingLootCarryBreakdown)
+        assertEquals(breakdown, restored.pendingLootRecoveryBreakdown())
+        assertEquals(3, restored.pendingLootEffectiveKeepLimit())
+    }
+    @Test
     fun snapshotVersionIsExplicitlyCurrent() {
         val snapshot = PlaySessionSnapshot.initial()
 

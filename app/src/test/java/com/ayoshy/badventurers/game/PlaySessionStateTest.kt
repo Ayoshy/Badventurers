@@ -508,6 +508,57 @@ class PlaySessionStateTest {
         assertEquals(3, upgraded.lootCarryLimit(listOf(veteran)))
     }
     @Test
+    fun lootCarryBreakdownShowsRecoverySources() {
+        val specialistVeteran = HeroProgression.withProgress(
+            HeroCatalog.byId.getValue("nell").toHero(),
+            level = 5,
+            xp = 0,
+        )
+        val state = PlaySessionState.initial().copy(bunkRoomLevel = 3)
+        val breakdown = state.lootCarryBreakdown(listOf(specialistVeteran))
+
+        assertEquals(1, breakdown.base)
+        assertEquals(2, breakdown.bunkRoom)
+        assertEquals(1, breakdown.veteran)
+        assertEquals(1, breakdown.specialist)
+        assertEquals(5, breakdown.total)
+        assertEquals(5, state.lootCarryLimit(listOf(specialistVeteran)))
+    }
+
+    @Test
+    fun collectResultStoresPendingLootRecoveryBreakdown() {
+        val specialistVeteran = HeroProgression.withProgress(
+            HeroCatalog.byId.getValue("nell").toHero(),
+            level = 5,
+            xp = 0,
+        )
+        val ready = PlaySessionState.initial().copy(
+            bunkRoomLevel = 2,
+            heroes = listOf(specialistVeteran),
+            expedition = ExpeditionRun(
+                quest = SeedGame.firstQuest,
+                partyHeroIds = listOf(specialistVeteran.id),
+                startedAtMillis = 1_000L,
+                endsAtMillis = 2_000L,
+                result = ExpeditionResult(
+                    outcome = ExpeditionOutcome.Success,
+                    reward = Reward(gold = 0, xp = 0, lootRolls = 2),
+                    scoreMargin = 10,
+                ),
+            ),
+        )
+
+        val collected = ready.collectResult()
+        val breakdown = collected.pendingLootRecoveryBreakdown()
+
+        assertEquals(1, breakdown.base)
+        assertEquals(1, breakdown.bunkRoom)
+        assertEquals(1, breakdown.veteran)
+        assertEquals(1, breakdown.specialist)
+        assertEquals(4, breakdown.total)
+        assertEquals(4, collected.pendingLootEffectiveKeepLimit())
+    }
+    @Test
     fun debugAdjustmentsClampResources() {
         val state = PlaySessionState.initial().copy(gold = 10, reputation = 1, guildLevel = 1)
         val clamped = state.adjustGold(-50).adjustReputation(-10).adjustGuildLevel(-3)

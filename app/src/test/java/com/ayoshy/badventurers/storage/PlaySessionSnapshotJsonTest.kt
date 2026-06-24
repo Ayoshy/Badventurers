@@ -4,6 +4,7 @@ import com.ayoshy.badventurers.game.GuildFacility
 import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.GuildFacilityCatalog
 import com.ayoshy.badventurers.game.HeroCatalog
+import com.ayoshy.badventurers.game.LootCarryBreakdown
 import com.ayoshy.badventurers.game.LootGenerator
 import com.ayoshy.badventurers.game.PlaySessionSnapshot
 import com.ayoshy.badventurers.game.PlaySessionState
@@ -157,6 +158,27 @@ class PlaySessionSnapshotJsonTest {
     }
 
     @Test
+    fun codecRoundTripsPendingLootCarryBreakdown() {
+        val pendingLoot = LootGenerator.generate(2, seed = 23)
+        val breakdown = LootCarryBreakdown(base = 1, bunkRoom = 1, specialist = 1)
+        val state = PlaySessionState.initial().copy(
+            pendingLootItems = pendingLoot,
+            pendingLootKeepLimit = breakdown.total,
+            pendingLootKeptCount = 0,
+            pendingLootCarryBreakdown = breakdown,
+        )
+
+        val restored = PlaySessionSnapshotJson.decode(
+            PlaySessionSnapshotJson.encode(PlaySessionSnapshot.fromState(state)),
+        )?.toState()
+
+        assertEquals(pendingLoot, restored?.pendingLootItems)
+        assertEquals(breakdown, restored?.pendingLootCarryBreakdown)
+        assertEquals(breakdown, restored?.pendingLootRecoveryBreakdown())
+        assertEquals(3, restored?.pendingLootEffectiveKeepLimit())
+    }
+
+    @Test
     fun legacyJsonWithPendingLootDefaultsToOneChoice() {
         val pendingLoot = LootGenerator.generate(2, seed = 22).map { item ->
             JSONObject()
@@ -195,6 +217,7 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(2, restored?.pendingLootItems?.size)
         assertEquals(1, restored?.pendingLootEffectiveKeepLimit())
         assertEquals(1, restored?.pendingLootRemainingChoices())
+        assertEquals(LootCarryBreakdown(base = 1), restored?.pendingLootRecoveryBreakdown())
     }
     @Test
     fun invalidJsonReturnsNull() {
