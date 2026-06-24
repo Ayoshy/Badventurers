@@ -32,6 +32,24 @@ class PlaySessionStateTest {
         assertEquals(selectedParty.take(SeedGame.firstQuest.partySlots).map { it.id }, state.expedition?.partyHeroIds)
     }
 
+
+    @Test
+    fun startQuestStoresPlanAndAdjustedDuration() {
+        val startedAt = 1_000L
+        val state = PlaySessionState.initial().startQuest(
+            nowMillis = startedAt,
+            quest = SeedGame.firstQuest,
+            party = party,
+            planId = ExpeditionPlanCatalog.rushTheJobId,
+        )
+
+        assertEquals(ExpeditionPlanCatalog.rushTheJobId, state.expedition?.planId)
+        assertEquals(
+            startedAt + ExpeditionPlanCatalog.durationSeconds(SeedGame.firstQuest, ExpeditionPlanCatalog.rushTheJobId) * 1000L,
+            state.expedition?.endsAtMillis,
+        )
+        assertTrue(requireNotNull(state.expedition).endsAtMillis < startedAt + SeedGame.firstQuest.durationSeconds * 1000L)
+    }
     @Test
     fun finishQuestUsesStoredPartyInsteadOfFullRoster() {
         val quest = SeedGame.firstQuest.copy(tags = emptyList(), recommendedHeroIds = emptyList())
@@ -278,6 +296,8 @@ class PlaySessionStateTest {
         assertEquals(ready.gold + 200, collected.gold)
         assertEquals(4, collected.lootRolls)
         assertEquals(4, collected.pendingLootItems.size)
+        assertEquals(1, collected.pendingLootEffectiveKeepLimit())
+        assertEquals(1, collected.pendingLootRemainingChoices())
         assertEquals(PlayPhase.Idle, collected.phase)
         assertEquals(1, collected.completedQuestCount)
     }
@@ -300,6 +320,7 @@ class PlaySessionStateTest {
 
         assertEquals(emptyList<LootItem>(), collected.lootItems)
         assertEquals(2, collected.pendingLootItems.size)
+        assertEquals(1, collected.pendingLootEffectiveKeepLimit())
         assertTrue(collected.journalEntries.size >= 2)
         assertEquals(PlayPhase.Idle, collected.phase)
         assertEquals(1, collected.completedQuestCount)
@@ -421,14 +442,14 @@ class PlaySessionStateTest {
     }
 
     @Test
-    fun sellPendingLootRemovesRewardAndCreditsGold() {
+    fun discardPendingLootRemovesRewardWithoutGold() {
         val item = testLoot(id = "armor_reward_hat", bonus = 2)
         val state = PlaySessionState.initial().copy(pendingLootItems = listOf(item))
-        val sold = state.sellPendingLoot(item)
+        val discarded = state.discardPendingLoot()
 
-        assertEquals(emptyList<LootItem>(), sold.pendingLootItems)
-        assertEquals(emptyList<LootItem>(), sold.lootItems)
-        assertEquals(state.gold + LootEconomy.sellValue(item), sold.gold)
+        assertEquals(emptyList<LootItem>(), discarded.pendingLootItems)
+        assertEquals(emptyList<LootItem>(), discarded.lootItems)
+        assertEquals(state.gold, discarded.gold)
     }
     @Test
     fun sellLootRemovesItemAndCreditsGold() {
@@ -440,6 +461,52 @@ class PlaySessionStateTest {
         assertEquals(state.gold + LootEconomy.sellValue(item), sold.gold)
     }
 
+    @Test
+    fun keepPendingLootDestroysUnchosenLootWhenCarryLimitIsReached() {
+        val first = testLoot(id = "weapon_reward_spoon", bonus = 5)
+        val second = testLoot(id = "armor_reward_hat", bonus = 2)
+        val state = PlaySessionState.initial().copy(
+            pendingLootItems = listOf(first, second),
+            pendingLootKeepLimit = 1,
+        )
+
+        val kept = state.keepPendingLoot(second)
+
+        assertEquals(emptyList<LootItem>(), kept.pendingLootItems)
+        assertEquals(listOf(second), kept.lootItems)
+        assertEquals(0, kept.pendingLootKeepLimit)
+        assertEquals(0, kept.pendingLootKeptCount)
+    }
+
+    @Test
+    fun keepPendingLootAllowsMultipleChoicesWhenCarryLimitIsHigher() {
+        val first = testLoot(id = "weapon_reward_spoon", bonus = 5)
+        val second = testLoot(id = "armor_reward_hat", bonus = 2)
+        val state = PlaySessionState.initial().copy(
+            pendingLootItems = listOf(first, second),
+            pendingLootKeepLimit = 2,
+        )
+
+        val afterFirst = state.keepPendingLoot(first)
+        val afterSecond = afterFirst.keepPendingLoot(second)
+
+        assertEquals(listOf(second), afterFirst.pendingLootItems)
+        assertEquals(1, afterFirst.pendingLootSelectedCount())
+        assertEquals(1, afterFirst.pendingLootRemainingChoices())
+        assertEquals(emptyList<LootItem>(), afterSecond.pendingLootItems)
+        assertEquals(listOf(first, second), afterSecond.lootItems)
+    }
+
+    @Test
+    fun lootCarryLimitStartsAtOneAndScalesWithGuildAndVeteranHeroes() {
+        val veteran = HeroProgression.withProgress(party.first(), level = 5, xp = 0)
+        val base = PlaySessionState.initial()
+        val upgraded = base.copy(bunkRoomLevel = 2)
+
+        assertEquals(1, base.lootCarryLimit(listOf(party.first())))
+        assertEquals(2, upgraded.lootCarryLimit(listOf(party.first())))
+        assertEquals(3, upgraded.lootCarryLimit(listOf(veteran)))
+    }
     @Test
     fun debugAdjustmentsClampResources() {
         val state = PlaySessionState.initial().copy(gold = 10, reputation = 1, guildLevel = 1)
@@ -473,6 +540,8 @@ class PlaySessionStateTest {
                 lootRolls = 8,
                 lootItems = listOf(item),
                 pendingLootItems = listOf(item),
+                pendingLootKeepLimit = 1,
+                pendingLootKeptCount = 0,
                 equippedLoot = listOf(EquippedLoot(heroId = party.first().id, item = item)),
                 achievementProgress = emptyList(),
             )
@@ -490,6 +559,8 @@ class PlaySessionStateTest {
         assertEquals(0, reset.lootRolls)
         assertEquals(emptyList<LootItem>(), reset.lootItems)
         assertEquals(emptyList<LootItem>(), reset.pendingLootItems)
+        assertEquals(0, reset.pendingLootKeepLimit)
+        assertEquals(0, reset.pendingLootKeptCount)
         assertEquals(emptyList<EquippedLoot>(), reset.equippedLoot)
         assertEquals(emptyList<JournalEntry>(), reset.journalEntries)
         assertEquals(null, reset.expedition)

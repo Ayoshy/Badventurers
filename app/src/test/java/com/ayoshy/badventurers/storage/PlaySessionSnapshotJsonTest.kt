@@ -1,8 +1,10 @@
 package com.ayoshy.badventurers.storage
 
 import com.ayoshy.badventurers.game.GuildFacility
+import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.GuildFacilityCatalog
 import com.ayoshy.badventurers.game.HeroCatalog
+import com.ayoshy.badventurers.game.LootGenerator
 import com.ayoshy.badventurers.game.PlaySessionSnapshot
 import com.ayoshy.badventurers.game.PlaySessionState
 import org.json.JSONArray
@@ -92,6 +94,108 @@ class PlaySessionSnapshotJsonTest {
         )
     }
 
+
+    @Test
+    fun legacyRunningExpeditionWithoutPlanDefaultsToStandardContract() {
+        val encoded = JSONObject()
+            .put("version", 10)
+            .put("gold", 100)
+            .put("reputation", 0)
+            .put("guildLevel", 1)
+            .put("completedQuestCount", 0)
+            .put("noticeBoardLevel", 1)
+            .put("trainingYardLevel", 1)
+            .put("bunkRoomLevel", 1)
+            .put("lootRolls", 0)
+            .put("heroIds", JSONArray().put(HeroCatalog.starterHeroes.first().id))
+            .put(
+                "expedition",
+                JSONObject()
+                    .put("questId", "cave_minor_regrets")
+                    .put("partyHeroIds", JSONArray().put(HeroCatalog.starterHeroes.first().id))
+                    .put("startedAtMillis", 1_000L)
+                    .put("endsAtMillis", 46_000L),
+            )
+            .toString()
+
+        val restored = PlaySessionSnapshotJson.decode(encoded)?.toState()
+
+        assertEquals(ExpeditionPlanCatalog.defaultPlanId, restored?.expedition?.planId)
+    }
+
+    @Test
+    fun codecRoundTripsExpeditionPlan() {
+        val running = PlaySessionState.initial().startQuest(
+            nowMillis = 1_000L,
+            quest = com.ayoshy.badventurers.game.SeedGame.firstQuest,
+            planId = ExpeditionPlanCatalog.auditEverythingId,
+        )
+        val decoded = PlaySessionSnapshotJson.decode(
+            PlaySessionSnapshotJson.encode(PlaySessionSnapshot.fromState(running)),
+        )
+        val restored = decoded?.toState()
+
+        assertEquals(ExpeditionPlanCatalog.auditEverythingId, restored?.expedition?.planId)
+        assertEquals(running.expedition?.endsAtMillis, restored?.expedition?.endsAtMillis)
+    }
+    @Test
+    fun codecRoundTripsPendingLootChoiceLimit() {
+        val pendingLoot = LootGenerator.generate(2, seed = 21)
+        val state = PlaySessionState.initial().copy(
+            pendingLootItems = pendingLoot,
+            pendingLootKeepLimit = 1,
+            pendingLootKeptCount = 0,
+        )
+
+        val restored = PlaySessionSnapshotJson.decode(
+            PlaySessionSnapshotJson.encode(PlaySessionSnapshot.fromState(state)),
+        )?.toState()
+
+        assertEquals(pendingLoot, restored?.pendingLootItems)
+        assertEquals(1, restored?.pendingLootEffectiveKeepLimit())
+        assertEquals(1, restored?.pendingLootRemainingChoices())
+    }
+
+    @Test
+    fun legacyJsonWithPendingLootDefaultsToOneChoice() {
+        val pendingLoot = LootGenerator.generate(2, seed = 22).map { item ->
+            JSONObject()
+                .put("id", item.id)
+                .put("name", item.name)
+                .put("rarity", item.rarity.name)
+                .put("slot", item.slot.name)
+                .put("stats", JSONArray().also { stats ->
+                    item.stats.forEach { stat ->
+                        stats.put(
+                            JSONObject()
+                                .put("type", stat.type.name)
+                                .put("value", stat.value),
+                        )
+                    }
+                })
+                .put("bonus", item.bonus)
+                .put("icon", item.icon.name)
+        }
+        val encoded = JSONObject()
+            .put("version", 11)
+            .put("gold", 100)
+            .put("reputation", 0)
+            .put("guildLevel", 1)
+            .put("completedQuestCount", 0)
+            .put("noticeBoardLevel", 1)
+            .put("trainingYardLevel", 1)
+            .put("bunkRoomLevel", 1)
+            .put("lootRolls", 2)
+            .put("heroIds", JSONArray().put(HeroCatalog.starterHeroes.first().id))
+            .put("pendingLootItems", JSONArray().also { array -> pendingLoot.forEach { array.put(it) } })
+            .toString()
+
+        val restored = PlaySessionSnapshotJson.decode(encoded)?.toState()
+
+        assertEquals(2, restored?.pendingLootItems?.size)
+        assertEquals(1, restored?.pendingLootEffectiveKeepLimit())
+        assertEquals(1, restored?.pendingLootRemainingChoices())
+    }
     @Test
     fun invalidJsonReturnsNull() {
         assertNull(PlaySessionSnapshotJson.decode("not-json"))

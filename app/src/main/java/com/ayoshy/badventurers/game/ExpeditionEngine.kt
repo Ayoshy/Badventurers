@@ -1,4 +1,4 @@
-﻿package com.ayoshy.badventurers.game
+package com.ayoshy.badventurers.game
 
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -13,25 +13,31 @@ class ExpeditionEngine(
         roll: Int = random.nextInt(0, 101),
         equipment: List<EquippedLoot> = emptyList(),
         facilityPowerBonus: Int = 0,
+        planId: String = ExpeditionPlanCatalog.defaultPlanId,
     ): ExpeditionResult {
         val specialModifiers = HeroSpecialCatalog.modifiersFor(party, quest)
+        val planModifiers = ExpeditionPlanCatalog.modifiersFor(planId, quest)
         val partyPower = PartyPowerCalculator.totalPower(party, equipment) +
             facilityBonusFor(party, facilityPowerBonus) +
-            specialModifiers.scoreBonus
+            specialModifiers.scoreBonus +
+            planModifiers.scoreBonus
         val effectiveRoll = max(roll, specialModifiers.minimumRoll)
-        val riskPenalty = ExpeditionEstimator.riskPenalty(quest.risk, specialModifiers)
+        val riskPenalty = ExpeditionEstimator.riskPenalty(quest.risk, specialModifiers, planModifiers)
         val margin = partyPower + effectiveRoll - quest.difficulty - riskPenalty
-        val outcome = adjustedOutcome(outcomeForMargin(margin), specialModifiers)
+        val outcome = adjustedOutcome(outcomeForMargin(margin, planModifiers), specialModifiers)
 
         return ExpeditionResult(
             outcome = outcome,
-            reward = rewardFor(outcome, quest, specialModifiers),
+            reward = rewardFor(outcome, quest, specialModifiers, planModifiers),
             scoreMargin = margin,
         )
     }
 
-    private fun outcomeForMargin(margin: Int): ExpeditionOutcome = when {
-        margin >= 80 -> ExpeditionOutcome.GreatSuccess
+    private fun outcomeForMargin(
+        margin: Int,
+        planModifiers: ExpeditionPlanModifiers = ExpeditionPlanModifiers(),
+    ): ExpeditionOutcome = when {
+        margin >= 80 + planModifiers.greatSuccessMarginDelta -> ExpeditionOutcome.GreatSuccess
         margin >= 25 -> ExpeditionOutcome.Success
         margin >= 0 -> ExpeditionOutcome.PartialSuccess
         margin >= -35 -> ExpeditionOutcome.Failure
@@ -45,7 +51,12 @@ class ExpeditionEngine(
             outcome
         }
 
-    private fun rewardFor(outcome: ExpeditionOutcome, quest: Quest, modifiers: ExpeditionSpecialModifiers): Reward {
+    private fun rewardFor(
+        outcome: ExpeditionOutcome,
+        quest: Quest,
+        specialModifiers: ExpeditionSpecialModifiers,
+        planModifiers: ExpeditionPlanModifiers,
+    ): Reward {
         val multiplier = when (outcome) {
             ExpeditionOutcome.GreatSuccess -> 1.75
             ExpeditionOutcome.Success -> 1.0
@@ -53,25 +64,30 @@ class ExpeditionEngine(
             ExpeditionOutcome.Failure -> 0.25
             ExpeditionOutcome.RidiculousFailure -> 0.12
         }
-        val lootRolls = when (outcome) {
+        val lootRolls = (when (outcome) {
             ExpeditionOutcome.GreatSuccess -> 3
             ExpeditionOutcome.Success -> 2
             ExpeditionOutcome.PartialSuccess -> 1
             ExpeditionOutcome.Failure -> 0
             ExpeditionOutcome.RidiculousFailure -> 0
-        } + if (outcome.isAtLeastSuccess()) modifiers.successLootBonus else 0
+        } + if (outcome.isAtLeastSuccess()) {
+            specialModifiers.successLootBonus + planModifiers.successLootBonus
+        } else {
+            0
+        }).coerceAtLeast(0)
         val xp = when (outcome) {
             ExpeditionOutcome.GreatSuccess -> 24
             ExpeditionOutcome.Success -> 16
             ExpeditionOutcome.PartialSuccess -> 10
             ExpeditionOutcome.Failure -> 5
             ExpeditionOutcome.RidiculousFailure -> 3
-        } + if (outcome.isAtLeastPartial()) modifiers.xpBonus else 0
+        } + if (outcome.isAtLeastPartial()) specialModifiers.xpBonus else 0
         val baseGold = max(quest.pityGold, (quest.baseGold * multiplier).roundToInt())
-        val goldBonus = if (outcome.isAtLeastSuccess()) baseGold * modifiers.goldBonusPercent / 100 else 0
+        val totalGoldBonusPercent = specialModifiers.goldBonusPercent + planModifiers.goldBonusPercent
+        val goldBonus = if (outcome.isAtLeastSuccess()) baseGold * totalGoldBonusPercent / 100 else 0
 
         return Reward(
-            gold = baseGold + goldBonus,
+            gold = max(quest.pityGold, baseGold + goldBonus),
             xp = xp,
             lootRolls = lootRolls,
         )
@@ -88,6 +104,14 @@ data class ExpeditionEstimate(
     val minimumRoll: Int = 0,
     val goldBonusPercent: Int = 0,
     val bonusLootRolls: Int = 0,
+    val durationSeconds: Int = 0,
+    val planPowerModifier: Int = 0,
+    val planRiskModifier: Int = 0,
+    val planGoldBonusPercent: Int = 0,
+    val planBonusLootRolls: Int = 0,
+    val rewardGoldBonusPercent: Int = 0,
+    val rewardBonusLootRolls: Int = 0,
+    val greatSuccessTargetMargin: Int = 80,
 )
 
 object ExpeditionEstimator {
@@ -96,23 +120,34 @@ object ExpeditionEstimator {
         quest: Quest,
         equipment: List<EquippedLoot> = emptyList(),
         facilityPowerBonus: Int = 0,
+        planId: String = ExpeditionPlanCatalog.defaultPlanId,
     ): ExpeditionEstimate {
         val specialModifiers = HeroSpecialCatalog.modifiersFor(party, quest)
+        val planModifiers = ExpeditionPlanCatalog.modifiersFor(planId, quest)
         val partyPower = PartyPowerCalculator.totalPower(party, equipment) +
             facilityBonusFor(party, facilityPowerBonus) +
-            specialModifiers.scoreBonus
-        val riskPenalty = riskPenalty(quest.risk, specialModifiers)
-        val targetPower = targetPower(quest, specialModifiers)
+            specialModifiers.scoreBonus +
+            planModifiers.scoreBonus
+        val riskPenalty = riskPenalty(quest.risk, specialModifiers, planModifiers)
+        val targetPower = targetPower(quest, specialModifiers, planModifiers)
         return ExpeditionEstimate(
             partyPower = partyPower,
             targetPower = targetPower,
-            successChancePercent = successChancePercent(partyPower, quest, specialModifiers),
+            successChancePercent = successChancePercent(partyPower, quest, specialModifiers, planModifiers),
             riskPenalty = riskPenalty,
             specialPowerBonus = specialModifiers.scoreBonus,
             specialRiskReduction = specialModifiers.riskPenaltyReduction.coerceAtMost(riskPenalty(quest.risk)),
             minimumRoll = specialModifiers.minimumRoll,
             goldBonusPercent = specialModifiers.goldBonusPercent,
             bonusLootRolls = specialModifiers.successLootBonus,
+            durationSeconds = ExpeditionPlanCatalog.durationSeconds(quest, planId),
+            planPowerModifier = planModifiers.scoreBonus,
+            planRiskModifier = planModifiers.riskPenaltyDelta,
+            planGoldBonusPercent = planModifiers.goldBonusPercent,
+            planBonusLootRolls = planModifiers.successLootBonus,
+            rewardGoldBonusPercent = specialModifiers.goldBonusPercent + planModifiers.goldBonusPercent,
+            rewardBonusLootRolls = specialModifiers.successLootBonus + planModifiers.successLootBonus,
+            greatSuccessTargetMargin = 80 + planModifiers.greatSuccessMarginDelta,
         )
     }
 
@@ -121,13 +156,24 @@ object ExpeditionEstimator {
     fun targetPower(quest: Quest, modifiers: ExpeditionSpecialModifiers): Int =
         quest.difficulty + riskPenalty(quest.risk, modifiers)
 
-    fun successChancePercent(partyPower: Int, quest: Quest): Int =
-        successChancePercent(partyPower, quest, ExpeditionSpecialModifiers())
+    fun targetPower(
+        quest: Quest,
+        specialModifiers: ExpeditionSpecialModifiers,
+        planModifiers: ExpeditionPlanModifiers,
+    ): Int = quest.difficulty + riskPenalty(quest.risk, specialModifiers, planModifiers)
 
-    private fun successChancePercent(partyPower: Int, quest: Quest, modifiers: ExpeditionSpecialModifiers): Int {
-        val requiredRoll = targetPower(quest, modifiers) - partyPower
+    fun successChancePercent(partyPower: Int, quest: Quest): Int =
+        successChancePercent(partyPower, quest, ExpeditionSpecialModifiers(), ExpeditionPlanModifiers())
+
+    private fun successChancePercent(
+        partyPower: Int,
+        quest: Quest,
+        specialModifiers: ExpeditionSpecialModifiers,
+        planModifiers: ExpeditionPlanModifiers,
+    ): Int {
+        val requiredRoll = targetPower(quest, specialModifiers, planModifiers) - partyPower
         return when {
-            requiredRoll <= modifiers.minimumRoll -> 100
+            requiredRoll <= specialModifiers.minimumRoll -> 100
             requiredRoll > 100 -> 0
             else -> ((101 - requiredRoll) * 100 / 101).coerceIn(0, 100)
         }
@@ -142,6 +188,13 @@ object ExpeditionEstimator {
 
     fun riskPenalty(risk: QuestRisk, modifiers: ExpeditionSpecialModifiers): Int =
         (riskPenalty(risk) - modifiers.riskPenaltyReduction).coerceAtLeast(0)
+
+    fun riskPenalty(
+        risk: QuestRisk,
+        specialModifiers: ExpeditionSpecialModifiers,
+        planModifiers: ExpeditionPlanModifiers,
+    ): Int =
+        (riskPenalty(risk) - specialModifiers.riskPenaltyReduction + planModifiers.riskPenaltyDelta).coerceAtLeast(0)
 }
 
 private fun facilityBonusFor(party: List<Hero>, facilityPowerBonus: Int): Int =

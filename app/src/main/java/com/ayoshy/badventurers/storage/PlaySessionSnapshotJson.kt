@@ -3,6 +3,7 @@ package com.ayoshy.badventurers.storage
 import com.ayoshy.badventurers.game.AchievementProgress
 import com.ayoshy.badventurers.game.EquippedLootSnapshot
 import com.ayoshy.badventurers.game.ExpeditionOutcome
+import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.ExpeditionResultSnapshot
 import com.ayoshy.badventurers.game.ExpeditionRunSnapshot
 import com.ayoshy.badventurers.game.HeroCatalog
@@ -35,6 +36,8 @@ internal object PlaySessionSnapshotJson {
         .put("heroProgress", JSONArray().also { array -> snapshot.heroProgress.forEach { array.put(encodeHeroProgress(it)) } })
         .put("lootItems", JSONArray().also { array -> snapshot.lootItems.forEach { array.put(encodeLootItem(it)) } })
         .put("pendingLootItems", JSONArray().also { array -> snapshot.pendingLootItems.forEach { array.put(encodeLootItem(it)) } })
+        .put("pendingLootKeepLimit", snapshot.pendingLootKeepLimit)
+        .put("pendingLootKeptCount", snapshot.pendingLootKeptCount)
         .put("equippedLoot", JSONArray().also { array -> snapshot.equippedLoot.forEach { array.put(encodeEquippedLoot(it)) } })
         .put("journalEntries", JSONArray().also { array -> snapshot.journalEntries.forEach { array.put(encodeJournalEntry(it)) } })
         .put("expedition", snapshot.expedition?.let { encodeExpedition(it) })
@@ -58,6 +61,8 @@ internal object PlaySessionSnapshotJson {
             heroProgress = decodeObjectArray(json.optJSONArray("heroProgress"), ::decodeHeroProgress),
             lootItems = decodeObjectArray(json.optJSONArray("lootItems"), ::decodeLootItem),
             pendingLootItems = decodeObjectArray(json.optJSONArray("pendingLootItems"), ::decodeLootItem),
+            pendingLootKeepLimit = json.optInt("pendingLootKeepLimit", 0),
+            pendingLootKeptCount = json.optInt("pendingLootKeptCount", 0),
             equippedLoot = decodeObjectArray(json.optJSONArray("equippedLoot"), ::decodeEquippedLoot),
             journalEntries = decodeObjectArray(json.optJSONArray("journalEntries"), ::decodeJournalEntry),
             expedition = json.optJSONObject("expedition")?.let(::decodeExpedition),
@@ -157,6 +162,7 @@ internal object PlaySessionSnapshotJson {
         .put("partyHeroIds", JSONArray().also { array -> run.partyHeroIds.forEach { array.put(it) } })
         .put("startedAtMillis", run.startedAtMillis)
         .put("endsAtMillis", run.endsAtMillis)
+        .put("planId", run.planId)
         .put("result", run.result?.let { encodeResult(it) })
 
     private fun decodeExpedition(json: JSONObject): ExpeditionRunSnapshot = ExpeditionRunSnapshot(
@@ -165,6 +171,7 @@ internal object PlaySessionSnapshotJson {
         startedAtMillis = json.optLong("startedAtMillis"),
         endsAtMillis = json.optLong("endsAtMillis"),
         result = json.optJSONObject("result")?.let(::decodeResult),
+        planId = ExpeditionPlanCatalog.coercePlanId(json.optString("planId", ExpeditionPlanCatalog.defaultPlanId)),
     )
 
     private fun encodeResult(result: ExpeditionResultSnapshot): JSONObject = JSONObject()

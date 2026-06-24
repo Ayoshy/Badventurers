@@ -14,6 +14,8 @@ data class PlaySessionSnapshot(
     val heroProgress: List<HeroProgressSnapshot> = emptyList(),
     val lootItems: List<LootItemSnapshot> = emptyList(),
     val pendingLootItems: List<LootItemSnapshot> = emptyList(),
+    val pendingLootKeepLimit: Int = 0,
+    val pendingLootKeptCount: Int = 0,
     val equippedLoot: List<EquippedLootSnapshot> = emptyList(),
     val journalEntries: List<JournalEntrySnapshot> = emptyList(),
     val expedition: ExpeditionRunSnapshot? = null,
@@ -32,6 +34,17 @@ data class PlaySessionSnapshot(
         val migratedNoticeBoardLevel = migratedFacilityLevel(GuildFacility.NoticeBoard, noticeBoardLevel)
         val migratedTrainingYardLevel = migratedFacilityLevel(GuildFacility.TrainingYard, trainingYardLevel)
         val migratedBunkRoomLevel = migratedFacilityLevel(GuildFacility.BunkRoom, bunkRoomLevel)
+        val restoredPendingLootItems = pendingLootItems.map { it.toItem() }
+        val restoredPendingLootKeepLimit = if (restoredPendingLootItems.isEmpty()) {
+            0
+        } else {
+            pendingLootKeepLimit.coerceAtLeast(1)
+        }
+        val restoredPendingLootKeptCount = if (restoredPendingLootItems.isEmpty()) {
+            0
+        } else {
+            pendingLootKeptCount.coerceIn(0, restoredPendingLootKeepLimit)
+        }
 
         return PlaySessionState(
             gold = gold,
@@ -44,7 +57,9 @@ data class PlaySessionSnapshot(
             heroes = restoredHeroes,
             lootRolls = lootRolls,
             lootItems = lootItems.map { it.toItem() },
-            pendingLootItems = pendingLootItems.map { it.toItem() },
+            pendingLootItems = restoredPendingLootItems,
+            pendingLootKeepLimit = restoredPendingLootKeepLimit,
+            pendingLootKeptCount = restoredPendingLootKeptCount,
             equippedLoot = equippedLoot.mapNotNull { it.toEquippedLoot(restoredHeroes) },
             journalEntries = journalEntries.map { it.toEntry() },
             expedition = expedition?.toRun(),
@@ -53,7 +68,7 @@ data class PlaySessionSnapshot(
     }
 
     companion object {
-        const val CURRENT_VERSION = 10
+        const val CURRENT_VERSION = 12
 
         fun initial(): PlaySessionSnapshot {
             return fromState(PlaySessionState.initial())
@@ -74,6 +89,8 @@ data class PlaySessionSnapshot(
                 heroProgress = state.heroes.map { HeroProgressSnapshot.fromHero(it) },
                 lootItems = state.lootItems.map { LootItemSnapshot.fromItem(it) },
                 pendingLootItems = state.pendingLootItems.map { LootItemSnapshot.fromItem(it) },
+                pendingLootKeepLimit = state.pendingLootEffectiveKeepLimit(),
+                pendingLootKeptCount = state.pendingLootSelectedCount(),
                 equippedLoot = state.equippedLoot.map { EquippedLootSnapshot.fromEquippedLoot(it) },
                 journalEntries = state.journalEntries.map { JournalEntrySnapshot.fromEntry(it) },
                 expedition = state.expedition?.let { ExpeditionRunSnapshot.fromRun(it) },
@@ -227,6 +244,7 @@ data class ExpeditionRunSnapshot(
     val startedAtMillis: Long,
     val endsAtMillis: Long,
     val result: ExpeditionResultSnapshot? = null,
+    val planId: String = ExpeditionPlanCatalog.defaultPlanId,
 ) {
     fun toRun(): ExpeditionRun? {
         val quest = SeedGame.questById[questId] ?: return null
@@ -236,6 +254,7 @@ data class ExpeditionRunSnapshot(
             startedAtMillis = startedAtMillis,
             endsAtMillis = endsAtMillis,
             result = result?.toResult(),
+            planId = ExpeditionPlanCatalog.coercePlanId(planId),
         )
     }
 
@@ -246,6 +265,7 @@ data class ExpeditionRunSnapshot(
             startedAtMillis = run.startedAtMillis,
             endsAtMillis = run.endsAtMillis,
             result = run.result?.let { ExpeditionResultSnapshot.fromResult(it) },
+            planId = ExpeditionPlanCatalog.coercePlanId(run.planId),
         )
     }
 }

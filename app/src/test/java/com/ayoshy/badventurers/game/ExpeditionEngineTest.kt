@@ -93,6 +93,38 @@ class ExpeditionEngineTest {
         assertTrue(result.reward.gold > (quest.baseGold * 1.75).toInt())
     }
 
+
+    @Test
+    fun rushPlanShortensDurationAndRaisesRisk() {
+        val party = SeedGame.heroes.take(2)
+        val quest = SeedGame.firstQuest.copy(tags = emptyList(), recommendedHeroIds = emptyList())
+
+        val standard = ExpeditionEstimator.estimate(party = party, quest = quest)
+        val rushed = ExpeditionEstimator.estimate(
+            party = party,
+            quest = quest,
+            planId = ExpeditionPlanCatalog.rushTheJobId,
+        )
+
+        assertTrue(rushed.durationSeconds < quest.durationSeconds)
+        assertEquals(standard.riskPenalty + 12, rushed.riskPenalty)
+        assertEquals(standard.partyPower - 5, rushed.partyPower)
+    }
+
+    @Test
+    fun lootPriorityAddsLootOnSuccessButCostsMargin() {
+        val quest = SeedGame.firstQuest.copy(difficulty = 60, risk = QuestRisk.Low, tags = emptyList(), recommendedHeroIds = emptyList())
+        val standard = engine.resolve(party = SeedGame.heroes, quest = quest, roll = 100)
+        val greedy = engine.resolve(
+            party = SeedGame.heroes,
+            quest = quest,
+            roll = 100,
+            planId = ExpeditionPlanCatalog.lootPriorityId,
+        )
+
+        assertEquals(standard.reward.lootRolls + 1, greedy.reward.lootRolls)
+        assertTrue(greedy.scoreMargin < standard.scoreMargin)
+    }
     @Test
     fun protectiveSpecialCanStopRidiculousFailureOnCursedQuest() {
         val party = listOf(HeroCatalog.byId.getValue("pax").toHero())

@@ -71,9 +71,12 @@ import com.ayoshy.badventurers.R
 import com.ayoshy.badventurers.game.AchievementCatalog
 import com.ayoshy.badventurers.game.AchievementCategory
 import com.ayoshy.badventurers.game.AchievementDefinition
+import com.ayoshy.badventurers.game.AchievementFeature
 import com.ayoshy.badventurers.game.ExpeditionEngine
 import com.ayoshy.badventurers.game.ExpeditionEstimator
 import com.ayoshy.badventurers.game.ExpeditionOutcome
+import com.ayoshy.badventurers.game.ExpeditionPlan
+import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.ExpeditionResult
 import com.ayoshy.badventurers.game.FakeRewardedAdService
 import com.ayoshy.badventurers.game.GuildFacility
@@ -106,6 +109,10 @@ import com.ayoshy.badventurers.game.QuestDifficultyTier
 import com.ayoshy.badventurers.game.QuestRisk
 import com.ayoshy.badventurers.game.QuestTag
 import com.ayoshy.badventurers.game.QuestUnlockCondition
+import com.ayoshy.badventurers.game.ResultCause
+import com.ayoshy.badventurers.game.ResultCauseFacility
+import com.ayoshy.badventurers.game.ResultCauseGenerator
+import com.ayoshy.badventurers.game.ResultCauseKind
 import com.ayoshy.badventurers.game.SeedGame
 import com.ayoshy.badventurers.game.StatBonus
 import com.ayoshy.badventurers.game.StatType
@@ -171,6 +178,8 @@ fun BadventurersApp(
             mutableStateOf(initialSession.selectedPartyForQuest(SeedGame.firstQuest, initialSession.heroes).map { it.id })
         }
         val expeditionEngine = remember { ExpeditionEngine() }
+        var selectedPlanId by rememberSaveable { mutableStateOf(ExpeditionPlanCatalog.defaultPlayerPlanId) }
+        val selectedPlan = ExpeditionPlanCatalog.selectedPlanForUi(selectedPlanId, selectedQuest)
         val selectedQuestParty = selectedQuestPartyIds
             .mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }
             .take(session.effectivePartySlots(selectedQuest))
@@ -266,11 +275,13 @@ fun BadventurersApp(
                             selectedQuest = selectedQuest,
                             onSelectQuest = { quest ->
                                 selectedQuestId = quest.id
+                                selectedPlanId = ExpeditionPlanCatalog.selectedPlanForUi(selectedPlanId, quest).id
                                 val partySlots = session.effectivePartySlots(quest)
                                 selectedQuestPartyIds = selectedQuestPartyIds.take(partySlots)
                             },
                             onPrepare = { quest ->
                                 selectedQuestId = quest.id
+                                selectedPlanId = ExpeditionPlanCatalog.selectedPlanForUi(selectedPlanId, quest).id
                                 selectedTab = GameTab.ExpeditionPrep
                             },
                             onParty = { selectedTab = GameTab.Heroes },
@@ -279,6 +290,7 @@ fun BadventurersApp(
                             session = session,
                             quest = selectedQuest,
                             selectedPartyIds = selectedQuestPartyIds,
+                            selectedPlanId = selectedPlan.id,
                             onToggleHero = { heroId ->
                                 selectedQuestPartyIds = togglePartyHero(
                                     currentIds = selectedQuestPartyIds,
@@ -286,10 +298,11 @@ fun BadventurersApp(
                                     maxSlots = session.effectivePartySlots(selectedQuest),
                                 )
                             },
+                            onSelectPlan = { plan -> selectedPlanId = plan.id },
                             onLaunch = {
                                 val currentTime = System.currentTimeMillis()
                                 nowMillis = currentTime
-                                updateSession(session.startQuest(currentTime, selectedQuest, selectedQuestParty))
+                                updateSession(session.startQuest(currentTime, selectedQuest, selectedQuestParty, selectedPlan.id))
                                 selectedTab = GameTab.Guild
                             },
                             onParty = { selectedTab = GameTab.Heroes },
@@ -324,10 +337,10 @@ fun BadventurersApp(
                                 updateSession(nextSession)
                                 if (nextSession.pendingLootItems.isEmpty()) selectedTab = GameTab.Guild
                             },
-                            onSell = { item ->
-                                val nextSession = session.sellPendingLoot(item)
+                            onDiscardRest = {
+                                val nextSession = session.discardPendingLoot()
                                 updateSession(nextSession)
-                                if (nextSession.pendingLootItems.isEmpty()) selectedTab = GameTab.Guild
+                                selectedTab = GameTab.Guild
                             },
                             onDone = { selectedTab = GameTab.Guild },
                         )
@@ -821,6 +834,7 @@ private fun QuestResultScreen(
             .mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }
             .ifEmpty { session.heroes.take(session.effectivePartySlots(run.quest)) }
         val partyNames = resultParty.joinToString { it.name }
+        val resultCauses = ResultCauseGenerator.generate(session, run, resultParty)
         val levelUpPreviews = resultParty
             .map { hero -> hero to HeroProgression.previewGrantXp(hero, session.collectableHeroXp(result)) }
             .filter { (_, preview) -> preview.levelsGained > 0 }
@@ -834,7 +848,7 @@ private fun QuestResultScreen(
         )
         DarkPanel(
             title = outcomeLabel(result.outcome),
-            body = stringResource(R.string.result_report_summary),
+            body = resultIncidentText(run.planId, result.outcome),
         ) {
             ActionRow(
                 primaryLabel = stringResource(R.string.collect_action),
@@ -866,6 +880,8 @@ private fun QuestResultScreen(
             detail = stringResource(R.string.result_outcome_detail, result.scoreMargin),
             value = outcomeLabel(result.outcome),
         )
+        ResultCausesPanel(causes = resultCauses)
+
         InfoRow(
             title = stringResource(R.string.result_reward_title),
             detail = resultRewardDetail(session, result),
@@ -885,7 +901,7 @@ private fun QuestResultScreen(
         )
         InfoRow(
             title = stringResource(R.string.result_incident_title),
-            detail = resultIncidentText(result.outcome),
+            detail = resultIncidentText(run.planId, result.outcome),
             value = stringResource(R.string.result_incident_value),
         )
     }
@@ -913,6 +929,64 @@ private fun RewardNextActionPanel(session: PlaySessionState, advice: Progression
         body = progressionAdviceBody(session, advice),
     ) {
         ProgressBar(progress = progressionAdviceProgress(session, advice))
+    }
+}
+
+@Composable
+private fun ResultCausesPanel(causes: List<ResultCause>) {
+    if (causes.isEmpty()) return
+
+    PaperPanel(
+        title = stringResource(R.string.result_causes_title),
+        body = stringResource(R.string.result_causes_body),
+    ) {
+        Spacer(Modifier.height(8.dp))
+        causes.forEach { cause -> ResultCauseRow(cause) }
+    }
+}
+
+@Composable
+private fun ResultCauseRow(cause: ResultCause) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 7.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, Color(0x99D0A24A)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF6CD)),
+    ) {
+        Row(
+            modifier = Modifier.padding(9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = resultCauseTitle(cause),
+                    color = Color(0xFF211F1A),
+                    fontWeight = FontWeight.Black,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = resultCauseDetail(cause),
+                    color = Color(0xFF756B54),
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Text(
+                text = resultCauseValue(cause),
+                color = Color(0xFF211F1A),
+                fontWeight = FontWeight.Black,
+                fontSize = 12.sp,
+                textAlign = TextAlign.End,
+                maxLines = 1,
+            )
+        }
     }
 }
 
@@ -1011,6 +1085,7 @@ private fun OfflineSummaryScreen(
             .mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }
             .ifEmpty { session.heroes.take(session.effectivePartySlots(run.quest)) }
         val partyNames = resultParty.joinToString { it.name }
+        val resultCauses = ResultCauseGenerator.generate(session, run, resultParty, maxCauses = 3)
 
         QuestCardArt(
             bannerResourceId = questBannerResource(run.quest),
@@ -1035,9 +1110,11 @@ private fun OfflineSummaryScreen(
         )
         InfoRow(
             title = stringResource(R.string.result_outcome_title),
-            detail = resultIncidentText(result.outcome),
+            detail = resultIncidentText(run.planId, result.outcome),
             value = outcomeLabel(result.outcome),
         )
+        ResultCausesPanel(causes = resultCauses)
+
         InfoRow(
             title = stringResource(R.string.result_reward_title),
             detail = resultRewardDetail(session, result),
@@ -1118,12 +1195,16 @@ private fun ExpeditionPrepScreen(
     session: PlaySessionState,
     quest: Quest,
     selectedPartyIds: List<String>,
+    selectedPlanId: String,
     onToggleHero: (String) -> Unit,
+    onSelectPlan: (ExpeditionPlan) -> Unit,
     onLaunch: () -> Unit,
     onParty: () -> Unit,
 ) {
     val partySlots = session.effectivePartySlots(quest)
     val partyHeroes = selectedPartyIds.mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }.take(partySlots)
+    val availablePlans = ExpeditionPlanCatalog.availableFor(quest)
+    val selectedPlan = ExpeditionPlanCatalog.selectedPlanForUi(selectedPlanId, quest)
     val heroRecommendations = HeroRecommendationScorer.rankHeroes(
         roster = session.heroes,
         quest = quest,
@@ -1142,6 +1223,7 @@ private fun ExpeditionPrepScreen(
         quest = quest,
         equipment = session.equippedLoot,
         facilityPowerBonus = session.trainingYardPowerBonus(),
+        planId = selectedPlan.id,
     )
     val activeSpecials = HeroSpecialCatalog.activeHeroes(partyHeroes, quest)
     val unlocked = session.isQuestUnlocked(quest)
@@ -1151,7 +1233,7 @@ private fun ExpeditionPrepScreen(
         canLaunch -> stringResource(R.string.launch_quest_action)
         else -> stringResource(R.string.quest_blocked_action)
     }
-    val previewGold = questBaseGoldWithNoticeBoard(session, quest, estimate.goldBonusPercent)
+    val previewGold = questBaseGoldWithNoticeBoard(session, quest, estimate.rewardGoldBonusPercent)
 
     ScreenScaffold(title = stringResource(R.string.prep_title), status = stringResource(R.string.prep_status)) {
         QuestCardArt(
@@ -1183,6 +1265,12 @@ private fun ExpeditionPrepScreen(
             selectedPartyIds = selectedPartyIds,
             recommendations = heroRecommendations,
         )
+        ExpeditionPlanPanel(
+            quest = quest,
+            selectedPlan = selectedPlan,
+            availablePlans = availablePlans,
+            onSelectPlan = onSelectPlan,
+        )
         InfoRow(
             title = stringResource(R.string.prep_success_title),
             detail = stringResource(R.string.prep_success_detail, estimate.partyPower, estimate.targetPower),
@@ -1190,7 +1278,7 @@ private fun ExpeditionPrepScreen(
         )
         InfoRow(
             title = stringResource(R.string.prep_risk_title),
-            detail = stringResource(R.string.prep_risk_detail, riskLabel(quest.risk), quest.durationSeconds, estimate.riskPenalty),
+            detail = stringResource(R.string.prep_risk_detail, riskLabel(quest.risk), estimate.durationSeconds, estimate.riskPenalty),
             value = stringResource(R.string.prep_target_value, estimate.targetPower),
         )
         InfoRow(
@@ -1205,7 +1293,7 @@ private fun ExpeditionPrepScreen(
         )
         InfoRow(
             title = stringResource(R.string.prep_reward_title),
-            detail = stringResource(R.string.prep_reward_detail, quest.pityGold, 3 + estimate.bonusLootRolls),
+            detail = stringResource(R.string.prep_reward_detail, quest.pityGold, 3 + estimate.rewardBonusLootRolls),
             value = stringResource(R.string.gold_value, previewGold),
         )
         Text(
@@ -1310,6 +1398,89 @@ private fun recommendedHeroNames(
 
 private fun recommendationNames(recommendations: List<HeroRecommendation>): String =
     recommendations.joinToString { it.hero.name }
+
+@Composable
+private fun ExpeditionPlanPanel(
+    quest: Quest,
+    selectedPlan: ExpeditionPlan,
+    availablePlans: List<ExpeditionPlan>,
+    onSelectPlan: (ExpeditionPlan) -> Unit,
+) {
+    PaperPanel(
+        title = stringResource(R.string.prep_plan_panel_title),
+        body = stringResource(R.string.prep_plan_panel_body),
+    ) {
+        Spacer(Modifier.height(8.dp))
+        availablePlans.forEach { plan ->
+            ExpeditionPlanChoiceRow(
+                quest = quest,
+                plan = plan,
+                selected = plan.id == selectedPlan.id,
+                onClick = { onSelectPlan(plan) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExpeditionPlanChoiceRow(
+    quest: Quest,
+    plan: ExpeditionPlan,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val borderColor = if (selected) Color(0xFFD0A24A) else Color(0x66806C3A)
+    val background = if (selected) Color(0xFFFFE8A6) else Color(0xFFFFF6CD)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 7.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, borderColor),
+        colors = CardDefaults.cardColors(containerColor = background),
+    ) {
+        Row(
+            modifier = Modifier.padding(9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = expeditionPlanTitle(plan),
+                    color = Color(0xFF211F1A),
+                    fontWeight = FontWeight.Black,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = expeditionPlanSummary(plan),
+                    color = Color(0xFF756B54),
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = expeditionPlanEffectSummary(plan, quest),
+                    color = Color(0xFF5B4E2F),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Text(
+                text = if (selected) stringResource(R.string.prep_plan_selected_value) else stringResource(R.string.prep_roster_pick_value),
+                color = Color(0xFF211F1A),
+                fontWeight = FontWeight.Black,
+                fontSize = 12.sp,
+                textAlign = TextAlign.End,
+            )
+        }
+    }
+}
 @Composable
 private fun PartySlotRow(slotNumber: Int, hero: Hero?, session: PlaySessionState) {
     InfoRow(
@@ -2679,16 +2850,18 @@ private fun heroPortraitResource(hero: Hero): Int =
 private fun RewardLootScreen(
     session: PlaySessionState,
     onKeep: (LootItem) -> Unit,
-    onSell: (LootItem) -> Unit,
+    onDiscardRest: () -> Unit,
     onDone: () -> Unit,
 ) {
     val pendingRewards = session.pendingLootItems.asReversed()
+    val remainingChoices = minOf(session.pendingLootRemainingChoices(), pendingRewards.size)
+    val keepLimit = session.pendingLootEffectiveKeepLimit()
     var selectedIndex by remember(pendingRewards.size) { mutableStateOf(0) }
     val selectedItem = pendingRewards.getOrNull(selectedIndex)
 
     ScreenScaffold(
         title = stringResource(R.string.loot_reward_title),
-        status = stringResource(R.string.loot_reward_status, pendingRewards.size),
+        status = stringResource(R.string.loot_reward_status, pendingRewards.size, remainingChoices),
     ) {
         if (selectedItem == null) {
             DarkPanel(title = stringResource(R.string.loot_rewards_done_title), body = stringResource(R.string.loot_rewards_done_summary)) {
@@ -2712,7 +2885,6 @@ private fun RewardLootScreen(
         }
 
         val selectedItemName = lootItemName(selectedItem)
-        val sellValue = LootEconomy.sellValue(selectedItem)
         val suggestedTarget = bestEquipSuggestion(session, selectedItem)?.takeIf { it.gain > 0 }
         val equipTargetDetail = suggestedTarget?.let {
             stringResource(
@@ -2722,13 +2894,13 @@ private fun RewardLootScreen(
                 formatSignedCount(it.gain),
             )
         } ?: stringResource(R.string.reward_equip_target_missing)
-        val nextAdviceSession = if (pendingRewards.size == 1) session.keepPendingLoot(selectedItem) else session
+        val nextAdviceSession = session.keepPendingLoot(selectedItem)
         val nextAdvice = ProgressionAdvisor.recommend(nextAdviceSession)
         LootIconPanel(item = selectedItem, contentDescription = selectedItemName)
         InfoRow(
-            title = stringResource(R.string.sell_value_title),
-            detail = stringResource(R.string.sell_value_detail),
-            value = stringResource(R.string.gold_value, sellValue),
+            title = stringResource(R.string.loot_carry_title),
+            detail = stringResource(R.string.loot_carry_detail, session.pendingLootSelectedCount(), keepLimit),
+            value = stringResource(R.string.loot_carry_value, remainingChoices),
         )
         InfoRow(
             title = stringResource(R.string.equip_target_title),
@@ -2737,19 +2909,19 @@ private fun RewardLootScreen(
         )
         DarkPanel(
             title = selectedItemName,
-            body = lootRewardChoiceSummary(selectedItem, pendingRewards.size, sellValue),
+            body = lootRewardChoiceSummary(selectedItem, pendingRewards.size, remainingChoices),
         ) {
             ActionRow(
-                primaryLabel = stringResource(R.string.keep_action),
-                secondaryLabel = stringResource(R.string.sell_action),
+                primaryLabel = stringResource(R.string.loot_choose_action),
+                secondaryLabel = stringResource(R.string.loot_discard_rest_action),
                 onPrimary = { onKeep(selectedItem) },
-                onSecondary = { onSell(selectedItem) },
+                onSecondary = onDiscardRest,
             )
         }
         RewardNextActionPanel(session = nextAdviceSession, advice = nextAdvice)
 
         Text(
-            text = stringResource(R.string.loot_reward_title),
+            text = stringResource(R.string.loot_reward_candidates_title),
             color = Color(0xFFFFF0BD),
             fontSize = 16.sp,
             fontWeight = FontWeight.Black,
@@ -3464,6 +3636,32 @@ private fun riskLabel(risk: QuestRisk): String =
     }
 
 @Composable
+private fun resultIncidentText(planId: String, outcome: ExpeditionOutcome): String =
+    when (ExpeditionPlanCatalog.coercePlanId(planId)) {
+        ExpeditionPlanCatalog.rushTheJobId -> when (outcome.resultTone()) {
+            ResultTone.Win -> stringResource(R.string.result_plan_rush_win)
+            ResultTone.Mixed -> stringResource(R.string.result_plan_rush_mixed)
+            ResultTone.Fail -> stringResource(R.string.result_plan_rush_fail)
+        }
+        ExpeditionPlanCatalog.safetyFirstId -> when (outcome.resultTone()) {
+            ResultTone.Win -> stringResource(R.string.result_plan_safety_win)
+            ResultTone.Mixed -> stringResource(R.string.result_plan_safety_mixed)
+            ResultTone.Fail -> stringResource(R.string.result_plan_safety_fail)
+        }
+        ExpeditionPlanCatalog.lootPriorityId -> when (outcome.resultTone()) {
+            ResultTone.Win -> stringResource(R.string.result_plan_loot_win)
+            ResultTone.Mixed -> stringResource(R.string.result_plan_loot_mixed)
+            ResultTone.Fail -> stringResource(R.string.result_plan_loot_fail)
+        }
+        ExpeditionPlanCatalog.auditEverythingId -> when (outcome.resultTone()) {
+            ResultTone.Win -> stringResource(R.string.result_plan_audit_win)
+            ResultTone.Mixed -> stringResource(R.string.result_plan_audit_mixed)
+            ResultTone.Fail -> stringResource(R.string.result_plan_audit_fail)
+        }
+        else -> resultIncidentText(outcome)
+    }
+
+@Composable
 private fun resultIncidentText(outcome: ExpeditionOutcome): String =
     when (outcome) {
         ExpeditionOutcome.GreatSuccess -> stringResource(R.string.result_incident_great_success)
@@ -3472,6 +3670,16 @@ private fun resultIncidentText(outcome: ExpeditionOutcome): String =
         ExpeditionOutcome.Failure -> stringResource(R.string.result_incident_failure)
         ExpeditionOutcome.RidiculousFailure -> stringResource(R.string.result_incident_ridiculous_failure)
     }
+
+private enum class ResultTone { Win, Mixed, Fail }
+
+private fun ExpeditionOutcome.resultTone(): ResultTone = when (this) {
+    ExpeditionOutcome.GreatSuccess,
+    ExpeditionOutcome.Success -> ResultTone.Win
+    ExpeditionOutcome.PartialSuccess -> ResultTone.Mixed
+    ExpeditionOutcome.Failure,
+    ExpeditionOutcome.RidiculousFailure -> ResultTone.Fail
+}
 @Composable
 private fun heroRosterDetail(hero: Hero): String =
     stringResource(
@@ -3823,14 +4031,14 @@ private fun lootStatsSummary(item: LootItem): String {
     return if (item.isPerfect) "$statLine - ${stringResource(R.string.loot_perfect_label)}" else statLine
 }
 @Composable
-private fun lootRewardChoiceSummary(item: LootItem, pendingItems: Int, sellValue: Int): String =
+private fun lootRewardChoiceSummary(item: LootItem, pendingItems: Int, remainingChoices: Int): String =
     stringResource(
         R.string.loot_reward_choice_summary,
         lootRarityLabel(item.rarity),
         lootSlotLabel(item.slot),
         item.bonus,
         pendingItems,
-        sellValue,
+        remainingChoices,
     ) + "\n" + lootStatsSummary(item)
 @Composable
 private fun lootKeepSellSummary(item: LootItem, totalItems: Int, sellValue: Int): String =
@@ -3945,6 +4153,102 @@ private fun specialEstimateDetail(activeSpecials: List<Hero>, estimate: com.ayos
     return if (effects.isBlank()) heroNames else "$heroNames: $effects"
 }
 
+@Composable
+private fun resultCauseTitle(cause: ResultCause): String =
+    when (cause.kind) {
+        ResultCauseKind.Plan -> stringResource(
+            R.string.result_cause_plan_title,
+            expeditionPlanTitle(ExpeditionPlanCatalog.byId(cause.planId)),
+        )
+        ResultCauseKind.HeroSpecial -> stringResource(
+            R.string.result_cause_hero_title,
+            cause.heroName ?: stringResource(R.string.result_cause_unknown_hero),
+        )
+        ResultCauseKind.Facility -> when (cause.facility) {
+            ResultCauseFacility.TrainingYard -> stringResource(R.string.guild_facility_training_yard)
+            ResultCauseFacility.NoticeBoard -> stringResource(R.string.guild_facility_notice_board)
+            null -> stringResource(R.string.result_cause_facility_title)
+        }
+        ResultCauseKind.Achievement -> when (cause.achievementFeature) {
+            AchievementFeature.InsuranceDesk -> stringResource(R.string.result_cause_achievement_insurance)
+            AchievementFeature.RewardChoice -> stringResource(R.string.result_cause_achievement_reward_choice)
+            AchievementFeature.GuildCharterBonuses -> stringResource(R.string.result_cause_achievement_charter)
+            AchievementFeature.HeroMentorship -> stringResource(R.string.result_cause_achievement_mentorship)
+            AchievementFeature.AdvancedContracts -> stringResource(R.string.result_cause_achievement_advanced_contracts)
+            AchievementFeature.TrophyLedger,
+            null -> stringResource(R.string.result_cause_achievement_title)
+        }
+    }
+
+@Composable
+private fun resultCauseValue(cause: ResultCause): String =
+    when (cause.kind) {
+        ResultCauseKind.Plan -> stringResource(R.string.result_cause_value_signed)
+        ResultCauseKind.HeroSpecial -> stringResource(R.string.result_cause_value_special)
+        ResultCauseKind.Facility -> stringResource(R.string.result_cause_value_facility)
+        ResultCauseKind.Achievement -> stringResource(R.string.result_cause_value_charter)
+    }
+
+@Composable
+private fun resultCauseDetail(cause: ResultCause): String {
+    val effects = resultCauseEffects(cause)
+    return effects.ifEmpty { listOf(stringResource(R.string.plan_effect_standard)) }.joinToString(" / ")
+}
+
+@Composable
+private fun resultCauseEffects(cause: ResultCause): List<String> = listOfNotNull(
+    cause.durationDeltaSeconds.takeIf { it < 0 }?.let { stringResource(R.string.result_cause_effect_duration_faster, -it) },
+    cause.durationDeltaSeconds.takeIf { it > 0 }?.let { stringResource(R.string.result_cause_effect_duration_longer, it) },
+    cause.scoreBonus.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_power_up, it) },
+    cause.scoreBonus.takeIf { it < 0 }?.let { stringResource(R.string.plan_effect_power_down, -it) },
+    cause.riskDelta.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_risk_up, it) },
+    cause.riskDelta.takeIf { it < 0 }?.let { stringResource(R.string.plan_effect_risk_down, -it) },
+    cause.goldBonusPercent.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_gold_up, it) },
+    cause.lootBonus.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_loot_up, it) },
+    cause.xpBonus.takeIf { it > 0 }?.let { stringResource(R.string.result_cause_effect_xp_up, it) },
+    cause.minimumRoll.takeIf { it > 0 }?.let { stringResource(R.string.result_cause_effect_roll_floor, it) },
+    cause.greatSuccessMarginDelta.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_great_success_harder, it) },
+    cause.preventsRidiculousFailure.takeIf { it }?.let { stringResource(R.string.result_cause_effect_blocks_ridiculous_failure) },
+)
+@Composable
+private fun expeditionPlanTitle(plan: ExpeditionPlan): String =
+    when (plan.id) {
+        ExpeditionPlanCatalog.rushTheJobId -> stringResource(R.string.plan_title_rush_the_job)
+        ExpeditionPlanCatalog.safetyFirstId -> stringResource(R.string.plan_title_safety_first)
+        ExpeditionPlanCatalog.lootPriorityId -> stringResource(R.string.plan_title_loot_priority)
+        ExpeditionPlanCatalog.auditEverythingId -> stringResource(R.string.plan_title_audit_everything)
+        ExpeditionPlanCatalog.defaultPlanId -> stringResource(R.string.plan_title_standard_contract)
+        else -> plan.title
+    }
+
+@Composable
+private fun expeditionPlanSummary(plan: ExpeditionPlan): String =
+    when (plan.id) {
+        ExpeditionPlanCatalog.rushTheJobId -> stringResource(R.string.plan_summary_rush_the_job)
+        ExpeditionPlanCatalog.safetyFirstId -> stringResource(R.string.plan_summary_safety_first)
+        ExpeditionPlanCatalog.lootPriorityId -> stringResource(R.string.plan_summary_loot_priority)
+        ExpeditionPlanCatalog.auditEverythingId -> stringResource(R.string.plan_summary_audit_everything)
+        ExpeditionPlanCatalog.defaultPlanId -> stringResource(R.string.plan_summary_standard_contract)
+        else -> plan.summary
+    }
+
+@Composable
+private fun expeditionPlanEffectSummary(plan: ExpeditionPlan, quest: Quest): String {
+    val modifiers = ExpeditionPlanCatalog.modifiersFor(plan.id, quest)
+    val effects = listOfNotNull(
+        modifiers.durationPercentDelta.takeIf { it < 0 }?.let { stringResource(R.string.plan_effect_duration_shorter, -it) },
+        modifiers.durationPercentDelta.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_duration_longer, it) },
+        modifiers.scoreBonus.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_power_up, it) },
+        modifiers.scoreBonus.takeIf { it < 0 }?.let { stringResource(R.string.plan_effect_power_down, -it) },
+        modifiers.riskPenaltyDelta.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_risk_up, it) },
+        modifiers.riskPenaltyDelta.takeIf { it < 0 }?.let { stringResource(R.string.plan_effect_risk_down, -it) },
+        modifiers.goldBonusPercent.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_gold_up, it) },
+        modifiers.goldBonusPercent.takeIf { it < 0 }?.let { stringResource(R.string.plan_effect_gold_down, -it) },
+        modifiers.successLootBonus.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_loot_up, it) },
+        modifiers.greatSuccessMarginDelta.takeIf { it > 0 }?.let { stringResource(R.string.plan_effect_great_success_harder, it) },
+    )
+    return effects.ifEmpty { listOf(stringResource(R.string.plan_effect_standard)) }.joinToString(" / ")
+}
 @Composable
 private fun questDifficultyLabel(tier: QuestDifficultyTier): String =
     when (tier) {

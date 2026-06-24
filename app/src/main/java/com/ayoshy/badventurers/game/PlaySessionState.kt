@@ -12,6 +12,8 @@ data class PlaySessionState(
     val lootRolls: Int = 0,
     val lootItems: List<LootItem> = emptyList(),
     val pendingLootItems: List<LootItem> = emptyList(),
+    val pendingLootKeepLimit: Int = 0,
+    val pendingLootKeptCount: Int = 0,
     val equippedLoot: List<EquippedLoot> = emptyList(),
     val journalEntries: List<JournalEntry> = emptyList(),
     val expedition: ExpeditionRun? = null,
@@ -34,7 +36,12 @@ data class PlaySessionState(
         }
     }
 
-    fun startQuest(nowMillis: Long, quest: Quest, party: List<Hero> = heroes): PlaySessionState {
+    fun startQuest(
+        nowMillis: Long,
+        quest: Quest,
+        party: List<Hero> = heroes,
+        planId: String = ExpeditionPlanCatalog.defaultPlanId,
+    ): PlaySessionState {
         if (phase != PlayPhase.Idle || !isQuestUnlocked(quest)) return this
         val selectedParty = selectedPartyForQuest(quest, party)
         return copy(
@@ -42,7 +49,8 @@ data class PlaySessionState(
                 quest = quest,
                 partyHeroIds = selectedParty.map { it.id },
                 startedAtMillis = nowMillis,
-                endsAtMillis = nowMillis + quest.durationSeconds * 1000L,
+                endsAtMillis = nowMillis + ExpeditionPlanCatalog.durationSeconds(quest, planId) * 1000L,
+                planId = ExpeditionPlanCatalog.coercePlanId(planId),
             ),
         )
     }
@@ -61,6 +69,7 @@ data class PlaySessionState(
                     quest = run.quest,
                     equipment = equippedLoot,
                     facilityPowerBonus = trainingYardPowerBonus(),
+                    planId = run.planId,
                 ),
             ),
         )
@@ -79,6 +88,7 @@ data class PlaySessionState(
                 quest = run.quest,
                 equipment = equippedLoot,
                 facilityPowerBonus = trainingYardPowerBonus(),
+                planId = run.planId,
             )
         } else {
             engine.resolve(
@@ -87,6 +97,7 @@ data class PlaySessionState(
                 roll = roll,
                 equipment = equippedLoot,
                 facilityPowerBonus = trainingYardPowerBonus(),
+                planId = run.planId,
             )
         }
         return copy(expedition = run.copy(result = result))
@@ -105,15 +116,18 @@ data class PlaySessionState(
         val participatingParty = partyForRun(run, party)
         val generatedLoot = LootGenerator.generate(totalLootRolls, seed = lootSeed(result) + extraLootRolls * 17)
         val generatedJournal = JournalGenerator.generate(result, participatingParty, run.quest)
+        val advancedHeroes = heroesWithQuestXp(participatingParty, collectableHeroXp(result))
+        val advancedParty = participatingParty.map { hero ->
+            advancedHeroes.firstOrNull { it.id == hero.id } ?: hero
+        }
         val collected = copy(
             gold = gold + baseGold + extraGold,
             lootRolls = lootRolls + totalLootRolls,
             completedQuestCount = completedQuestCount + 1,
-            heroes = heroesWithQuestXp(participatingParty, collectableHeroXp(result)),
-            pendingLootItems = pendingLootItems + generatedLoot,
+            heroes = advancedHeroes,
             journalEntries = (journalEntries + generatedJournal).takeLast(12),
             expedition = null,
-        )
+        ).appendPendingLoot(generatedLoot, lootCarryLimit(advancedParty))
         return AchievementTracker.applyEvent(
             state = collected,
             event = AchievementEvent.QuestCollected(
@@ -186,6 +200,21 @@ data class PlaySessionState(
 
     fun collectableLootRolls(result: ExpeditionResult): Int =
         result.reward.lootRolls + achievementRewardChoiceLootRolls(result)
+
+    fun lootCarryLimit(party: List<Hero> = heroes): Int =
+        (BASE_LOOT_KEEP_LIMIT + bunkRoomLootCarryBonus() + veteranLootCarryBonus(party) + specialistLootCarryBonus(party))
+            .coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
+
+    fun bunkRoomLootCarryBonus(): Int = (bunkRoomLevel - 1).coerceAtLeast(0)
+
+    fun pendingLootEffectiveKeepLimit(): Int =
+        if (pendingLootItems.isEmpty()) 0 else pendingLootKeepLimit.coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
+
+    fun pendingLootRemainingChoices(): Int =
+        (pendingLootEffectiveKeepLimit() - pendingLootKeptCount.coerceAtLeast(0)).coerceAtLeast(0)
+
+    fun pendingLootSelectedCount(): Int =
+        if (pendingLootItems.isEmpty()) 0 else pendingLootKeptCount.coerceAtLeast(0)
 
     fun achievementSeals(): Int = AchievementCatalog.claimedSeals(achievementProgress)
 
@@ -265,6 +294,8 @@ data class PlaySessionState(
             lootRolls = 0,
             lootItems = emptyList(),
             pendingLootItems = emptyList(),
+            pendingLootKeepLimit = 0,
+            pendingLootKeptCount = 0,
             equippedLoot = emptyList(),
             journalEntries = emptyList(),
             expedition = null,
@@ -364,25 +395,34 @@ data class PlaySessionState(
     fun keepPendingLoot(item: LootItem): PlaySessionState {
         val itemIndex = pendingLootItems.indexOf(item)
         if (itemIndex < 0) return this
+        if (pendingLootRemainingChoices() <= 0) return discardPendingLoot()
+
         val nextPending = pendingLootItems.toMutableList().also { it.removeAt(itemIndex) }
+        val nextKeptCount = pendingLootSelectedCount() + 1
+        val keepLimit = pendingLootEffectiveKeepLimit()
+        val shouldDestroyRest = nextPending.isEmpty() || nextKeptCount >= keepLimit
+        val selected = copy(
+            pendingLootItems = if (shouldDestroyRest) emptyList() else nextPending,
+            pendingLootKeepLimit = if (shouldDestroyRest) 0 else keepLimit,
+            pendingLootKeptCount = if (shouldDestroyRest) 0 else nextKeptCount,
+            lootItems = lootItems + item,
+        )
         return AchievementTracker.applyEvent(
-            state = copy(
-                pendingLootItems = nextPending,
-                lootItems = lootItems + item,
-            ),
+            state = selected,
             event = AchievementEvent.LootKept(item),
         )
     }
 
-    fun sellPendingLoot(item: LootItem): PlaySessionState {
-        val itemIndex = pendingLootItems.indexOf(item)
-        if (itemIndex < 0) return this
-        val nextPending = pendingLootItems.toMutableList().also { it.removeAt(itemIndex) }
+    fun discardPendingLoot(item: LootItem? = null): PlaySessionState {
+        if (item != null && item !in pendingLootItems) return this
+        if (pendingLootItems.isEmpty()) return this
         return copy(
-            gold = gold + LootEconomy.sellValue(item),
-            pendingLootItems = nextPending,
+            pendingLootItems = emptyList(),
+            pendingLootKeepLimit = 0,
+            pendingLootKeptCount = 0,
         )
     }
+
     fun sellLoot(item: LootItem): PlaySessionState {
         val itemIndex = lootItems.indexOf(item)
         if (itemIndex < 0) return this
@@ -443,6 +483,14 @@ data class PlaySessionState(
         private const val ACHIEVEMENT_TRAINING_POWER_BONUS = 12
         private const val ACHIEVEMENT_INSURANCE_PITY_GOLD_BONUS_PERCENT = 30
         private const val ACHIEVEMENT_CHARTER_QUEST_GOLD_BONUS_PERCENT = 10
+        private const val BASE_LOOT_KEEP_LIMIT = 1
+        private const val VETERAN_LOOT_CARRY_LEVEL = 5
+        private const val SPECIALIST_LOOT_CARRY_LEVEL = 3
+        private val LOOT_CARRY_SPECIALS = setOf(
+            HeroSpecial.LightFingers,
+            HeroSpecial.DirtyJackpot,
+            HeroSpecial.PreservationSalt,
+        )
 
         fun initial(): PlaySessionState = PlaySessionState()
 
@@ -451,6 +499,26 @@ data class PlaySessionState(
 
     private fun refreshedAchievementProgress(nowMillis: Long = 0L): List<AchievementProgress> =
         AchievementTracker.refresh(this, nowMillis = nowMillis).achievementProgress
+
+    private fun appendPendingLoot(items: List<LootItem>, keepLimit: Int): PlaySessionState {
+        if (items.isEmpty()) return this
+        val nextKeepLimit = if (pendingLootItems.isEmpty()) {
+            keepLimit.coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
+        } else {
+            pendingLootEffectiveKeepLimit() + keepLimit.coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
+        }
+        return copy(
+            pendingLootItems = pendingLootItems + items,
+            pendingLootKeepLimit = nextKeepLimit,
+            pendingLootKeptCount = if (pendingLootItems.isEmpty()) 0 else pendingLootKeptCount.coerceAtLeast(0),
+        )
+    }
+
+    private fun veteranLootCarryBonus(party: List<Hero>): Int =
+        if (party.any { it.level >= VETERAN_LOOT_CARRY_LEVEL }) 1 else 0
+
+    private fun specialistLootCarryBonus(party: List<Hero>): Int =
+        if (party.any { it.level >= SPECIALIST_LOOT_CARRY_LEVEL && it.special in LOOT_CARRY_SPECIALS }) 1 else 0
 
     private fun achievementAdjustedRewardGold(result: ExpeditionResult): Int {
         val pityBonusPercent = if (
@@ -501,8 +569,7 @@ data class PlaySessionState(
                 gold = gold + reward.gold,
                 reputation = reputation + reward.reputation,
                 lootRolls = lootRolls + reward.lootRolls,
-                pendingLootItems = pendingLootItems + generatedLoot,
-            )
+            ).appendPendingLoot(generatedLoot, lootCarryLimit())
         }
         is AchievementReward.Composite -> reward.rewards.fold(this) { state, item ->
             state.applyAchievementReward(item, achievementId)
@@ -520,6 +587,7 @@ data class ExpeditionRun(
     val startedAtMillis: Long,
     val endsAtMillis: Long,
     val result: ExpeditionResult? = null,
+    val planId: String = ExpeditionPlanCatalog.defaultPlanId,
 )
 
 data class HeroRecruitmentResult(

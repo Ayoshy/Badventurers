@@ -24,6 +24,8 @@ class PlaySessionSnapshotTest {
             lootRolls = 7,
             lootItems = generatedLoot.drop(1),
             pendingLootItems = generatedLoot.take(1),
+            pendingLootKeepLimit = 1,
+            pendingLootKeptCount = 0,
             equippedLoot = listOf(EquippedLoot(extraHero.id, generatedLoot.first())),
             journalEntries = listOf(JournalEntry(id = "note-1", text = "The ledger survived.")),
         )
@@ -56,6 +58,20 @@ class PlaySessionSnapshotTest {
         val restored = PlaySessionSnapshot.fromState(running).toState()
 
         assertEquals(selectedParty.map { it.id }, restored.expedition?.partyHeroIds)
+    }
+
+    @Test
+    fun snapshotPreservesExpeditionPlan() {
+        val running = PlaySessionState.initial().startQuest(
+            nowMillis = 1_000L,
+            quest = SeedGame.firstQuest,
+            planId = ExpeditionPlanCatalog.lootPriorityId,
+        )
+
+        val restored = PlaySessionSnapshot.fromState(running).toState()
+
+        assertEquals(ExpeditionPlanCatalog.lootPriorityId, restored.expedition?.planId)
+        assertEquals(running.expedition?.endsAtMillis, restored.expedition?.endsAtMillis)
     }
     @Test
     fun snapshotRestoresReadyResult() {
@@ -117,6 +133,21 @@ class PlaySessionSnapshotTest {
         )
     }
 
+    @Test
+    fun snapshotMigratesPendingLootWithoutCarryLimitToOneChoice() {
+        val pendingLoot = LootGenerator.generate(2, seed = 13)
+        val snapshot = PlaySessionSnapshot.initial().copy(
+            pendingLootItems = pendingLoot.map { LootItemSnapshot.fromItem(it) },
+            pendingLootKeepLimit = 0,
+            pendingLootKeptCount = 0,
+        )
+
+        val restored = snapshot.toState()
+
+        assertEquals(pendingLoot, restored.pendingLootItems)
+        assertEquals(1, restored.pendingLootEffectiveKeepLimit())
+        assertEquals(1, restored.pendingLootRemainingChoices())
+    }
     @Test
     fun snapshotVersionIsExplicitlyCurrent() {
         val snapshot = PlaySessionSnapshot.initial()
