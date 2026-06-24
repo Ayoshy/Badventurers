@@ -151,6 +151,38 @@ class PlaySessionStateTest {
         assertEquals(benchHero, unchangedBenchHero)
     }
     @Test
+    fun upgradedTrainingYardAddsQuestXpBonusToParticipatingHeroesOnly() {
+        val participant = HeroCatalog.byId.getValue("brugg").toHero()
+        val benchHero = HeroCatalog.byId.getValue("mira").toHero()
+        val ready = PlaySessionState.initial().copy(
+            trainingYardLevel = 3,
+            heroes = listOf(participant, benchHero),
+            expedition = ExpeditionRun(
+                quest = SeedGame.firstQuest,
+                partyHeroIds = listOf(participant.id),
+                startedAtMillis = 1_000L,
+                endsAtMillis = 2_000L,
+                result = ExpeditionResult(
+                    outcome = ExpeditionOutcome.Success,
+                    reward = Reward(gold = 0, xp = 20, lootRolls = 0),
+                    scoreMargin = 10,
+                ),
+            ),
+        )
+
+        assertEquals(20, ready.expedition?.result?.reward?.xp)
+        assertEquals(20, ready.trainingYardQuestXpBonusPercent())
+        assertEquals(24, ready.collectableHeroXp(requireNotNull(ready.expedition?.result)))
+
+        val collected = ready.collectResult()
+        val advancedHero = collected.heroes.first { it.id == participant.id }
+        val unchangedBenchHero = collected.heroes.first { it.id == benchHero.id }
+
+        assertEquals(24, advancedHero.xp)
+        assertEquals(benchHero, unchangedBenchHero)
+    }
+
+    @Test
     fun upgradeNoticeBoardConsumesGoldAndIncreasesLevel() {
         val state = PlaySessionState.initial().copy(gold = 600)
         val upgraded = state.upgradeNoticeBoard()

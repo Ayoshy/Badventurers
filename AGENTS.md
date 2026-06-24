@@ -1,8 +1,23 @@
 # Badventurers Agent Context
 
-Last updated: 2026-06-22.
+Last updated: 2026-06-24.
 
 This file is the first stop for future Codex work on this repo. Read it before doing a broad scan. Then inspect only the specific docs/code touched by the user's request.
+
+## Critical Windows ACL Editing Rule
+
+This workspace repeatedly hits Windows sandbox/ACL failures when Codex uses `apply_patch`, `git diff`, or normal file reads on otherwise valid repo files. Typical errors mention `windows sandbox`, `helper_unknown_error`, `apply deny-read ACLs`, or `orchestrator_helper_exit_nonzero`.
+
+- Do not spend repeated attempts on the same failing operation. One normal attempt is enough.
+- If `apply_patch` fails with one of those ACL errors, switch immediately to a narrow guarded PowerShell edit:
+  - read with `[System.IO.File]::ReadAllText($p)`;
+  - replace exact known text blocks only;
+  - check `Contains(...)` or an exact match count before writing;
+  - write with `[System.IO.File]::WriteAllText($p, $text, [System.Text.UTF8Encoding]::new($false))`;
+  - re-read or `git diff` the edited file afterwards.
+- If `git diff`, `Get-Content`, or `rg` fails with the same ACL issue, rerun once with `sandbox_permissions: "require_escalated"` and a narrow justification.
+- Keep these fallback edits small. Avoid broad rewrites, formatting churn, generated rewrites, or touching unrelated files.
+- Do not narrate every ACL failure at length. State the switch once, then continue.
 
 ## How To Start A New Thread
 
@@ -180,7 +195,7 @@ Current snapshot test intent:
 
 ## Editing Notes
 
-- The repo has hit Windows sandbox/ACL issues with some files. If normal patching fails, use narrow PowerShell edits that replace exact blocks, then re-read the file.
+- Follow the Critical Windows ACL Editing Rule near the top of this file. The short version: one normal patch/read attempt, then guarded PowerShell or elevated read fallback for ACL failures.
 - Do not use broad rewrites, formatting churn, or cleanup unrelated to the request.
 - Keep `main` releasable. Use small branches/PRs once GitHub tooling is available.
 - Update docs when decisions or screen scope change.

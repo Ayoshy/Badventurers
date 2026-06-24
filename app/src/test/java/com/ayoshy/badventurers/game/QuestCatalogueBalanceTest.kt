@@ -66,6 +66,47 @@ class QuestCatalogueBalanceTest {
     }
 
     @Test
+    fun leveledStartersGainMeaningfulCatchUpOnMediumAndHighRiskQuests() {
+        val hungrySiege = SeedGame.questById.getValue("the_hungry_siege")
+        val lockedDoor = SeedGame.questById.getValue("the_last_locked_door")
+        val leveledStarters = SeedGame.heroes.map { hero -> HeroProgression.withProgress(hero, level = 8, xp = 0) }
+
+        val baseHungrySiege = bestEstimate(SeedGame.heroes, hungrySiege).successChancePercent
+        val leveledHungrySiege = bestEstimate(leveledStarters, hungrySiege).successChancePercent
+        val baseLockedDoor = bestEstimate(SeedGame.heroes, lockedDoor).successChancePercent
+        val leveledLockedDoor = bestEstimate(leveledStarters, lockedDoor).successChancePercent
+
+        assertTrue(leveledHungrySiege > baseHungrySiege)
+        assertTrue("leveled starters should stabilize the last medium-risk starter route", leveledHungrySiege >= 95)
+        assertTrue("level gaps should materially improve first high-risk odds", leveledLockedDoor >= baseLockedDoor + 30)
+    }
+
+    @Test
+    fun maxRankPromotionProjectionStaysBelowFullyUpgradedSafetyCeiling() {
+        val promotedRoster = HeroCatalog.heroes.map { definition ->
+            HeroPromotion.previewPromoted(definition.toHero(), HeroPromotion.MAX_RANK)
+        }
+        val upgradedRoster = HeroCatalog.heroes.map { it.toHero() }
+        val equipment = upgradedRoster.map { hero -> testGear(hero.id, bonus = 18) }
+
+        SeedGame.quests.forEach { quest ->
+            val promotedEstimate = bestEstimate(promotedRoster, quest)
+            val upgradedEstimate = bestEstimate(
+                roster = upgradedRoster,
+                quest = quest,
+                equipment = equipment,
+                facilityPowerBonus = 24,
+            )
+
+            assertTrue(
+                "${quest.id} promotion projection should not beat equipment plus facilities",
+                promotedEstimate.partyPower < upgradedEstimate.partyPower,
+            )
+            assertTrue("${quest.id} was only ${promotedEstimate.successChancePercent}%", promotedEstimate.successChancePercent >= 85)
+        }
+    }
+
+    @Test
     fun questsReferenceExistingRecommendedHeroes() {
         SeedGame.quests.forEach { quest ->
             assertTrue("${quest.id} needs recommended heroes", quest.recommendedHeroIds.isNotEmpty())

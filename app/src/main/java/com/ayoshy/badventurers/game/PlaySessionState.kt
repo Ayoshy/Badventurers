@@ -109,7 +109,7 @@ data class PlaySessionState(
             gold = gold + baseGold + extraGold,
             lootRolls = lootRolls + totalLootRolls,
             completedQuestCount = completedQuestCount + 1,
-            heroes = heroesWithQuestXp(participatingParty, result.reward.xp),
+            heroes = heroesWithQuestXp(participatingParty, collectableHeroXp(result)),
             pendingLootItems = pendingLootItems + generatedLoot,
             journalEntries = (journalEntries + generatedJournal).takeLast(12),
             expedition = null,
@@ -122,6 +122,12 @@ data class PlaySessionState(
                 partyHeroIds = run.partyHeroIds,
             ),
         )
+    }
+
+    fun markOfflineReportCollected(nowMillis: Long = 0L): PlaySessionState {
+        val run = expedition ?: return this
+        if (run.result == null) return this
+        return AchievementTracker.applyEvent(this, AchievementEvent.OfflineCollected, nowMillis)
     }
 
     fun isQuestUnlocked(quest: Quest): Boolean {
@@ -167,8 +173,16 @@ data class PlaySessionState(
     fun trainingYardPowerBonus(): Int =
         (trainingYardLevel - 1).coerceAtLeast(0) * TRAINING_YARD_POWER_PER_LEVEL + achievementTrainingPowerBonus()
 
+    fun trainingYardQuestXpBonusPercent(): Int =
+        (trainingYardLevel - 1).coerceAtLeast(0) * TRAINING_YARD_XP_BONUS_PERCENT_PER_LEVEL
+
     fun collectableRewardGold(result: ExpeditionResult): Int =
         questGoldWithNoticeBoard(achievementAdjustedRewardGold(result))
+
+    fun collectableHeroXp(result: ExpeditionResult): Int {
+        val baseXp = result.reward.xp.coerceAtLeast(0)
+        return baseXp + baseXp * trainingYardQuestXpBonusPercent() / 100
+    }
 
     fun collectableLootRolls(result: ExpeditionResult): Int =
         result.reward.lootRolls + achievementRewardChoiceLootRolls(result)
@@ -425,6 +439,7 @@ data class PlaySessionState(
 
     companion object {
         private const val TRAINING_YARD_POWER_PER_LEVEL = 8
+        private const val TRAINING_YARD_XP_BONUS_PERCENT_PER_LEVEL = 10
         private const val ACHIEVEMENT_TRAINING_POWER_BONUS = 12
         private const val ACHIEVEMENT_INSURANCE_PITY_GOLD_BONUS_PERCENT = 30
         private const val ACHIEVEMENT_CHARTER_QUEST_GOLD_BONUS_PERCENT = 10

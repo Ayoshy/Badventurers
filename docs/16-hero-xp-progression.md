@@ -9,7 +9,7 @@ This note compares candidate XP curves before implementing stat growth. The curr
 - XP is earned by participating heroes only.
 - A normal `Success` gives 16 XP, `Great Success` gives 24 XP, `Partial Success` gives 10 XP, `Failure` gives 5 XP, and `Ridiculous Failure` gives 3 XP.
 - The run-count chart uses 16 XP per run as a readable baseline, not as a balance guarantee.
-- These curves do not include Training Yard bonuses, future rested XP, promotions, duplicate currency, or offline catch-up.
+- The curve charts do not include Training Yard bonus XP, future rested XP, promotions, duplicate currency, or offline catch-up. The prototype now applies +10% quest XP per extra Training Yard level when a result is collected.
 
 ## Candidate Curves
 
@@ -93,9 +93,12 @@ Practical target:
 - Level 5 after about 20 normal successes total.
 - Level 10 after about 97 normal successes total.
 
+## Promotion And Duplicate Decision
+
+Promotions and duplicate pull compensation are now defined in [Hero promotion and duplicate rules](18-hero-promotion-duplicate-rules.md). Duplicate pulls keep their immediate reputation reward, then later add hero-specific contracts that feed bounded promotion ranks instead of raw XP.
+
 ## Open Tuning Questions
 
 - Should starter heroes keep their current catalog levels, or should all recruited heroes normalize to level 1 with stronger rarity stats?
 - Should each level add flat power, stat-specific growth, or both?
-- Should Training Yard increase XP earned, reduce XP needed, or unlock training actions separately?
-- Should duplicate pulls feed promotion/rank progress instead of raw XP?
+- Should deeper Training Yard work add active drills, rested XP, or hero-specific coaching without replacing expedition XP?

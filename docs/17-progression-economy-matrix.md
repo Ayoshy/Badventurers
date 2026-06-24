@@ -17,7 +17,7 @@ This note is the single planning surface for Badventurers progression currencies
 | --- | --- | --- | --- | --- |
 | Gold | Quest rewards, loot sells, achievements, optional rewarded bonus in prototype/debug | Guild facility upgrades, recruitment, future shop cosmetics/starter conveniences | "What can I buy right now?" | Do not sell random power for real money. |
 | Reputation | Quest milestones, medium/high-risk unlocks, duplicate compensation, achievements | Quest gates, facility unlock gates, future recruit pool tiers | "What new trouble trusts my guild?" | Keep rep mostly earned through play, not ads. |
-| Hero XP | Participating heroes on expedition result, future Training Yard actions/bonus | Hero levels, promotion eligibility | "Which heroes are getting better?" | XP comes from play; no paid XP boosts. |
+| Hero XP | Participating heroes on expedition result, Training Yard level bonus, future Training Yard actions | Hero levels, promotion eligibility | "Which heroes are getting better?" | XP comes from play; no paid XP boosts. |
 | Guild XP | Future meta reward from completed quests, achievements, first clears | Guild level, facility cap unlocks, offline cap upgrades | "How established is this guild?" | Use as a pacing gate, not another spendable wallet. |
 | Duplicate contracts | Duplicate hero pulls, future achievement milestones | Hero promotions/rank-up, optional shard conversion | "What happens when I pull someone I already own?" | No paid random duplicate pressure. |
 | Charter seals | Achievement claims | Milestone unlocks, prestige/pre-charter bonuses | "What long-term milestone did I earn?" | Bounded bonuses, mostly unlocks and visibility. |
@@ -41,9 +41,9 @@ Implemented baseline as of 2026-06-23:
 
 - New sessions start at 0 gold, 0 reputation, guild level 1, and level-1 implemented facilities. The debug top-bar +/- controls replace the old rich debug start.
 - A deterministic first-session route can clear Cave of Minor Regrets, Forest of Wrong Turns, Bandit Tax Office, Salted Swamp Chapel, Moonlit Smuggler Run, and The Hungry Siege in 855 quest seconds, leaving room inside the 30-minute target for reward handling and upgrade decisions.
-- The route affords Notice Board 2 after the first clear, Training Yard 2 after the second clear, and Bunk Room 2 after the third clear while still leaving enough gold for a recruit or another meaningful action by the first high-risk unlock.
+- The route affords Notice Board 2 after the first clear, Training Yard 2 after the second clear, and Bunk Room 2 after the third clear while still leaving enough gold for a recruit or another meaningful action by the first high-risk unlock. Training Yard upgrades now add +10% quest XP per extra level for participating heroes.
 - Six clears unlock the first high-risk quests through completed-quest pacing, and starter heroes gain visible XP plus at least one level-up along the route.
-- This is covered by `FirstThirtyMinutePacingTest`; first-return/offline pacing still needs its own pass once offline rewards are tuned.
+- This is covered by `FirstThirtyMinutePacingTest`, including the first-return offline report path: returning after the first timer completes marks the idle report achievement, collecting and claiming keeps Notice Board 2 affordable, and the advisor points back to that first facility upgrade after loot cleanup.
 
 ## Reward-To-Action Rules
 
@@ -68,7 +68,7 @@ This is the target shape before replacing the current basic facility pass.
 | Facility | Core effect | Unlock gate | Cost curve role | First 30-minute intent |
 | --- | --- | --- | --- | --- |
 | Notice Board | More quest gold, quest visibility, some quest gates | Always available | Cheapest early sink, ramps gently | First obvious upgrade and gold feedback loop. |
-| Training Yard | Party power, future XP/training actions | After first completed quest or rep 2 | Medium-cost tactical sink | Fixes "my odds are bad" without replacing hero XP. |
+| Training Yard | Party power, hero XP bonus, future training actions | After first completed quest or rep 2 | Medium-cost tactical sink | Fixes "my odds are bad" and improves participants without replacing expedition XP. |
 | Bunk Room | Party slots and roster comfort | Rep/completed quest gate | Spiky milestone sink | Unlocks 4-hero quests and makes recruitment matter. |
 | Armory/Forge | Equipment quality, equip suggestions, future rerolls | Notice Board level or loot milestone | Midgame loot sink | Makes loot management feel purposeful. |
 | Infirmary | Risk mitigation, failure recovery, pity rewards | Failure/achievement milestone | Defensive sink | Turns bad outcomes into funny resilience. |
@@ -76,16 +76,19 @@ This is the target shape before replacing the current basic facility pass.
 | Tavern/Kitchen | Morale, hero XP bonus, long quest support | Roster size or chef-themed unlock | Support sink | Makes repeated expeditions feel cozy and productive. |
 | Accountant Office | Gold efficiency, duplicate contracts, paperwork bonuses | Rep and paperwork quest gate | Optimization sink | Gives late early-game players a clever economy toy. |
 
-## Duplicate Progression Draft
+## Duplicate And Promotion Decision
 
-Current prototype duplicate pulls grant reputation. Keep that as the immediate fallback, then layer a clearer long-term path:
+Promotion and duplicate handling are now defined in [Hero promotion and duplicate rules](18-hero-promotion-duplicate-rules.md).
 
-1. Duplicate pull always grants reputation now.
-2. Duplicate also grants one future `contract` for that hero family.
-3. Contracts fill promotion progress once promotion exists.
-4. When a hero is fully promoted for the current cap, duplicates convert to reputation plus charter seal progress, never wasted power pressure.
+The decision is:
 
-This keeps the current generous behavior while making future gacha-adjacent progression understandable and monetization-safe.
+1. Duplicate pulls keep the current immediate reputation reward.
+2. Once contract storage exists, each duplicate also grants one hero-specific contract.
+3. Contracts feed bounded promotion ranks, not raw XP.
+4. Blank contracts from non-random play sources must exist before promotions affect meaningful quest power.
+5. Fully promoted duplicate value must overflow or convert into a future charter reward, never disappear.
+
+This keeps duplicate pulls generous while avoiding paid or random pressure around core hero power.
 
 ## Recommendation Priority
 
@@ -104,5 +107,5 @@ The UI copy should stay concrete: "Upgrade Bunk Room for 4th slot" beats "Improv
 - Replace the current hardcoded Guild Home recommendation with a `ProgressionAdvisor`.
 - Give quest result and loot reward screens a single `nextAction` prompt.
 - Tune facility costs numerically against the first 30-minute pacing now that the facility catalog owns caps, costs, gates, and effects.
-- Add duplicate contract fields only when promotion rules are finalized.
+- Implement promotion rank, hero contract, and blank contract fields from `docs/18-hero-promotion-duplicate-rules.md` with a snapshot version bump.
 - Keep rewarded-ad bonus copy separate from all advisor decisions.

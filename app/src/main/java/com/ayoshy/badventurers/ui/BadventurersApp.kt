@@ -74,6 +74,7 @@ import com.ayoshy.badventurers.game.AchievementDefinition
 import com.ayoshy.badventurers.game.ExpeditionEngine
 import com.ayoshy.badventurers.game.ExpeditionEstimator
 import com.ayoshy.badventurers.game.ExpeditionOutcome
+import com.ayoshy.badventurers.game.ExpeditionResult
 import com.ayoshy.badventurers.game.FakeRewardedAdService
 import com.ayoshy.badventurers.game.GuildFacility
 import com.ayoshy.badventurers.game.Hero
@@ -736,7 +737,11 @@ private fun GuildFacilitiesPanel(session: PlaySessionState, selectedQuest: Quest
             label = stringResource(R.string.guild_facility_training_yard),
             value = facilityLevelEffect(
                 state = session.facilityUpgradeState(GuildFacility.TrainingYard),
-                effect = stringResource(R.string.guild_facility_training_effect, session.trainingYardPowerBonus()),
+                effect = stringResource(
+                    R.string.guild_facility_training_effect,
+                    session.trainingYardPowerBonus(),
+                    session.trainingYardQuestXpBonusPercent(),
+                ),
             ),
         )
         FacilityLine(
@@ -817,7 +822,7 @@ private fun QuestResultScreen(
             .ifEmpty { session.heroes.take(session.effectivePartySlots(run.quest)) }
         val partyNames = resultParty.joinToString { it.name }
         val levelUpPreviews = resultParty
-            .map { hero -> hero to HeroProgression.previewGrantXp(hero, result.reward.xp) }
+            .map { hero -> hero to HeroProgression.previewGrantXp(hero, session.collectableHeroXp(result)) }
             .filter { (_, preview) -> preview.levelsGained > 0 }
 
         QuestCardArt(
@@ -861,7 +866,7 @@ private fun QuestResultScreen(
         )
         InfoRow(
             title = stringResource(R.string.result_reward_title),
-            detail = stringResource(R.string.result_reward_detail, result.reward.xp),
+            detail = resultRewardDetail(session, result),
             value = stringResource(R.string.gold_value, rewardGoldWithNoticeBoard(session)),
         )
         HeroLevelUpRevealPanel(levelUps = levelUpPreviews)
@@ -883,6 +888,21 @@ private fun QuestResultScreen(
     }
 }
 
+@Composable
+private fun resultRewardDetail(session: PlaySessionState, result: ExpeditionResult): String {
+    val totalXp = session.collectableHeroXp(result)
+    val baseXp = result.reward.xp.coerceAtLeast(0)
+    val bonusPercent = session.trainingYardQuestXpBonusPercent()
+    if (bonusPercent <= 0) return stringResource(R.string.result_reward_detail, totalXp)
+
+    return stringResource(
+        R.string.result_reward_detail_training_bonus,
+        totalXp,
+        baseXp,
+        totalXp - baseXp,
+        bonusPercent,
+    )
+}
 @Composable
 private fun HeroLevelUpRevealPanel(levelUps: List<Pair<Hero, HeroXpPreview>>) {
     if (levelUps.isEmpty()) return
@@ -1007,7 +1027,7 @@ private fun OfflineSummaryScreen(
         )
         InfoRow(
             title = stringResource(R.string.result_reward_title),
-            detail = stringResource(R.string.result_reward_detail, result.reward.xp),
+            detail = resultRewardDetail(session, result),
             value = stringResource(R.string.gold_value, rewardGoldWithNoticeBoard(session)),
         )
         InfoRow(
@@ -2909,6 +2929,13 @@ private fun UpgradesScreen(
         UpgradeRow(
             title = stringResource(R.string.notice_board_upgrade_title, session.noticeBoardLevel),
             detail = stringResource(R.string.notice_board_upgrade_detail),
+            preview = upgradePreviewText(
+                currentValue = session.noticeBoardGoldBonusPercent(),
+                nextValue = session.noticeBoardLevel * 10,
+                maxed = session.facilityUpgradeState(GuildFacility.NoticeBoard).maxed,
+                currentFormat = R.string.notice_board_upgrade_preview,
+                maxedFormat = R.string.notice_board_upgrade_maxed,
+            ),
             cost = noticeBoardCost,
             currentGold = session.gold,
             enabled = session.canUpgradeFacility(GuildFacility.NoticeBoard),
@@ -2917,6 +2944,7 @@ private fun UpgradesScreen(
         UpgradeRow(
             title = stringResource(R.string.training_yard_upgrade_title, session.trainingYardLevel),
             detail = stringResource(R.string.training_yard_upgrade_detail),
+            preview = trainingYardUpgradePreviewText(session),
             cost = trainingYardCost,
             currentGold = session.gold,
             enabled = session.canUpgradeFacility(GuildFacility.TrainingYard),
@@ -2925,6 +2953,13 @@ private fun UpgradesScreen(
         UpgradeRow(
             title = stringResource(R.string.bunk_room_upgrade_title, session.bunkRoomLevel),
             detail = stringResource(R.string.bunk_room_upgrade_detail),
+            preview = upgradePreviewText(
+                currentValue = (session.bunkRoomLevel - 1).coerceAtLeast(0),
+                nextValue = session.bunkRoomLevel,
+                maxed = session.facilityUpgradeState(GuildFacility.BunkRoom).maxed,
+                currentFormat = R.string.bunk_room_upgrade_preview,
+                maxedFormat = R.string.bunk_room_upgrade_maxed,
+            ),
             cost = bunkRoomCost,
             currentGold = session.gold,
             enabled = session.canUpgradeFacility(GuildFacility.BunkRoom),
@@ -3168,6 +3203,7 @@ private fun achievementRewardSummary(definition: AchievementDefinition): String 
 private fun UpgradeRow(
     title: String,
     detail: String,
+    preview: String,
     cost: Int,
     currentGold: Int,
     enabled: Boolean,
@@ -3201,6 +3237,15 @@ private fun UpgradeRow(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                Text(
+                    text = preview,
+                    color = Color(0xFF3C6A55),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 3.dp),
+                )
             }
             Button(
                 onClick = onBuy,
@@ -3228,6 +3273,37 @@ private fun UpgradeRow(
         }
     }
 }
+
+@Composable
+private fun trainingYardUpgradePreviewText(session: PlaySessionState): String {
+    val currentPower = session.trainingYardPowerBonus()
+    val currentXpBonus = session.trainingYardQuestXpBonusPercent()
+    return if (session.facilityUpgradeState(GuildFacility.TrainingYard).maxed) {
+        stringResource(R.string.training_yard_upgrade_maxed, currentPower, currentXpBonus)
+    } else {
+        stringResource(
+            R.string.training_yard_upgrade_preview,
+            currentPower,
+            currentXpBonus,
+            currentPower + 8,
+            currentXpBonus + 10,
+        )
+    }
+}
+
+@Composable
+private fun upgradePreviewText(
+    currentValue: Int,
+    nextValue: Int,
+    maxed: Boolean,
+    currentFormat: Int,
+    maxedFormat: Int,
+): String =
+    if (maxed) {
+        stringResource(maxedFormat, currentValue)
+    } else {
+        stringResource(currentFormat, currentValue, nextValue)
+    }
 
 private fun heroBorderStyle(rarity: HeroRarity): RarityBorderStyle =
     when (rarity) {

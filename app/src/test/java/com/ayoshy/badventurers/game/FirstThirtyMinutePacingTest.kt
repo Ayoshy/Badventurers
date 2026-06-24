@@ -65,6 +65,37 @@ class FirstThirtyMinutePacingTest {
         assertTrue("early quest achievements should introduce reputation pressure gently", run.session.reputation >= 1)
     }
 
+    @Test
+    fun firstOfflineReturnRewardsTheReportAndPointsToFirstUpgrade() {
+        val startedAt = 1_000L
+        val running = PlaySessionState.initial().startQuest(startedAt, SeedGame.firstQuest)
+        val returnedAt = startedAt + (SeedGame.firstQuest.durationSeconds + 600) * 1_000L
+
+        assertTrue("return should happen after the expedition timer", returnedAt >= requireNotNull(running.expedition).endsAtMillis)
+
+        val ready = running
+            .finishQuestNow(engine, running.heroes, roll = 80)
+            .markOfflineReportCollected(returnedAt)
+
+        assertEquals(PlayPhase.ResultReady, ready.phase)
+        assertTrue("offline summary should complete its idle achievement", ready.isAchievementCompleted("welcome_back_audit"))
+        assertEquals(ProgressionAdviceKind.ViewQuestReport, ProgressionAdvisor.recommend(ready).kind)
+
+        val collected = ready.collectResult().claimAllAchievements(nowMillis = returnedAt)
+        val afterLoot = collected.pendingLootItems.fold(collected) { nextSession, item ->
+            nextSession.keepPendingLoot(item)
+        }
+
+        assertTrue("offline return should leave enough gold for the first facility upgrade", afterLoot.canUpgradeFacility(GuildFacility.NoticeBoard))
+        assertTrue("offline report plus first quest achievements should yield charter progress", afterLoot.achievementSeals() >= 3)
+        assertEquals(ProgressionAdviceKind.UpgradeNoticeBoard, ProgressionAdvisor.recommend(afterLoot).kind)
+    }
+
+    private fun PlaySessionState.isAchievementCompleted(achievementId: String): Boolean {
+        val definition = AchievementCatalog.byId.getValue(achievementId)
+        return achievementProgressFor(definition).isCompleted(definition)
+    }
+
     private fun PacingRun.keepPendingLoot(): PacingRun {
         val kept = session.pendingLootItems.fold(session) { nextSession, item ->
             nextSession.keepPendingLoot(item)

@@ -19,6 +19,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - Concrete monetization guardrails live in [Monetization guardrails](14-monetization-guardrails.md).
 - Hero XP curve candidates are captured in [Hero XP progression curves](16-hero-xp-progression.md).
 - Progression resource roles and reward-to-action rules are captured in [Progression economy matrix](17-progression-economy-matrix.md).
+- Hero promotion and duplicate pull decisions are captured in [Hero promotion and duplicate rules](18-hero-promotion-duplicate-rules.md).
 - Current core screens are Guild, Quests, Heroes, Loot, and Upgrades.
 - Future MVP screens to preserve in planning: Expedition Prep, Offline Summary, Quest Result, Reward Choice, Item Detail, Equip Item, Hero Detail, Settings, and a fake Rewarded Ad Prompt.
 - Longer-term future screens: Shop, Events / seasonal quests, and Prestige / charter bonuses.
@@ -82,8 +83,8 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [x] Add quest-specific and special-triggered journal lines to make hero specials visible in results.
 - [x] Add unlock conditions for medium/high-risk quests using reputation, guild upgrades, or completed quest counts.
 - [x] Add UI treatment for recommended heroes per quest.
-- [ ] Visual QA the new quest banners on emulator once image preview/screenshot ACL issues are solved.
-- [ ] Design Progression / Upgrade V2: guild facilities, hero XP, level-ups, promotions, and duplicate-use rules.
+- [x] Visual QA the new quest banners on emulator. 2026-06-23: installed debug build, captured quest list scroll positions, and pixel-matched all eight in-screen banners to 4:1 Android resources.
+- [x] Design Progression / Upgrade V2: guild facilities, hero XP, level-ups, promotions, and duplicate-use rules.
 - [x] Define first 30-minute progression pacing across quests, gold, reputation, hero XP, and upgrade costs.
 - [ ] Create initial GitHub issues once GitHub CLI/connector access works.
 
@@ -102,7 +103,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [x] Add upgrade recommendations on Guild Home based on the player's current bottleneck.
 - [x] Add visible Guild Home facility state changes or badges so upgrades feel concrete, not just numeric.
 - [x] Add facility persistence, migration, and unit tests once the model is implemented.
-- [ ] Balance upgrade costs and effects for the first 30 minutes, first return session, and first high-risk quest unlock.
+- [x] Balance upgrade costs and effects for the first 30 minutes, first return session, and first high-risk quest unlock.
 
 ### Hero Growth
 
@@ -111,10 +112,10 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [x] Add level-up stat growth rules using the 10-stat foundation without making every hero feel identical.
 - [x] Add a post-result level-up reveal for heroes who gained levels.
 - [x] Add Hero Detail progression UI: XP bar, next-level preview, stat changes, and special notes.
-- [ ] Define hero promotion/rank-up rules for longer-term growth beyond raw levels.
-- [ ] Decide how duplicate hero pulls feed progression: reputation only, hero shards/contracts, promotion currency, or selectable compensation.
-- [ ] Add training actions or Training Yard bonuses that improve heroes without replacing expedition XP.
-- [ ] Add balance tests for starter heroes, recruited heroes, level gaps, and promoted heroes.
+- [x] Define hero promotion/rank-up rules for longer-term growth beyond raw levels.
+- [x] Decide how duplicate hero pulls feed progression: reputation only, hero shards/contracts, promotion currency, or selectable compensation.
+- [x] Add Training Yard XP bonuses that improve participating heroes without replacing expedition XP.
+- [x] Add balance tests for starter heroes, recruited heroes, level gaps, and promoted heroes.
 
 ### Upgrade Economy And UX
 
@@ -122,7 +123,7 @@ This file is the repo-local board. GitHub Issues should mirror these items so th
 - [ ] Make every major reward answer "what can I improve now?" through upgrade prompts, hero suggestions, or equip suggestions.
 - [x] Replace manual recommended heroes with a dynamic hybrid score using active specials, quest tags, hero stats, equipment, and estimated success gain.
 - [x] Define when the game should encourage upgrading guild facilities versus leveling heroes versus equipping loot.
-- [ ] Add upgrade preview copy in English and French before implementation to keep the systems readable.
+- [x] Add upgrade preview copy in English and French before implementation to keep the systems readable.
 - [ ] Keep paid/random monetization out of hero power progression; rewarded ads may boost optional rewards only under the monetization guardrails.
 
 ## Later
