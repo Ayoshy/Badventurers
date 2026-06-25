@@ -249,7 +249,7 @@ internal fun LootInventoryRow(item: LootItem, selected: Boolean, onClick: () -> 
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Image(
-                    painter = painterResource(lootItemArtResource(item)),
+                    painter = painterResource(lootIconResource(item.icon)),
                     contentDescription = lootItemName(item),
                     modifier = Modifier
                         .size(42.dp)

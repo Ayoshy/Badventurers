@@ -30,10 +30,9 @@ class LootGeneratorTest {
     }
 
     @Test
-    fun catalogDefinitionsHaveUniqueIdsNamesAndArt() {
+    fun catalogDefinitionsHaveUniqueIdsAndNames() {
         assertEquals(LootCatalog.items.size, LootCatalog.byId.size)
         assertEquals(LootCatalog.items.size, LootCatalog.items.map { it.name }.toSet().size)
-        assertEquals(LootCatalog.items.size, LootCatalog.items.map { it.art }.toSet().size)
     }
 
     @Test
