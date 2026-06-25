@@ -30,9 +30,10 @@ class LootGeneratorTest {
     }
 
     @Test
-    fun catalogDefinitionsHaveUniqueIdsAndNames() {
+    fun catalogDefinitionsHaveUniqueIdsNamesAndArt() {
         assertEquals(LootCatalog.items.size, LootCatalog.byId.size)
         assertEquals(LootCatalog.items.size, LootCatalog.items.map { it.name }.toSet().size)
+        assertEquals(LootCatalog.items.size, LootCatalog.items.map { it.art }.toSet().size)
     }
 
     @Test
@@ -42,6 +43,44 @@ class LootGeneratorTest {
 
         assertEquals(expectedSlots, catalogSlots)
         assertTrue(LootCatalog.bySlot.values.all { it.isNotEmpty() })
+    }
+
+    @Test
+    fun catalogUsesFixedRarityPoolsForNewItemRule() {
+        val originalItemIds = setOf(
+            "weapon_bent_spoon",
+            "weapon_fork_spear",
+            "weapon_moon_axe",
+            "weapon_nibblade",
+            "weapon_toast_mace",
+            "armor_patch_hood",
+            "armor_moss_coat",
+            "armor_winged_boots",
+            "armor_travel_boots",
+            "trinket_lucky_ring",
+            "trinket_pocket_ring",
+            "trinket_spare_ring",
+            "trinket_dusty_ring",
+            "trinket_quiet_ring",
+            "armor_panic_helm",
+            "headgear_soup_helm",
+            "headgear_wobble_cap",
+            "headgear_paper_crown",
+            "headgear_lantern_hat",
+            "headgear_grin_hood",
+            "consumable_stale_potion",
+            "consumable_brave_brew",
+            "consumable_tiny_flask",
+            "consumable_odd_elixir",
+            "consumable_snap_tonic",
+        )
+
+        assertTrue(LootCatalog.items.filter { it.id in originalItemIds }.all { it.rarity == LootRarity.Common })
+        assertEquals(25, LootCatalog.byRarity.getValue(LootRarity.Common).size)
+        assertEquals(8, LootCatalog.byRarity.getValue(LootRarity.Uncommon).size)
+        assertEquals(8, LootCatalog.byRarity.getValue(LootRarity.Rare).size)
+        assertEquals(8, LootCatalog.byRarity.getValue(LootRarity.Epic).size)
+        assertEquals(8, LootCatalog.byRarity.getValue(LootRarity.Relic).size)
     }
 
     @Test
@@ -131,6 +170,7 @@ class LootGeneratorTest {
             requireNotNull(definition)
 
             assertEquals(definition.name, item.name)
+            assertEquals(definition.rarity, item.rarity)
             assertEquals(definition.slot, item.slot)
             assertEquals(definition.icon, item.icon)
         }

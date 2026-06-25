@@ -776,19 +776,44 @@
     {
       "id": "BV-021",
       "title": "New items",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "loot",
       "track": "Backlog",
       "summary": "We need to create new items. New rule is that 1 item = 1 artwork. All existing items will be reassigned to the common rarity. \nWe will create 8 items per other rarity level, with corresponding name, artwork, stats etc etc. Refer to the loot excel sheet items.csv",
       "acceptance": [
         {
-          "text": "Create artwork for",
-          "done": false
+          "text": "Reassign all existing loot definitions to Common rarity.",
+          "done": true
+        },
+        {
+          "text": "Add 8 Uncommon, 8 Rare, 8 Epic, and 8 Relic item definitions.",
+          "done": true
+        },
+        {
+          "text": "Give every loot definition a unique artwork reference and render item art from that reference.",
+          "done": true
+        },
+        {
+          "text": "Update docs/data/items.csv and the hero/item catalog to mirror rarity, art, and stat rules.",
+          "done": true
+        },
+        {
+          "text": "Add tests for fixed item rarity pools, unique artwork references, and generation/stat behavior.",
+          "done": true
         }
       ],
-      "refs": [],
-      "notes": []
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/Loot.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiArt.kt",
+        "app/src/main/res-loot/drawable/",
+        "docs/data/items.csv",
+        "docs/content/hero-item-catalog.md"
+      ],
+      "notes": [
+        "2026-06-25: Started implementation after pushing BV-005. Scope: fixed-rarity item catalog, 8 items per non-common rarity, and one artwork reference per item while preserving legacy LootIcon snapshots.",
+        "2026-06-25: Added fixed-rarity loot definitions with 25 Common legacy items and 8 items each for Uncommon/Rare/Epic/Relic, generated one vector art resource per item, moved item rendering to LootArt, updated CSV/catalog docs, and verified targeted tests, full test, assembleDebug, and lintDebug."
+      ]
     }
   ]
 }

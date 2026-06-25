@@ -97,6 +97,8 @@ import com.ayoshy.badventurers.game.HeroRecruitmentResult
 import com.ayoshy.badventurers.game.JournalEntry
 import com.ayoshy.badventurers.game.LootCarryBreakdown
 import com.ayoshy.badventurers.game.LootEconomy
+import com.ayoshy.badventurers.game.LootArt
+import com.ayoshy.badventurers.game.LootCatalog
 import com.ayoshy.badventurers.game.LootIcon
 import com.ayoshy.badventurers.game.LootItem
 import com.ayoshy.badventurers.game.LootRarity
@@ -447,7 +449,7 @@ internal fun LootIconPanel(item: LootItem, contentDescription: String) {
             contentAlignment = Alignment.Center,
         ) {
             Image(
-                painter = painterResource(lootIconResource(item.icon)),
+                painter = painterResource(lootItemArtResource(item)),
                 contentDescription = contentDescription,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit,
@@ -455,6 +457,83 @@ internal fun LootIconPanel(item: LootItem, contentDescription: String) {
         }
     }
 }
+
+internal fun lootItemArtResource(item: LootItem): Int =
+    lootArtResource(LootCatalog.byId[item.id]?.art ?: item.icon.defaultLootArt())
+
+private fun LootIcon.defaultLootArt(): LootArt =
+    when (this) {
+        LootIcon.Boots -> LootArt.ArmorTravelBoots
+        LootIcon.Ring -> LootArt.TrinketLuckyRing
+        LootIcon.Helmet -> LootArt.HeadgearSoupHelm
+        LootIcon.Weapon -> LootArt.WeaponForkSpear
+        LootIcon.Spoon -> LootArt.WeaponBentSpoon
+        LootIcon.Hood -> LootArt.ArmorPatchHood
+        LootIcon.Tankard -> LootArt.ConsumableBraveBrew
+        LootIcon.Potion -> LootArt.ConsumableStalePotion
+        LootIcon.Blade -> LootArt.WeaponNibblade
+    }
+
+internal fun lootArtResource(art: LootArt): Int =
+    when (art) {
+        LootArt.WeaponBentSpoon -> R.drawable.loot_art_weapon_bent_spoon
+        LootArt.WeaponForkSpear -> R.drawable.loot_art_weapon_fork_spear
+        LootArt.WeaponMoonAxe -> R.drawable.loot_art_weapon_moon_axe
+        LootArt.WeaponNibblade -> R.drawable.loot_art_weapon_nibblade
+        LootArt.WeaponToastMace -> R.drawable.loot_art_weapon_toast_mace
+        LootArt.ArmorPatchHood -> R.drawable.loot_art_armor_patch_hood
+        LootArt.ArmorMossCoat -> R.drawable.loot_art_armor_moss_coat
+        LootArt.ArmorWingedBoots -> R.drawable.loot_art_armor_winged_boots
+        LootArt.ArmorTravelBoots -> R.drawable.loot_art_armor_travel_boots
+        LootArt.TrinketLuckyRing -> R.drawable.loot_art_trinket_lucky_ring
+        LootArt.TrinketPocketRing -> R.drawable.loot_art_trinket_pocket_ring
+        LootArt.TrinketSpareRing -> R.drawable.loot_art_trinket_spare_ring
+        LootArt.TrinketDustyRing -> R.drawable.loot_art_trinket_dusty_ring
+        LootArt.TrinketQuietRing -> R.drawable.loot_art_trinket_quiet_ring
+        LootArt.ArmorPanicHelm -> R.drawable.loot_art_armor_panic_helm
+        LootArt.HeadgearSoupHelm -> R.drawable.loot_art_headgear_soup_helm
+        LootArt.HeadgearWobbleCap -> R.drawable.loot_art_headgear_wobble_cap
+        LootArt.HeadgearPaperCrown -> R.drawable.loot_art_headgear_paper_crown
+        LootArt.HeadgearLanternHat -> R.drawable.loot_art_headgear_lantern_hat
+        LootArt.HeadgearGrinHood -> R.drawable.loot_art_headgear_grin_hood
+        LootArt.ConsumableStalePotion -> R.drawable.loot_art_consumable_stale_potion
+        LootArt.ConsumableBraveBrew -> R.drawable.loot_art_consumable_brave_brew
+        LootArt.ConsumableTinyFlask -> R.drawable.loot_art_consumable_tiny_flask
+        LootArt.ConsumableOddElixir -> R.drawable.loot_art_consumable_odd_elixir
+        LootArt.ConsumableSnapTonic -> R.drawable.loot_art_consumable_snap_tonic
+        LootArt.WeaponReceiptCutter -> R.drawable.loot_art_weapon_receipt_cutter
+        LootArt.WeaponMopHalberd -> R.drawable.loot_art_weapon_mop_halberd
+        LootArt.ArmorButtonedBarrel -> R.drawable.loot_art_armor_buttoned_barrel
+        LootArt.FootwearSqueakyGreaves -> R.drawable.loot_art_footwear_squeaky_greaves
+        LootArt.TrinketQueueToken -> R.drawable.loot_art_trinket_queue_token
+        LootArt.HeadgearBucketVisor -> R.drawable.loot_art_headgear_bucket_visor
+        LootArt.ConsumableWarmishTea -> R.drawable.loot_art_consumable_warmish_tea
+        LootArt.ConsumablePicklePotion -> R.drawable.loot_art_consumable_pickle_potion
+        LootArt.WeaponFinePrintRapier -> R.drawable.loot_art_weapon_fine_print_rapier
+        LootArt.WeaponTaxmanGavel -> R.drawable.loot_art_weapon_taxman_gavel
+        LootArt.ArmorInvoiceMail -> R.drawable.loot_art_armor_invoice_mail
+        LootArt.FootwearWitnessSlippers -> R.drawable.loot_art_footwear_witness_slippers
+        LootArt.TrinketOvertimeHourglass -> R.drawable.loot_art_trinket_overtime_hourglass
+        LootArt.HeadgearNotaryWig -> R.drawable.loot_art_headgear_notary_wig
+        LootArt.ConsumableBottledCourage -> R.drawable.loot_art_consumable_bottled_courage
+        LootArt.TrinketMinorOracleReceipt -> R.drawable.loot_art_trinket_minor_oracle_receipt
+        LootArt.WeaponAuditorsHalberd -> R.drawable.loot_art_weapon_auditors_halberd
+        LootArt.WeaponDragonStamp -> R.drawable.loot_art_weapon_dragon_stamp
+        LootArt.ArmorMisfiledAegis -> R.drawable.loot_art_armor_misfiled_aegis
+        LootArt.FootwearPlausibleDenialBoots -> R.drawable.loot_art_footwear_plausible_denial_boots
+        LootArt.TrinketBellOfLastCall -> R.drawable.loot_art_trinket_bell_of_last_call
+        LootArt.HeadgearEmergencyMinutesCrown -> R.drawable.loot_art_headgear_emergency_minutes_crown
+        LootArt.ConsumableSecondChanceSoup -> R.drawable.loot_art_consumable_second_chance_soup
+        LootArt.TrinketContractKnot -> R.drawable.loot_art_trinket_contract_knot
+        LootArt.WeaponSpoonFinalNotice -> R.drawable.loot_art_weapon_spoon_final_notice
+        LootArt.WeaponMoonlitReceiptCleaver -> R.drawable.loot_art_weapon_moonlit_receipt_cleaver
+        LootArt.ArmorManySignaturesCloak -> R.drawable.loot_art_armor_many_signatures_cloak
+        LootArt.FootwearInevitableReturnSandals -> R.drawable.loot_art_footwear_inevitable_return_sandals
+        LootArt.TrinketPerpetualQueueRing -> R.drawable.loot_art_trinket_perpetual_queue_ring
+        LootArt.HeadgearHaloCompliance -> R.drawable.loot_art_headgear_halo_compliance
+        LootArt.ConsumableAbsoluteMaybeElixir -> R.drawable.loot_art_consumable_absolute_maybe_elixir
+        LootArt.TrinketUnpaidCharterSeal -> R.drawable.loot_art_trinket_unpaid_charter_seal
+    }
 
 internal fun lootIconResource(icon: LootIcon): Int =
     when (icon) {

@@ -2,6 +2,7 @@ package com.ayoshy.badventurers.ui
 
 import com.ayoshy.badventurers.R
 import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
+import com.ayoshy.badventurers.game.LootCatalog
 import com.ayoshy.badventurers.game.SeedGame
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -53,5 +54,12 @@ class BadventurersUiLocalizationTest {
             ),
             questsWithBriefs,
         )
+    }
+
+    @Test
+    fun everyLootDefinitionHasResolvedArtResource() {
+        LootCatalog.items.forEach { definition ->
+            assertNotEquals("${definition.id} should resolve item art", 0, lootArtResource(definition.art))
+        }
     }
 }

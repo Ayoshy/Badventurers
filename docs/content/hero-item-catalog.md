@@ -90,63 +90,98 @@ Open design space for this catalog:
 
 ## Item Rules
 
-Items currently use generated rarity and generated stat bonuses. The `LootCatalog` row defines the item identity, slot, name, and icon. `LootGenerator` then rolls rarity and stats for each dropped instance.
+Items now use fixed-rarity catalog definitions. `LootGenerator` rolls a rarity from the active profile, then chooses an item from that rarity pool. Existing items are intentionally assigned to Common so higher-rarity drops can introduce distinct names and artwork instead of upgrading the same object by math only.
 
 Current item rarity profiles are progression-gated in `LootGenerator`:
 
 - Base profile before the Palier 2 gate: Common `75`, Uncommon `25`.
 - Palier 2 Rare loot profile after `8` completed quests: Common `65`, Uncommon `25`, Rare `10`.
-- Epic and Relic item chance remains locked for later tiers.
+- Epic and Relic item definitions exist for later unlock profiles, but current runtime profiles do not roll them yet.
 
-| Rarity | Stat Slots |
-| --- | ---: |
-| Common | 1 |
-| Uncommon | 2 |
-| Rare | 3 |
-| Epic | 4 |
-| Relic | 5 |
+| Rarity | Catalog Count | Stat Slots |
+| --- | ---: | ---: |
+| Common | 25 | 1 |
+| Uncommon | 8 | 2 |
+| Rare | 8 | 3 |
+| Epic | 8 | 4 |
+| Relic | 8 | 5 |
 
-Each stat slot chooses a unique stat type and a weighted value from `1` to `10`. Item stat values are currently flat bonuses; items do not level up yet.
+Each stat slot chooses a unique stat type and a weighted value from `1` to `10`. Item stat values are flat bonuses; items do not level up yet.
+
+One item equals one artwork resource. The `LootIcon` field remains as a legacy family/fallback for old saves and empty-slot affordances, while runtime item cards render through the item-specific art resource mapped by `LootArt` in `BadventurersUiArt.kt`.
 
 ## Items
 
-| ID | Artwork | Item Class / Slot | Name | Current Rarity Rule | Stats Distribution | Stats Gained Per Level | Evolution / Design Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| weapon_bent_spoon | `app/src/main/res-loot/drawable-nodpi/loot_icon_spoon.png` | Weapon | Bent Spoon | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| weapon_fork_spear | `app/src/main/res-loot/drawable-nodpi/loot_icon_weapon.png` | Weapon | Fork Spear | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| weapon_moon_axe | `app/src/main/res-loot/drawable-nodpi/loot_icon_weapon.png` | Weapon | Moon Axe | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| weapon_nibblade | `app/src/main/res-loot/drawable-nodpi/loot_icon_blade.png` | Weapon | Nibblade | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| weapon_toast_mace | `app/src/main/res-loot/drawable-nodpi/loot_icon_spoon.png` | Weapon | Toast Spoon | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Name/id mismatch to review: id says mace, display name says spoon. |
-| armor_patch_hood | `app/src/main/res-loot/drawable-nodpi/loot_icon_hood.png` | Armor | Patch Cloak | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| armor_moss_coat | `app/src/main/res-loot/drawable-nodpi/loot_icon_hood.png` | Armor | Moss Coat | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| armor_winged_boots | `app/src/main/res-loot/drawable-nodpi/loot_icon_boots.png` | Footwear | Winged Boots | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Prefix says armor but slot is Footwear; review naming if needed. |
-| armor_travel_boots | `app/src/main/res-loot/drawable-nodpi/loot_icon_boots.png` | Footwear | Travel Boots | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Prefix says armor but slot is Footwear; review naming if needed. |
-| trinket_lucky_ring | `app/src/main/res-loot/drawable-nodpi/loot_icon_ring.png` | Trinket | Lucky Ring | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| trinket_pocket_ring | `app/src/main/res-loot/drawable-nodpi/loot_icon_ring.png` | Trinket | Pocket Ring | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| trinket_spare_ring | `app/src/main/res-loot/drawable-nodpi/loot_icon_ring.png` | Trinket | Spare Ring | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| trinket_dusty_ring | `app/src/main/res-loot/drawable-nodpi/loot_icon_ring.png` | Trinket | Dusty Ring | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| trinket_quiet_ring | `app/src/main/res-loot/drawable-nodpi/loot_icon_ring.png` | Trinket | Quiet Ring | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| armor_panic_helm | `app/src/main/res-loot/drawable-nodpi/loot_icon_helmet.png` | Headgear | Panic Helm | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Prefix says armor but slot is Headgear; review naming if needed. |
-| headgear_soup_helm | `app/src/main/res-loot/drawable-nodpi/loot_icon_helmet.png` | Headgear | Soup Helm | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| headgear_wobble_cap | `app/src/main/res-loot/drawable-nodpi/loot_icon_hood.png` | Headgear | Wobble Cap | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| headgear_paper_crown | `app/src/main/res-loot/drawable-nodpi/loot_icon_helmet.png` | Headgear | Paper Crown | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| headgear_lantern_hat | `app/src/main/res-loot/drawable-nodpi/loot_icon_helmet.png` | Headgear | Lantern Hat | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| headgear_grin_hood | `app/src/main/res-loot/drawable-nodpi/loot_icon_hood.png` | Headgear | Grin Hood | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Upgrade/evolution TBD. |
-| consumable_stale_potion | `app/src/main/res-loot/drawable-nodpi/loot_icon_potion.png` | Consumable | Stale Potion | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Consumable behavior TBD; currently behaves like flat-stat loot. |
-| consumable_brave_brew | `app/src/main/res-loot/drawable-nodpi/loot_icon_tankard.png` | Consumable | Brave Brew | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Consumable behavior TBD; currently behaves like flat-stat loot. |
-| consumable_tiny_flask | `app/src/main/res-loot/drawable-nodpi/loot_icon_potion.png` | Consumable | Tiny Flask | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Consumable behavior TBD; currently behaves like flat-stat loot. |
-| consumable_odd_elixir | `app/src/main/res-loot/drawable-nodpi/loot_icon_potion.png` | Consumable | Odd Elixir | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Consumable behavior TBD; currently behaves like flat-stat loot. |
-| consumable_snap_tonic | `app/src/main/res-loot/drawable-nodpi/loot_icon_potion.png` | Consumable | Snap Tonic | Rolled per drop | Generated unique stats by rarity | None; flat generated bonuses only | Consumable behavior TBD; currently behaves like flat-stat loot. |
+| ID | Artwork | Slot | Name | Fixed Rarity | Stats Distribution | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| weapon_bent_spoon | `app/src/main/res-loot/drawable/loot_art_weapon_bent_spoon.xml` | Weapon | Bent Spoon | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| weapon_fork_spear | `app/src/main/res-loot/drawable/loot_art_weapon_fork_spear.xml` | Weapon | Fork Spear | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| weapon_moon_axe | `app/src/main/res-loot/drawable/loot_art_weapon_moon_axe.xml` | Weapon | Moon Axe | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| weapon_nibblade | `app/src/main/res-loot/drawable/loot_art_weapon_nibblade.xml` | Weapon | Nibblade | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| weapon_toast_mace | `app/src/main/res-loot/drawable/loot_art_weapon_toast_mace.xml` | Weapon | Toast Spoon | Common | 1 generated unique stat(s) | Existing item reassigned to Common; name/id mismatch retained for save compatibility. |
+| armor_patch_hood | `app/src/main/res-loot/drawable/loot_art_armor_patch_hood.xml` | Armor | Patch Cloak | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| armor_moss_coat | `app/src/main/res-loot/drawable/loot_art_armor_moss_coat.xml` | Armor | Moss Coat | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| armor_winged_boots | `app/src/main/res-loot/drawable/loot_art_armor_winged_boots.xml` | Footwear | Winged Boots | Common | 1 generated unique stat(s) | Existing item reassigned to Common; legacy id prefix retained. |
+| armor_travel_boots | `app/src/main/res-loot/drawable/loot_art_armor_travel_boots.xml` | Footwear | Travel Boots | Common | 1 generated unique stat(s) | Existing item reassigned to Common; legacy id prefix retained. |
+| trinket_lucky_ring | `app/src/main/res-loot/drawable/loot_art_trinket_lucky_ring.xml` | Trinket | Lucky Ring | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| trinket_pocket_ring | `app/src/main/res-loot/drawable/loot_art_trinket_pocket_ring.xml` | Trinket | Pocket Ring | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| trinket_spare_ring | `app/src/main/res-loot/drawable/loot_art_trinket_spare_ring.xml` | Trinket | Spare Ring | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| trinket_dusty_ring | `app/src/main/res-loot/drawable/loot_art_trinket_dusty_ring.xml` | Trinket | Dusty Ring | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| trinket_quiet_ring | `app/src/main/res-loot/drawable/loot_art_trinket_quiet_ring.xml` | Trinket | Quiet Ring | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| armor_panic_helm | `app/src/main/res-loot/drawable/loot_art_armor_panic_helm.xml` | Headgear | Panic Helm | Common | 1 generated unique stat(s) | Existing item reassigned to Common; legacy id prefix retained. |
+| headgear_soup_helm | `app/src/main/res-loot/drawable/loot_art_headgear_soup_helm.xml` | Headgear | Soup Helm | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| headgear_wobble_cap | `app/src/main/res-loot/drawable/loot_art_headgear_wobble_cap.xml` | Headgear | Wobble Cap | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| headgear_paper_crown | `app/src/main/res-loot/drawable/loot_art_headgear_paper_crown.xml` | Headgear | Paper Crown | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| headgear_lantern_hat | `app/src/main/res-loot/drawable/loot_art_headgear_lantern_hat.xml` | Headgear | Lantern Hat | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| headgear_grin_hood | `app/src/main/res-loot/drawable/loot_art_headgear_grin_hood.xml` | Headgear | Grin Hood | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| consumable_stale_potion | `app/src/main/res-loot/drawable/loot_art_consumable_stale_potion.xml` | Consumable | Stale Potion | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| consumable_brave_brew | `app/src/main/res-loot/drawable/loot_art_consumable_brave_brew.xml` | Consumable | Brave Brew | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| consumable_tiny_flask | `app/src/main/res-loot/drawable/loot_art_consumable_tiny_flask.xml` | Consumable | Tiny Flask | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| consumable_odd_elixir | `app/src/main/res-loot/drawable/loot_art_consumable_odd_elixir.xml` | Consumable | Odd Elixir | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| consumable_snap_tonic | `app/src/main/res-loot/drawable/loot_art_consumable_snap_tonic.xml` | Consumable | Snap Tonic | Common | 1 generated unique stat(s) | Existing item reassigned to Common. |
+| weapon_receipt_cutter | `app/src/main/res-loot/drawable/loot_art_weapon_receipt_cutter.xml` | Weapon | Receipt Cutter | Uncommon | 2 generated unique stat(s) | New Uncommon item. |
+| weapon_mop_halberd | `app/src/main/res-loot/drawable/loot_art_weapon_mop_halberd.xml` | Weapon | Mop Halberd | Uncommon | 2 generated unique stat(s) | New Uncommon item. |
+| armor_buttoned_barrel | `app/src/main/res-loot/drawable/loot_art_armor_buttoned_barrel.xml` | Armor | Buttoned Barrel | Uncommon | 2 generated unique stat(s) | New Uncommon item. |
+| footwear_squeaky_greaves | `app/src/main/res-loot/drawable/loot_art_footwear_squeaky_greaves.xml` | Footwear | Squeaky Greaves | Uncommon | 2 generated unique stat(s) | New Uncommon item. |
+| trinket_queue_token | `app/src/main/res-loot/drawable/loot_art_trinket_queue_token.xml` | Trinket | Queue Token | Uncommon | 2 generated unique stat(s) | New Uncommon item. |
+| headgear_bucket_visor | `app/src/main/res-loot/drawable/loot_art_headgear_bucket_visor.xml` | Headgear | Bucket Visor | Uncommon | 2 generated unique stat(s) | New Uncommon item. |
+| consumable_warmish_tea | `app/src/main/res-loot/drawable/loot_art_consumable_warmish_tea.xml` | Consumable | Warmish Tea | Uncommon | 2 generated unique stat(s) | New Uncommon item. |
+| consumable_pickle_potion | `app/src/main/res-loot/drawable/loot_art_consumable_pickle_potion.xml` | Consumable | Pickle Potion | Uncommon | 2 generated unique stat(s) | New Uncommon item. |
+| weapon_fine_print_rapier | `app/src/main/res-loot/drawable/loot_art_weapon_fine_print_rapier.xml` | Weapon | Fine Print Rapier | Rare | 3 generated unique stat(s) | New Rare item. |
+| weapon_taxman_gavel | `app/src/main/res-loot/drawable/loot_art_weapon_taxman_gavel.xml` | Weapon | Taxman Gavel | Rare | 3 generated unique stat(s) | New Rare item. |
+| armor_invoice_mail | `app/src/main/res-loot/drawable/loot_art_armor_invoice_mail.xml` | Armor | Invoice Mail | Rare | 3 generated unique stat(s) | New Rare item. |
+| footwear_witness_slippers | `app/src/main/res-loot/drawable/loot_art_footwear_witness_slippers.xml` | Footwear | Witness Slippers | Rare | 3 generated unique stat(s) | New Rare item. |
+| trinket_overtime_hourglass | `app/src/main/res-loot/drawable/loot_art_trinket_overtime_hourglass.xml` | Trinket | Overtime Hourglass | Rare | 3 generated unique stat(s) | New Rare item. |
+| headgear_notary_wig | `app/src/main/res-loot/drawable/loot_art_headgear_notary_wig.xml` | Headgear | Notary Wig | Rare | 3 generated unique stat(s) | New Rare item. |
+| consumable_bottled_courage | `app/src/main/res-loot/drawable/loot_art_consumable_bottled_courage.xml` | Consumable | Bottled Courage | Rare | 3 generated unique stat(s) | New Rare item. |
+| trinket_minor_oracle_receipt | `app/src/main/res-loot/drawable/loot_art_trinket_minor_oracle_receipt.xml` | Trinket | Minor Oracle Receipt | Rare | 3 generated unique stat(s) | New Rare item. |
+| weapon_auditors_halberd | `app/src/main/res-loot/drawable/loot_art_weapon_auditors_halberd.xml` | Weapon | Auditors Halberd | Epic | 4 generated unique stat(s) | New Epic item. |
+| weapon_dragon_stamp | `app/src/main/res-loot/drawable/loot_art_weapon_dragon_stamp.xml` | Weapon | Dragon Stamp | Epic | 4 generated unique stat(s) | New Epic item. |
+| armor_misfiled_aegis | `app/src/main/res-loot/drawable/loot_art_armor_misfiled_aegis.xml` | Armor | Misfiled Aegis | Epic | 4 generated unique stat(s) | New Epic item. |
+| footwear_plausible_denial_boots | `app/src/main/res-loot/drawable/loot_art_footwear_plausible_denial_boots.xml` | Footwear | Boots of Plausible Denial | Epic | 4 generated unique stat(s) | New Epic item. |
+| trinket_bell_of_last_call | `app/src/main/res-loot/drawable/loot_art_trinket_bell_of_last_call.xml` | Trinket | Bell of Last Call | Epic | 4 generated unique stat(s) | New Epic item. |
+| headgear_emergency_minutes_crown | `app/src/main/res-loot/drawable/loot_art_headgear_emergency_minutes_crown.xml` | Headgear | Crown of Emergency Minutes | Epic | 4 generated unique stat(s) | New Epic item. |
+| consumable_second_chance_soup | `app/src/main/res-loot/drawable/loot_art_consumable_second_chance_soup.xml` | Consumable | Soup of Second Chances | Epic | 4 generated unique stat(s) | New Epic item. |
+| trinket_contract_knot | `app/src/main/res-loot/drawable/loot_art_trinket_contract_knot.xml` | Trinket | Contract Knot | Epic | 4 generated unique stat(s) | New Epic item. |
+| weapon_spoon_final_notice | `app/src/main/res-loot/drawable/loot_art_weapon_spoon_final_notice.xml` | Weapon | Spoon of Final Notice | Relic | 5 generated unique stat(s) | New Relic item. |
+| weapon_moonlit_receipt_cleaver | `app/src/main/res-loot/drawable/loot_art_weapon_moonlit_receipt_cleaver.xml` | Weapon | Moonlit Receipt Cleaver | Relic | 5 generated unique stat(s) | New Relic item. |
+| armor_many_signatures_cloak | `app/src/main/res-loot/drawable/loot_art_armor_many_signatures_cloak.xml` | Armor | Cloak of Many Signatures | Relic | 5 generated unique stat(s) | New Relic item. |
+| footwear_inevitable_return_sandals | `app/src/main/res-loot/drawable/loot_art_footwear_inevitable_return_sandals.xml` | Footwear | Sandals of Inevitable Return | Relic | 5 generated unique stat(s) | New Relic item. |
+| trinket_perpetual_queue_ring | `app/src/main/res-loot/drawable/loot_art_trinket_perpetual_queue_ring.xml` | Trinket | Ring of Perpetual Queue | Relic | 5 generated unique stat(s) | New Relic item. |
+| headgear_halo_compliance | `app/src/main/res-loot/drawable/loot_art_headgear_halo_compliance.xml` | Headgear | Halo of Compliance | Relic | 5 generated unique stat(s) | New Relic item. |
+| consumable_absolute_maybe_elixir | `app/src/main/res-loot/drawable/loot_art_consumable_absolute_maybe_elixir.xml` | Consumable | Elixir of Absolute Maybe | Relic | 5 generated unique stat(s) | New Relic item. |
+| trinket_unpaid_charter_seal | `app/src/main/res-loot/drawable/loot_art_trinket_unpaid_charter_seal.xml` | Trinket | Unpaid Charter Seal | Relic | 5 generated unique stat(s) | New Relic item. |
 
 Runtime loot/UI art note:
 
 - `app/src/main/res-loot/drawable-nodpi/loot_icon_paper_shield.png` is used as the empty Armor slot icon; it is not currently tied to a generated loot definition.
+- `app/src/main/res-loot/drawable-nodpi/loot_icon_*.png` files remain as legacy fallback icon families and empty-slot UI affordances.
 
 ## Item Evolution Notes
 
 Open design space for item progression:
 
-- Fixed-rarity catalog items instead of fully rolled rarity.
+- Unlock Epic and Relic rarity profiles through Palier 3+ quests, Armory/Forge upgrades, or achievements.
 - Upgrade tiers that add a stat slot, increase values, or unlock a special rule.
 - Reroll or reforging system owned by the Armory/Forge.
 - Consumables that are actually spent for one expedition instead of equipped as flat-stat loot.
@@ -159,12 +194,13 @@ When adding or changing a hero:
 1. Update the hero row in this catalog.
 2. Update `HeroCatalog` in `HeroGacha.kt`.
 3. Update `HeroSpecialCatalog` if the hero has a new or changed special.
-4. Update `portraitResourceFor` in `BadventurersApp.kt` if artwork changes.
+4. Update portrait mapping in `BadventurersUiArt.kt` if artwork changes.
 5. Update balance tests if growth, rarity, or recruitment odds change.
 
 When adding or changing an item:
 
 1. Update the item row in this catalog.
 2. Update `LootCatalog` in `Loot.kt`.
-3. Update loot icon mapping if a new icon enum or asset is added.
-4. Update loot generation tests if rarity, stat slots, stat ranges, or sell value rules change.
+3. Add or update the unique `LootArt` resource and `lootArtResource` mapping.
+4. Update `docs/data/items.csv`.
+5. Update loot generation tests if rarity pools, stat slots, stat ranges, sell value rules, or artwork uniqueness changes.
