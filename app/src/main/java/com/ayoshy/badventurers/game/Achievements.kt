@@ -64,6 +64,8 @@ sealed interface AchievementReward {
         val lootRolls: Int = 0,
     ) : AchievementReward
 
+    data class Tickets(val tickets: Map<String, Int> = emptyMap()) : AchievementReward
+
     data class Composite(val rewards: List<AchievementReward>) : AchievementReward
     data object None : AchievementReward
 }
@@ -207,7 +209,14 @@ object AchievementCatalog {
             summary = "Buy 3 total facility upgrades.",
             target = 3,
             sealReward = 2,
-            reward = AchievementReward.Currency(gold = 250),
+            reward = AchievementReward.Composite(
+                rewards = listOf(
+                    AchievementReward.Currency(gold = 250),
+                    AchievementReward.Tickets(
+                        tickets = mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+                    ),
+                ),
+            ),
         ),
         AchievementDefinition(
             id = "first_hire",
@@ -216,6 +225,9 @@ object AchievementCatalog {
             summary = "Recruit a hero after opening the guild.",
             target = 1,
             sealReward = 1,
+            reward = AchievementReward.Tickets(
+                tickets = mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1),
+            ),
         ),
         AchievementDefinition(
             id = "tiny_hr_department",
@@ -224,6 +236,9 @@ object AchievementCatalog {
             summary = "Own 5 heroes.",
             target = 5,
             sealReward = 1,
+            reward = AchievementReward.Tickets(
+                tickets = mapOf(RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1),
+            ),
         ),
         AchievementDefinition(
             id = "duplicate_form",

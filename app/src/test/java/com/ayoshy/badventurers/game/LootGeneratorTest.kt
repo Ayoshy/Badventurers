@@ -72,7 +72,8 @@ class LootGeneratorTest {
                 LootIcon.Potion,
                 LootIcon.Tankard -> assertEquals("Drink icons should use the consumable slot.", LootSlot.Consumable, definition.slot)
                 LootIcon.Weapon,
-                LootIcon.Spoon -> assertEquals("Weapon-like icons should use the weapon slot.", LootSlot.Weapon, definition.slot)
+                LootIcon.Spoon,
+                LootIcon.Blade -> assertEquals("Weapon-like icons should use the weapon slot.", LootSlot.Weapon, definition.slot)
                 LootIcon.Hood -> assertTrue(
                     "Hood and cloak icons should be armor or headgear.",
                     definition.slot == LootSlot.Armor || definition.slot == LootSlot.Headgear,

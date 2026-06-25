@@ -12,6 +12,7 @@ data class PlaySessionSnapshot(
     val lootRolls: Int,
     val heroIds: List<String> = HeroCatalog.starterHeroes.map { it.id },
     val heroProgress: List<HeroProgressSnapshot> = emptyList(),
+    val coreCrewHeroIds: List<String> = HeroCatalog.starterHeroes.take(3).map { it.id },
     val lootItems: List<LootItemSnapshot> = emptyList(),
     val pendingLootItems: List<LootItemSnapshot> = emptyList(),
     val pendingLootKeepLimit: Int = 0,
@@ -21,6 +22,9 @@ data class PlaySessionSnapshot(
     val journalEntries: List<JournalEntrySnapshot> = emptyList(),
     val expedition: ExpeditionRunSnapshot? = null,
     val achievementProgress: List<AchievementProgress> = emptyList(),
+    val lastOfflinePassiveIncome: PassiveIncomeReport? = null,
+    val lastOfflinePassiveIncidents: List<PassiveIncident> = emptyList(),
+    val recruitmentTickets: Map<String, Int> = RecruitmentTicketCatalog.normalizedInventory(),
 ) {
     fun toState(): PlaySessionState {
         val progressByHeroId = heroProgress.associateBy { it.heroId }
@@ -47,7 +51,7 @@ data class PlaySessionSnapshot(
             pendingLootKeptCount.coerceIn(0, restoredPendingLootKeepLimit)
         }
 
-        return PlaySessionState(
+        val restoredState = PlaySessionState(
             gold = gold,
             reputation = reputation,
             guildLevel = guildLevel,
@@ -56,6 +60,7 @@ data class PlaySessionSnapshot(
             trainingYardLevel = migratedTrainingYardLevel,
             bunkRoomLevel = migratedBunkRoomLevel,
             heroes = restoredHeroes,
+            coreCrewHeroIds = coreCrewHeroIds,
             lootRolls = lootRolls,
             lootItems = lootItems.map { it.toItem() },
             pendingLootItems = restoredPendingLootItems,
@@ -66,11 +71,15 @@ data class PlaySessionSnapshot(
             journalEntries = journalEntries.map { it.toEntry() },
             expedition = expedition?.toRun(),
             achievementProgress = AchievementCatalog.normalizeProgress(achievementProgress),
+            recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(recruitmentTickets),
+            lastOfflinePassiveIncidents = lastOfflinePassiveIncidents,
+            lastOfflinePassiveIncome = lastOfflinePassiveIncome,
         )
+        return restoredState.copy(coreCrewHeroIds = restoredState.normalizedCoreCrewHeroIds())
     }
 
     companion object {
-        const val CURRENT_VERSION = 13
+        const val CURRENT_VERSION = 16
 
         fun initial(): PlaySessionSnapshot {
             return fromState(PlaySessionState.initial())
@@ -89,6 +98,7 @@ data class PlaySessionSnapshot(
                 lootRolls = state.lootRolls,
                 heroIds = state.heroes.map { it.id },
                 heroProgress = state.heroes.map { HeroProgressSnapshot.fromHero(it) },
+                coreCrewHeroIds = state.normalizedCoreCrewHeroIds(),
                 lootItems = state.lootItems.map { LootItemSnapshot.fromItem(it) },
                 pendingLootItems = state.pendingLootItems.map { LootItemSnapshot.fromItem(it) },
                 pendingLootKeepLimit = state.pendingLootEffectiveKeepLimit(),
@@ -98,6 +108,9 @@ data class PlaySessionSnapshot(
                 journalEntries = state.journalEntries.map { JournalEntrySnapshot.fromEntry(it) },
                 expedition = state.expedition?.let { ExpeditionRunSnapshot.fromRun(it) },
                 achievementProgress = AchievementCatalog.normalizeProgress(state.achievementProgress),
+                recruitmentTickets = state.normalizedRecruitmentTickets(),
+                lastOfflinePassiveIncidents = state.lastOfflinePassiveIncidents,
+                lastOfflinePassiveIncome = state.lastOfflinePassiveIncome,
             )
         }
 

@@ -14,8 +14,12 @@ import com.ayoshy.badventurers.game.LootIcon
 import com.ayoshy.badventurers.game.LootItemSnapshot
 import com.ayoshy.badventurers.game.LootRarity
 import com.ayoshy.badventurers.game.LootSlot
+import com.ayoshy.badventurers.game.PassiveIncomeReport
+import com.ayoshy.badventurers.game.PassiveIncident
+import com.ayoshy.badventurers.game.PassiveIncidentReward
 import com.ayoshy.badventurers.game.PlaySessionSnapshot
 import com.ayoshy.badventurers.game.PlaySessionState
+import com.ayoshy.badventurers.game.RecruitmentTicketCatalog
 import com.ayoshy.badventurers.game.RewardSnapshot
 import com.ayoshy.badventurers.game.StatBonusSnapshot
 import com.ayoshy.badventurers.game.StatType
@@ -23,6 +27,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 internal object PlaySessionSnapshotJson {
+    var lastDecodeFailure: String? = null
+        private set
+
     fun encode(snapshot: PlaySessionSnapshot): String = JSONObject()
         .put("version", snapshot.version)
         .put("gold", snapshot.gold)
@@ -35,6 +42,7 @@ internal object PlaySessionSnapshotJson {
         .put("lootRolls", snapshot.lootRolls)
         .put("heroIds", JSONArray().also { array -> snapshot.heroIds.forEach { array.put(it) } })
         .put("heroProgress", JSONArray().also { array -> snapshot.heroProgress.forEach { array.put(encodeHeroProgress(it)) } })
+        .put("coreCrewHeroIds", JSONArray().also { array -> snapshot.coreCrewHeroIds.forEach { array.put(it) } })
         .put("lootItems", JSONArray().also { array -> snapshot.lootItems.forEach { array.put(encodeLootItem(it)) } })
         .put("pendingLootItems", JSONArray().also { array -> snapshot.pendingLootItems.forEach { array.put(encodeLootItem(it)) } })
         .put("pendingLootKeepLimit", snapshot.pendingLootKeepLimit)
@@ -44,9 +52,13 @@ internal object PlaySessionSnapshotJson {
         .put("journalEntries", JSONArray().also { array -> snapshot.journalEntries.forEach { array.put(encodeJournalEntry(it)) } })
         .put("expedition", snapshot.expedition?.let { encodeExpedition(it) })
         .put("achievementProgress", JSONArray().also { array -> snapshot.achievementProgress.forEach { array.put(encodeAchievementProgress(it)) } })
+        .put("lastOfflinePassiveIncome", snapshot.lastOfflinePassiveIncome?.let { encodePassiveIncomeReport(it) })
+        .put("lastOfflinePassiveIncidents", JSONArray().also { array -> snapshot.lastOfflinePassiveIncidents.forEach { array.put(encodePassiveIncident(it)) } })
+        .put("recruitmentTickets", encodeRecruitmentTickets(snapshot.recruitmentTickets))
         .toString()
 
     fun decode(encoded: String): PlaySessionSnapshot? = try {
+        lastDecodeFailure = null
         val json = JSONObject(encoded)
         val initial = PlaySessionState.initial()
         PlaySessionSnapshot(
@@ -61,6 +73,11 @@ internal object PlaySessionSnapshotJson {
             lootRolls = json.optInt("lootRolls", initial.lootRolls),
             heroIds = decodeStringArray(json.optJSONArray("heroIds")).ifEmpty { HeroCatalog.starterHeroes.map { it.id } },
             heroProgress = decodeObjectArray(json.optJSONArray("heroProgress"), ::decodeHeroProgress),
+            coreCrewHeroIds = if (json.has("coreCrewHeroIds")) {
+                decodeStringArray(json.optJSONArray("coreCrewHeroIds"))
+            } else {
+                initial.coreCrewHeroIds
+            },
             lootItems = decodeObjectArray(json.optJSONArray("lootItems"), ::decodeLootItem),
             pendingLootItems = decodeObjectArray(json.optJSONArray("pendingLootItems"), ::decodeLootItem),
             pendingLootKeepLimit = json.optInt("pendingLootKeepLimit", 0),
@@ -70,8 +87,12 @@ internal object PlaySessionSnapshotJson {
             journalEntries = decodeObjectArray(json.optJSONArray("journalEntries"), ::decodeJournalEntry),
             expedition = json.optJSONObject("expedition")?.let(::decodeExpedition),
             achievementProgress = decodeObjectArray(json.optJSONArray("achievementProgress"), ::decodeAchievementProgress),
+            recruitmentTickets = decodeRecruitmentTickets(json.optJSONObject("recruitmentTickets")),
+            lastOfflinePassiveIncome = json.optJSONObject("lastOfflinePassiveIncome")?.let(::decodePassiveIncomeReport),
+            lastOfflinePassiveIncidents = decodeObjectArray(json.optJSONArray("lastOfflinePassiveIncidents"), ::decodePassiveIncident),
         )
-    } catch (_: Exception) {
+    } catch (exception: Exception) {
+        lastDecodeFailure = "${exception.javaClass.simpleName}: ${exception.message.orEmpty()}"
         null
     }
 
@@ -89,12 +110,56 @@ internal object PlaySessionSnapshotJson {
         )
     }
 
+
+
+    private fun encodePassiveIncident(incident: PassiveIncident): JSONObject = JSONObject()
+        .put("id", incident.id)
+        .put("text", incident.text)
+        .put("gold", incident.reward.gold)
+        .put("reputation", incident.reward.reputation)
+
+    private fun decodePassiveIncident(json: JSONObject): PassiveIncident? {
+        val id = json.optString("id").takeIf { it.isNotBlank() } ?: return null
+        return PassiveIncident(
+            id = id,
+            text = json.optString("text"),
+            reward = PassiveIncidentReward(
+                gold = json.optInt("gold"),
+                reputation = json.optInt("reputation"),
+            ),
+        )
+    }
     private fun encodeAchievementProgress(progress: AchievementProgress): JSONObject = JSONObject()
         .put("achievementId", progress.achievementId)
         .put("current", progress.current)
         .put("completedAtMillis", progress.completedAtMillis ?: JSONObject.NULL)
         .put("claimedAtMillis", progress.claimedAtMillis ?: JSONObject.NULL)
         .put("seen", progress.seen)
+
+    private fun encodePassiveIncomeReport(report: PassiveIncomeReport): JSONObject = JSONObject()
+        .put("sinceMillis", report.sinceMillis)
+        .put("untilMillis", report.untilMillis)
+        .put("elapsedSeconds", report.elapsedSeconds)
+        .put("cappedSeconds", report.cappedSeconds)
+        .put("activeSeconds", report.activeSeconds)
+        .put("idleSeconds", report.idleSeconds)
+        .put("gold", report.gold)
+        .put("goldPerHour", report.goldPerHour)
+        .put("activeGoldPerHour", report.activeGoldPerHour)
+        .put("coreCrewHeroIds", JSONArray().also { array -> report.coreCrewHeroIds.forEach { array.put(it) } })
+
+    private fun decodePassiveIncomeReport(json: JSONObject): PassiveIncomeReport = PassiveIncomeReport(
+        sinceMillis = json.optLong("sinceMillis"),
+        untilMillis = json.optLong("untilMillis"),
+        elapsedSeconds = json.optLong("elapsedSeconds"),
+        cappedSeconds = json.optLong("cappedSeconds"),
+        activeSeconds = json.optLong("activeSeconds"),
+        idleSeconds = json.optLong("idleSeconds"),
+        gold = json.optInt("gold"),
+        goldPerHour = json.optInt("goldPerHour"),
+        activeGoldPerHour = json.optInt("activeGoldPerHour"),
+        coreCrewHeroIds = decodeStringArray(json.optJSONArray("coreCrewHeroIds")),
+    )
 
     private fun decodeAchievementProgress(json: JSONObject): AchievementProgress? {
         val achievementId = json.optString("achievementId").takeIf { it.isNotBlank() } ?: return null
@@ -107,12 +172,27 @@ internal object PlaySessionSnapshotJson {
         )
     }
 
+    private fun encodeRecruitmentTickets(tickets: Map<String, Int>): JSONObject = RecruitmentTicketCatalog
+        .normalizedInventory(tickets)
+        .entries
+        .fold(JSONObject()) { json, entry ->
+            json.put(entry.key, entry.value)
+        }
+
+    private fun decodeRecruitmentTickets(json: JSONObject?): Map<String, Int> {
+        if (json == null) return RecruitmentTicketCatalog.normalizedInventory()
+        val raw = mutableMapOf<String, Int>()
+        json.keys().forEachRemaining { key ->
+            raw[key] = json.optInt(key)
+        }
+        return RecruitmentTicketCatalog.normalizedInventory(raw)
+    }
+
     private fun encodeLootCarryBreakdown(breakdown: LootCarryBreakdown): JSONObject = JSONObject()
         .put("base", breakdown.base)
         .put("bunkRoom", breakdown.bunkRoom)
         .put("veteran", breakdown.veteran)
         .put("specialist", breakdown.specialist)
-
     private fun decodeLootCarryBreakdown(json: JSONObject): LootCarryBreakdown = LootCarryBreakdown(
         base = json.optInt("base"),
         bunkRoom = json.optInt("bunkRoom"),

@@ -359,6 +359,54 @@ class PlaySessionStateTest {
     }
 
     @Test
+    fun recruitHeroUsesBaseProfileBeforePalier2Unlocked() {
+        val state = PlaySessionState.initial().copy(
+            gold = HeroGacha.RECRUIT_COST,
+            completedQuestCount = 7,
+            heroes = emptyList(),
+        )
+        val seed = 42
+        val expected = HeroGacha.summon(
+            pulls = 1,
+            seed = seed,
+            recruitmentProfile = HeroGacha.baseRecruitmentProfile,
+        ).single()
+        val recruitment = requireNotNull(state.recruitHero(seed))
+
+        assertEquals(expected, recruitment.hero)
+        assertEquals(HeroGacha.RECRUIT_COST, recruitment.cost)
+        assertEquals(false, recruitment.duplicate)
+        assertEquals(0, recruitment.reputationReward)
+        assertEquals(state.gold - HeroGacha.RECRUIT_COST, recruitment.session.gold)
+        assertEquals(state.heroes.size + 1, recruitment.session.heroes.size)
+    }
+
+    @Test
+    fun recruitHeroUsesLicensedTroubleProfileWithoutChangingDuplicateFlow() {
+        val roster = HeroCatalog.heroes.map { it.toHero() }
+        val state = PlaySessionState.initial().copy(
+            gold = HeroGacha.RECRUIT_COST,
+            completedQuestCount = 8,
+            heroes = roster,
+        )
+        val seed = 42
+        val expected = HeroGacha.summon(
+            pulls = 1,
+            seed = seed,
+            recruitmentProfile = HeroGacha.palier2RecruitmentProfile,
+        ).single()
+        val recruitment = requireNotNull(state.recruitHero(seed))
+
+        assertEquals(expected, recruitment.hero)
+        assertEquals(HeroGacha.RECRUIT_COST, recruitment.cost)
+        assertEquals(true, recruitment.duplicate)
+        assertEquals(HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.reputationReward)
+        assertEquals(state.gold - HeroGacha.RECRUIT_COST, recruitment.session.gold)
+        assertEquals(state.reputation + HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.session.reputation)
+        assertEquals(roster.size, recruitment.session.heroes.size)
+    }
+
+    @Test
     fun recruitHeroConvertsDuplicateIntoReputation() {
         val state = PlaySessionState.initial().copy(
             gold = HeroGacha.RECRUIT_COST,
@@ -372,6 +420,62 @@ class PlaySessionStateTest {
         assertEquals(state.reputation + HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.session.reputation)
         assertEquals(state.heroes.size, recruitment.session.heroes.size)
     }
+
+    @Test
+    fun recruitHeroWithTicketConsumesOneTicketAndCostsNoGold() {
+        val state = PlaySessionState.initial().copy(
+            gold = 500,
+            heroes = emptyList(),
+            recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
+                mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 2),
+            ),
+        )
+        val recruitment = requireNotNull(state.recruitHeroWithTicket(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID, seed = 42))
+
+        assertEquals(0, recruitment.cost)
+        assertEquals(500, recruitment.session.gold)
+        assertEquals(false, recruitment.duplicate)
+        assertEquals(0, recruitment.reputationReward)
+        assertEquals(state.heroes.size + 1, recruitment.session.heroes.size)
+        assertEquals(1, recruitment.session.recruitmentTickets[RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID])
+    }
+
+    @Test
+    fun recruitHeroWithTicketUsesDuplicateFlowAndTriggersRecruitmentAchievements() {
+        val state = PlaySessionState.initial().copy(
+            heroes = HeroCatalog.heroes.map { it.toHero() },
+            recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
+                mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1),
+            ),
+        )
+        val recruitment = requireNotNull(state.recruitHeroWithTicket(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID, seed = 42))
+
+        assertEquals(true, recruitment.duplicate)
+        assertEquals(HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.reputationReward)
+        assertEquals(state.reputation + HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.session.reputation)
+        assertEquals(state.heroes.size, recruitment.session.heroes.size)
+        assertEquals(true, recruitment.session.isCompleted("first_hire"))
+        assertEquals(true, recruitment.session.isCompleted("duplicate_form"))
+    }
+
+    @Test
+    fun recruitHeroWithTicketRequiresValidRecruitmentTicketAndInventory() {
+        val state = PlaySessionState.initial().copy(
+            recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
+                mapOf(
+                    RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1,
+                    RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+                ),
+            ),
+            heroes = emptyList(),
+        )
+
+        assertEquals(null, state.recruitHeroWithTicket("ghost_ticket", seed = 5))
+        assertEquals(null, state.recruitHeroWithTicket(RecruitmentTicketCatalog.BLANK_CONTRACT_ID, seed = 5))
+        assertEquals(1, state.recruitmentTickets[RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID])
+        assertEquals(1, state.recruitmentTickets[RecruitmentTicketCatalog.BLANK_CONTRACT_ID])
+    }
+
     @Test
     fun equipLootMovesItemIntoHeroSlotAndBoostsPartyPower() {
         val hero = party.first()
@@ -559,6 +663,160 @@ class PlaySessionStateTest {
         assertEquals(4, collected.pendingLootEffectiveKeepLimit())
     }
     @Test
+    fun initialCoreCrewUsesStarterSlotsAndProducesPassiveIncome() {
+        val state = PlaySessionState.initial()
+
+        assertEquals(3, state.coreCrewSlots())
+        assertEquals(HeroCatalog.starterHeroes.map { it.id }, state.normalizedCoreCrewHeroIds())
+        assertTrue(state.passiveGoldPerHour() > 0)
+    }
+
+    @Test
+    fun bunkRoomUnlocksFourthCoreCrewSlot() {
+        val roster = HeroCatalog.heroes.map { it.toHero() }
+        val state = PlaySessionState.initial().copy(heroes = roster, bunkRoomLevel = 2)
+        val extraHero = roster.first { it.id !in state.normalizedCoreCrewHeroIds() }
+
+        val assigned = state.toggleCoreCrewHero(extraHero.id)
+        val removed = assigned.toggleCoreCrewHero(extraHero.id)
+
+        assertEquals(4, state.coreCrewSlots())
+        assertEquals(4, assigned.normalizedCoreCrewHeroIds().size)
+        assertTrue(extraHero.id in assigned.normalizedCoreCrewHeroIds())
+        assertEquals(false, extraHero.id in removed.normalizedCoreCrewHeroIds())
+    }
+
+    @Test
+    fun passiveIncomeUsesGearAndReducesActiveExpeditionCrew() {
+        val hero = PlaySessionState.initial().coreCrew().first()
+        val item = testLoot(id = "weapon_core_spoon", bonus = 20)
+        val base = PlaySessionState.initial()
+        val geared = base.copy(lootItems = listOf(item)).equipLoot(hero.id, item)
+
+        val fullReport = geared.passiveIncomeReport(
+            sinceMillis = 0L,
+            untilMillis = 3_600_000L,
+        )
+        val activeReport = geared.passiveIncomeReport(
+            sinceMillis = 0L,
+            untilMillis = 3_600_000L,
+            activeExpeditionHeroIds = listOf(hero.id),
+            activeUntilMillis = 3_600_000L,
+        )
+
+        val cappedReport = geared.passiveIncomeReport(
+            sinceMillis = 0L,
+            untilMillis = 8 * 3_600_000L,
+        )
+
+        assertTrue(geared.passiveGoldPerHour() > base.passiveGoldPerHour())
+        assertTrue(activeReport.gold > 0)
+        assertTrue(activeReport.gold < fullReport.gold)
+        assertEquals(geared.passiveIncomeCapSeconds(), cappedReport.cappedSeconds)
+        assertTrue(cappedReport.elapsedSeconds > cappedReport.cappedSeconds)
+    }
+
+    @Test
+    fun offlineReportCreditsPassiveIncomeAndIncidentsOnce() {
+        val ready = PlaySessionState.initial()
+            .startQuest(0L, SeedGame.firstQuest)
+            .finishQuestNow(engine, party, roll = 100)
+
+        val marked = ready.markOfflineReportCollected(3_600_000L)
+        val report = requireNotNull(marked.lastOfflinePassiveIncome)
+        val incidentGold = marked.lastOfflinePassiveIncidents.sumOf { it.reward.gold }
+        val incidentReputation = marked.lastOfflinePassiveIncidents.sumOf { it.reward.reputation }
+        val markedAgain = marked.markOfflineReportCollected(7_200_000L)
+
+        assertTrue(report.gold > 0)
+        assertTrue(marked.lastOfflinePassiveIncidents.isNotEmpty())
+        assertEquals(ready.gold + report.gold + incidentGold, marked.gold)
+        assertEquals(ready.reputation + incidentReputation, marked.reputation)
+        assertEquals(marked.gold, markedAgain.gold)
+        assertEquals(marked.reputation, markedAgain.reputation)
+        assertEquals(report, markedAgain.lastOfflinePassiveIncome)
+        assertEquals(marked.lastOfflinePassiveIncidents, markedAgain.lastOfflinePassiveIncidents)
+    }
+
+    @Test
+    fun offlineReportSkipsPassiveIncidentsForShortReturns() {
+        val ready = PlaySessionState.initial()
+            .startQuest(0L, SeedGame.firstQuest)
+            .finishQuestNow(engine, party, roll = 100)
+
+        val marked = ready.markOfflineReportCollected(5 * 60 * 1000L)
+
+        assertEquals(emptyList<PassiveIncident>(), marked.lastOfflinePassiveIncidents)
+    }
+
+    @Test
+    fun offlineReportHighlightsAchievementProgressAfterCollect() {
+        val ready = PlaySessionState.initial()
+            .startQuest(0L, SeedGame.firstQuest)
+            .finishQuestNow(engine, party, roll = 100)
+        val marked = ready.markOfflineReportCollected(3_600_000L)
+
+        val highlights = marked.offlineReportHighlights(marked.collectResult())
+
+        assertTrue(highlights.hasAchievementProgress)
+        assertTrue(highlights.completedAchievementDelta > 0)
+        assertTrue(highlights.claimableAchievementDelta > 0)
+        assertTrue(highlights.claimableSealDelta > 0)
+    }
+
+    @Test
+    fun offlineReportHighlightsTicketInventoryAndClaimableTicketRewards() {
+        val before = PlaySessionState.initial().copy(
+            recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
+                mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 2),
+            ),
+        )
+        val after = before.copy(achievementProgress = completedProgress("first_hire"))
+
+        val highlights = before.offlineReportHighlights(after)
+
+        assertTrue(highlights.hasTicketProgress)
+        assertEquals(2, highlights.ticketInventory[RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID])
+        assertEquals(1, highlights.claimableTicketRewardDelta[RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID])
+    }
+
+    @Test
+    fun passiveIncidentGeneratorIsDeterministicAndMentionsCoreCrew() {
+        val ready = PlaySessionState.initial()
+            .startQuest(0L, SeedGame.firstQuest)
+            .finishQuestNow(engine, party, roll = 100)
+
+        val first = PassiveIncidentGenerator.generate(ready, 3_600_000L)
+        val second = PassiveIncidentGenerator.generate(ready, 3_600_000L)
+        val starterNames = HeroCatalog.starterHeroes.map { it.name }
+
+        assertEquals(first, second)
+        assertEquals(1, first.size)
+        assertTrue(starterNames.any { name -> first.single().text.contains(name) })
+        assertTrue(first.single().reward.gold in 0..8)
+        assertTrue(first.single().reward.reputation in 0..1)
+    }
+
+    @Test
+    fun passiveIncidentGeneratorHandlesUpgradedFacilityTemplates() {
+        val ready = PlaySessionState.initial()
+            .startQuest(0L, SeedGame.firstQuest)
+            .finishQuestNow(engine, party, roll = 100)
+        val facilityStates = listOf(
+            ready.copy(noticeBoardLevel = 2),
+            ready.copy(trainingYardLevel = 2),
+            ready.copy(bunkRoomLevel = 2),
+            ready.copy(noticeBoardLevel = 3, trainingYardLevel = 3, bunkRoomLevel = 2),
+        )
+
+        facilityStates.forEach { state ->
+            val incidents = PassiveIncidentGenerator.generate(state, 3_600_000L)
+
+            assertTrue(incidents.isNotEmpty())
+            incidents.forEach { incident -> assertTrue(incident.text.isNotBlank()) }
+        }
+    }
+    @Test
     fun debugAdjustmentsClampResources() {
         val state = PlaySessionState.initial().copy(gold = 10, reputation = 1, guildLevel = 1)
         val clamped = state.adjustGold(-50).adjustReputation(-10).adjustGuildLevel(-3)
@@ -588,6 +846,10 @@ class PlaySessionStateTest {
                 trainingYardLevel = 2,
                 bunkRoomLevel = 3,
                 heroes = emptyList(),
+                coreCrewHeroIds = listOf("brugg"),
+                recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
+                    mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 2),
+                ),
                 lootRolls = 8,
                 lootItems = listOf(item),
                 pendingLootItems = listOf(item),
@@ -595,6 +857,7 @@ class PlaySessionStateTest {
                 pendingLootKeptCount = 0,
                 equippedLoot = listOf(EquippedLoot(heroId = party.first().id, item = item)),
                 achievementProgress = emptyList(),
+                lastOfflinePassiveIncidents = listOf(PassiveIncident("dirty-reset", "Brugg counted the locks.")),
             )
 
         val reset = dirty.resetProgressForTesting()
@@ -607,6 +870,10 @@ class PlaySessionStateTest {
         assertEquals(1, reset.trainingYardLevel)
         assertEquals(1, reset.bunkRoomLevel)
         assertEquals(HeroCatalog.starterHeroes, reset.heroes)
+        assertEquals(HeroCatalog.starterHeroes.map { it.id }, reset.normalizedCoreCrewHeroIds())
+        assertEquals(RecruitmentTicketCatalog.normalizedInventory(), reset.recruitmentTickets)
+        assertEquals(null, reset.lastOfflinePassiveIncome)
+        assertEquals(emptyList<PassiveIncident>(), reset.lastOfflinePassiveIncidents)
         assertEquals(0, reset.lootRolls)
         assertEquals(emptyList<LootItem>(), reset.lootItems)
         assertEquals(emptyList<LootItem>(), reset.pendingLootItems)
@@ -616,6 +883,26 @@ class PlaySessionStateTest {
         assertEquals(emptyList<JournalEntry>(), reset.journalEntries)
         assertEquals(null, reset.expedition)
         assertEquals(AchievementCatalog.initialProgress(), reset.achievementProgress)
+    }
+
+    private fun PlaySessionState.isCompleted(achievementId: String): Boolean {
+        val definition = AchievementCatalog.byId.getValue(achievementId)
+        return achievementProgressFor(definition).isCompleted(definition)
+    }
+
+    private fun completedProgress(vararg achievementIds: String): List<AchievementProgress> {
+        val completedIds = achievementIds.toSet()
+        return AchievementCatalog.definitions.map { definition ->
+            if (definition.id in completedIds) {
+                AchievementProgress(
+                    achievementId = definition.id,
+                    current = definition.target,
+                    completedAtMillis = 1L,
+                )
+            } else {
+                AchievementProgress(achievementId = definition.id)
+            }
+        }
     }
 
     private fun testLoot(id: String, bonus: Int): LootItem = LootItem(

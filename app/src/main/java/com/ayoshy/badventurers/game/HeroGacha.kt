@@ -226,10 +226,18 @@ object HeroCatalog {
 }
 
 object HeroGacha {
+    data class RecruitmentProfile(val rarityWeights: List<Pair<HeroRarity, Int>>) {
+        val rareOrBetterWeight: Int
+            get() = rarityWeights
+                .filter { (rarity, _) -> rarity >= HeroRarity.Rare }
+                .sumOf { it.second }
+    }
+
     const val RECRUIT_COST = 350
     const val DUPLICATE_REPUTATION_REWARD = 2
+    const val LICENSED_TROUBLE_RECRUITMENT_COMPLETED_QUEST_THRESHOLD = 8
 
-    val rarityWeights = listOf(
+    private val baseRarityWeights = listOf(
         HeroRarity.Common to 55,
         HeroRarity.Uncommon to 25,
         HeroRarity.Rare to 13,
@@ -237,14 +245,46 @@ object HeroGacha {
         HeroRarity.Legendary to 1,
     )
 
-    fun summon(pulls: Int, seed: Int = 0): List<Hero> =
-        summon(pulls, Random(seed))
+    val rarityWeights: List<Pair<HeroRarity, Int>>
+        get() = baseRarityWeights
 
-    fun summon(pulls: Int, random: Random): List<Hero> {
+    val baseRecruitmentProfile = RecruitmentProfile(baseRarityWeights)
+
+    val palier2RecruitmentProfile = RecruitmentProfile(
+        listOf(
+            HeroRarity.Common to 50,
+            HeroRarity.Uncommon to 25,
+            HeroRarity.Rare to 18,
+            HeroRarity.Epic to 6,
+            HeroRarity.Legendary to 1,
+        ),
+    )
+
+    fun recruitmentProfileForProgress(completedQuestCount: Int): RecruitmentProfile =
+        if (completedQuestCount >= LICENSED_TROUBLE_RECRUITMENT_COMPLETED_QUEST_THRESHOLD) {
+            palier2RecruitmentProfile
+        } else {
+            baseRecruitmentProfile
+        }
+
+    fun summon(pulls: Int, seed: Int = 0): List<Hero> =
+        summon(pulls, Random(seed), baseRecruitmentProfile)
+
+    fun summon(
+        pulls: Int,
+        seed: Int,
+        recruitmentProfile: RecruitmentProfile,
+    ): List<Hero> = summon(pulls, Random(seed), recruitmentProfile)
+
+    fun summon(
+        pulls: Int,
+        random: Random,
+        recruitmentProfile: RecruitmentProfile = baseRecruitmentProfile,
+    ): List<Hero> {
         if (pulls <= 0) return emptyList()
 
         return List(pulls) {
-            val rarity = random.nextWeightedEnum(rarityWeights)
+            val rarity = random.nextWeightedEnum(recruitmentProfile.rarityWeights)
             val pool = HeroCatalog.byRarity.getValue(rarity)
             random.nextEnum(pool).toHero()
         }

@@ -1,6 +1,7 @@
 package com.ayoshy.badventurers.game
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.random.Random
@@ -93,5 +94,32 @@ class HeroGachaTest {
     fun rarityWeightsRepresentPercentOdds() {
         assertEquals(100, HeroGacha.rarityWeights.sumOf { it.second })
     }
-}
 
+    @Test
+    fun summonUsesBaseProfileByDefault() {
+        val expected = HeroGacha.summon(20, seed = 77)
+        val baseProfileSummons = HeroGacha.summon(
+            pulls = 20,
+            seed = 77,
+            recruitmentProfile = HeroGacha.baseRecruitmentProfile,
+        )
+
+        assertEquals(expected, baseProfileSummons)
+        assertEquals(HeroGacha.rarityWeights, HeroGacha.baseRecruitmentProfile.rarityWeights)
+    }
+
+    @Test
+    fun palier2RecruitmentProfileHasHigherRareOrBetterOdds() {
+        assertEquals(20, HeroGacha.baseRecruitmentProfile.rareOrBetterWeight)
+        assertEquals(25, HeroGacha.palier2RecruitmentProfile.rareOrBetterWeight)
+        assertTrue(HeroGacha.palier2RecruitmentProfile.rareOrBetterWeight > HeroGacha.baseRecruitmentProfile.rareOrBetterWeight)
+    }
+
+    @Test
+    fun recruitmentProfileUnlocksAtPalier2QuestThreshold() {
+        assertEquals(HeroGacha.baseRecruitmentProfile, HeroGacha.recruitmentProfileForProgress(7))
+        assertEquals(HeroGacha.palier2RecruitmentProfile, HeroGacha.recruitmentProfileForProgress(8))
+        assertEquals(HeroGacha.palier2RecruitmentProfile, HeroGacha.recruitmentProfileForProgress(20))
+        assertNotEquals(HeroGacha.baseRecruitmentProfile, HeroGacha.palier2RecruitmentProfile)
+    }
+}

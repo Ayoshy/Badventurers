@@ -1,6 +1,7 @@
 package com.ayoshy.badventurers.storage
 
 import android.content.Context
+import android.util.Log
 import com.ayoshy.badventurers.game.PlaySessionSnapshot
 import com.ayoshy.badventurers.game.PlaySessionState
 
@@ -9,7 +10,14 @@ class PlaySessionStore(context: Context) {
 
     fun loadState(): PlaySessionState {
         val encoded = preferences.getString(KEY_SESSION, null) ?: return PlaySessionState.initial()
-        return PlaySessionSnapshotJson.decode(encoded)?.toState() ?: PlaySessionState.initial()
+        val snapshot = PlaySessionSnapshotJson.decode(encoded)
+        if (snapshot == null) {
+            PlaySessionSnapshotJson.lastDecodeFailure?.let { failure ->
+                Log.w(TAG, "Failed to decode saved session; starting a fresh session. $failure")
+            }
+            return PlaySessionState.initial()
+        }
+        return snapshot.toState()
     }
 
     fun saveState(state: PlaySessionState) {
@@ -21,5 +29,6 @@ class PlaySessionStore(context: Context) {
     private companion object {
         const val PREFERENCES_NAME = "badventurers_session"
         const val KEY_SESSION = "session_snapshot"
+        const val TAG = "PlaySessionStore"
     }
 }

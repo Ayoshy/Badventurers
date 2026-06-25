@@ -115,6 +115,124 @@ class QuestCatalogueBalanceTest {
             }
         }
     }
+    @Test
+    fun localDisasterUnlocksAreBalancedAroundContractPlans() {
+        val questById = SeedGame.questById
+
+        fun unlocks(questId: String): List<QuestUnlockCondition> =
+            questById.getValue(questId).unlockRequirement.conditions
+
+        assertEquals(emptyList<QuestUnlockCondition>(), unlocks("cave_minor_regrets"))
+        assertEquals(
+            listOf(QuestUnlockCondition(minCompletedQuestCount = 1), QuestUnlockCondition(minReputation = 3)),
+            unlocks("forest_of_wrong_turns"),
+        )
+        assertEquals(
+            listOf(
+                QuestUnlockCondition(minCompletedQuestCount = 2),
+                QuestUnlockCondition(minReputation = 8),
+                QuestUnlockCondition(minNoticeBoardLevel = 2),
+            ),
+            unlocks("bandit_tax_office"),
+        )
+        assertEquals(
+            listOf(
+                QuestUnlockCondition(minCompletedQuestCount = 2),
+                QuestUnlockCondition(minReputation = 10),
+                QuestUnlockCondition(minTrainingYardLevel = 2),
+            ),
+            unlocks("salted_swamp_chapel"),
+        )
+        assertEquals(
+            listOf(
+                QuestUnlockCondition(minCompletedQuestCount = 3),
+                QuestUnlockCondition(minReputation = 12),
+                QuestUnlockCondition(minNoticeBoardLevel = 2),
+            ),
+            unlocks("moonlit_smuggler_run"),
+        )
+        assertEquals(
+            listOf(
+                QuestUnlockCondition(minCompletedQuestCount = 4),
+                QuestUnlockCondition(minReputation = 15),
+                QuestUnlockCondition(minBunkRoomLevel = 2),
+            ),
+            unlocks("the_hungry_siege"),
+        )
+        assertEquals(
+            listOf(
+                QuestUnlockCondition(minCompletedQuestCount = 5),
+                QuestUnlockCondition(minReputation = 20),
+                QuestUnlockCondition(minTrainingYardLevel = 3),
+            ),
+            unlocks("the_last_locked_door"),
+        )
+        assertEquals(
+            listOf(
+                QuestUnlockCondition(minCompletedQuestCount = 5),
+                QuestUnlockCondition(minReputation = 22),
+                QuestUnlockCondition(minNoticeBoardLevel = 3),
+            ),
+            unlocks("crypt_of_unpaid_debts"),
+        )
+    }
+    @Test
+    fun licensedTroubleQuestsAddedToCatalogueWithUnlockAndPlanCoverage() {
+        val licensedTroubleQuestIds = listOf(
+            "paperwork_toll_of_chaos",
+            "licensed_guild_caravan_haunt",
+            "notary_night_patrol",
+            "inspectorate_cove_banquet",
+        )
+        assertEquals(12, SeedGame.quests.size)
+
+        val questById = SeedGame.questById
+        val licensedTroubleQuests = licensedTroubleQuestIds.associateWith { questById.getValue(it) }
+
+        assertEquals(
+            listOf(30, 34, 38, 42),
+            licensedTroubleQuestIds.map { licensedTroubleQuests.getValue(it).unlockRequirement.conditions.single().minReputation },
+        )
+        assertEquals(
+            listOf(8, 9, 10, 11),
+            licensedTroubleQuestIds.map { licensedTroubleQuests.getValue(it).unlockRequirement.conditions.single().minCompletedQuestCount },
+        )
+
+        val unlockedFacilityProgress = listOf(
+            QuestUnlockCondition(minNoticeBoardLevel = 2),
+            QuestUnlockCondition(minTrainingYardLevel = 2),
+            QuestUnlockCondition(minBunkRoomLevel = 2),
+            QuestUnlockCondition(minNoticeBoardLevel = 3, minTrainingYardLevel = 3, minBunkRoomLevel = 2),
+        )
+        licensedTroubleQuestIds.forEachIndexed { index, questId ->
+            val quest = licensedTroubleQuests.getValue(questId)
+            val unlock = quest.unlockRequirement.conditions.single()
+
+            assertTrue(quest.recommendedHeroIds.isNotEmpty())
+            quest.recommendedHeroIds.forEach { heroId ->
+                assertTrue("${quest.id} recommends unknown hero $heroId", heroId in HeroCatalog.byId)
+            }
+
+            val facilityCheck = unlockedFacilityProgress[index]
+            assertTrue(
+                "${quest.id} notice board threshold should progress",
+                unlock.minNoticeBoardLevel >= facilityCheck.minNoticeBoardLevel,
+            )
+            assertTrue(
+                "${quest.id} training yard threshold should progress",
+                unlock.minTrainingYardLevel >= facilityCheck.minTrainingYardLevel,
+            )
+            assertTrue(
+                "${quest.id} bunk room threshold should progress",
+                unlock.minBunkRoomLevel >= facilityCheck.minBunkRoomLevel,
+            )
+
+            assertTrue(
+                "${quest.id} should have at least one quest-specific plan",
+                ExpeditionPlanCatalog.availableFor(quest).any { plan -> quest.id in plan.questIds },
+            )
+        }
+    }
 
     @Test
     fun everyCurrentQuestOffersAQuestSpecificContractClause() {

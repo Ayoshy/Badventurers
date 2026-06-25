@@ -35,6 +35,10 @@ object ExpeditionPlanCatalog {
     const val rationTheBiscuitsId: String = "ration_the_biscuits"
     const val bringDoorFormsId: String = "bring_door_forms"
     const val itemizedLastRitesId: String = "itemized_last_rites"
+    const val paperworkTollId: String = "paperwork_toll_of_chaos_clause"
+    const val caravanManifestId: String = "licensed_guild_caravan_haunt_clause"
+    const val notaryNightPatrolId: String = "notary_night_patrol_clause"
+    const val inspectorateBanquetId: String = "inspectorate_cove_banquet_clause"
 
     private val standard = ExpeditionPlan(
         id = defaultPlanId,
@@ -190,6 +194,60 @@ object ExpeditionPlanCatalog {
         ),
     )
 
+    private val paperworkToll = ExpeditionPlan(
+        id = paperworkTollId,
+        title = "Stamp the Border Toll",
+        summary = "Collect and re-collect signatures before your party even leaves the gate.",
+        questIds = setOf("paperwork_toll_of_chaos"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 18,
+            scoreBonus = 14,
+            riskPenaltyDelta = -6,
+            goldBonusPercent = 12,
+        ),
+    )
+
+    private val caravanManifest = ExpeditionPlan(
+        id = caravanManifestId,
+        title = "Demand a Manifest",
+        summary = "Make the caravan submit the same manifest seven times to avoid arguing with a checkpoint captain.",
+        questIds = setOf("licensed_guild_caravan_haunt"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = -12,
+            scoreBonus = -8,
+            riskPenaltyDelta = 8,
+            successLootBonus = 1,
+        ),
+    )
+
+    private val notaryNightPatrol = ExpeditionPlan(
+        id = notaryNightPatrolId,
+        title = "Read the Oath of the Night",
+        summary = "Make every night patrol recite the same oath and keep the same route map.",
+        questIds = setOf("notary_night_patrol"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 10,
+            scoreBonus = 16,
+            riskPenaltyDelta = -4,
+            greatSuccessMarginDelta = 10,
+            goldBonusPercent = 10,
+        ),
+    )
+
+    private val inspectorateBanquet = ExpeditionPlan(
+        id = inspectorateBanquetId,
+        title = "Comply With Banquet Etiquette",
+        summary = "Serve the inspectorate in order and make the paperwork look expensive.",
+        questIds = setOf("inspectorate_cove_banquet"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 24,
+            scoreBonus = 12,
+            riskPenaltyDelta = 3,
+            goldBonusPercent = 18,
+            greatSuccessMarginDelta = 8,
+        ),
+    )
+
     private val genericPlans = listOf(rushTheJob, safetyFirst, lootPriority, auditEverything)
     private val questSpecificPlans = listOf(
         sealSideTunnel,
@@ -200,6 +258,10 @@ object ExpeditionPlanCatalog {
         rationTheBiscuits,
         bringDoorForms,
         itemizedLastRites,
+        paperworkToll,
+        caravanManifest,
+        notaryNightPatrol,
+        inspectorateBanquet,
     )
     private val visiblePlans = genericPlans + questSpecificPlans
     val all: List<ExpeditionPlan> = listOf(standard) + visiblePlans

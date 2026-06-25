@@ -6,8 +6,12 @@ import com.ayoshy.badventurers.game.GuildFacilityCatalog
 import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.LootCarryBreakdown
 import com.ayoshy.badventurers.game.LootGenerator
+import com.ayoshy.badventurers.game.PassiveIncomeReport
+import com.ayoshy.badventurers.game.PassiveIncident
+import com.ayoshy.badventurers.game.PassiveIncidentReward
 import com.ayoshy.badventurers.game.PlaySessionSnapshot
 import com.ayoshy.badventurers.game.PlaySessionState
+import com.ayoshy.badventurers.game.RecruitmentTicketCatalog
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -34,6 +38,7 @@ class PlaySessionSnapshotJsonTest {
         val restored = decoded?.toState()
 
         assertNotNull(decoded)
+        assertNull(PlaySessionSnapshotJson.lastDecodeFailure)
         assertEquals(PlaySessionSnapshot.CURRENT_VERSION, decoded?.version)
         assertEquals(3, restored?.noticeBoardLevel)
         assertEquals(4, restored?.trainingYardLevel)
@@ -42,6 +47,43 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(state.reputation, restored?.reputation)
         assertEquals(state.guildLevel, restored?.guildLevel)
         assertEquals(state.completedQuestCount, restored?.completedQuestCount)
+    }
+
+    @Test
+    fun codecRoundTripsCoreCrewAndOfflineIncomeReport() {
+        val crewIds = HeroCatalog.starterHeroes.take(2).map { it.id }
+        val report = PassiveIncomeReport(
+            sinceMillis = 1_000L,
+            untilMillis = 61_000L,
+            elapsedSeconds = 60L,
+            cappedSeconds = 60L,
+            activeSeconds = 45L,
+            idleSeconds = 15L,
+            gold = 2,
+            goldPerHour = 130,
+            activeGoldPerHour = 90,
+            coreCrewHeroIds = crewIds,
+        )
+        val incidents = listOf(
+            PassiveIncident(
+                id = "watch-ledger",
+                text = "Mira turned a loose form into rent.",
+                reward = PassiveIncidentReward(gold = 3, reputation = 1),
+            ),
+        )
+        val state = PlaySessionState.initial().copy(
+            coreCrewHeroIds = crewIds,
+            lastOfflinePassiveIncome = report,
+            lastOfflinePassiveIncidents = incidents,
+        )
+
+        val restored = PlaySessionSnapshotJson.decode(
+            PlaySessionSnapshotJson.encode(PlaySessionSnapshot.fromState(state)),
+        )?.toState()
+
+        assertEquals(crewIds, restored?.normalizedCoreCrewHeroIds())
+        assertEquals(report, restored?.lastOfflinePassiveIncome)
+        assertEquals(incidents, restored?.lastOfflinePassiveIncidents)
     }
 
     @Test
@@ -65,6 +107,7 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(1, restored?.noticeBoardLevel)
         assertEquals(1, restored?.trainingYardLevel)
         assertEquals(1, restored?.bunkRoomLevel)
+        assertEquals(listOf(HeroCatalog.starterHeroes.first().id), restored?.normalizedCoreCrewHeroIds())
     }
 
     @Test
@@ -220,7 +263,46 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(LootCarryBreakdown(base = 1), restored?.pendingLootRecoveryBreakdown())
     }
     @Test
-    fun invalidJsonReturnsNull() {
+    fun codecRoundTripsRecruitmentTickets() {
+        val state = PlaySessionState.initial().copy(
+            recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
+                mapOf(
+                    RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 3,
+                    RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1,
+                ),
+            ),
+        )
+
+        val restored = PlaySessionSnapshotJson.decode(
+            PlaySessionSnapshotJson.encode(PlaySessionSnapshot.fromState(state)),
+        )?.toState()
+
+        assertEquals(state.recruitmentTickets, restored?.recruitmentTickets)
+    }
+
+    @Test
+    fun legacyJsonWithoutRecruitmentTicketsDefaultsToEmptyInventory() {
+        val encoded = JSONObject()
+            .put("version", 12)
+            .put("gold", 100)
+            .put("reputation", 0)
+            .put("guildLevel", 1)
+            .put("completedQuestCount", 0)
+            .put("noticeBoardLevel", 1)
+            .put("trainingYardLevel", 1)
+            .put("bunkRoomLevel", 1)
+            .put("lootRolls", 0)
+            .put("heroIds", JSONArray().put(HeroCatalog.starterHeroes.first().id))
+            .toString()
+
+        val restored = PlaySessionSnapshotJson.decode(encoded)?.toState()
+
+        assertEquals(RecruitmentTicketCatalog.normalizedInventory(), restored?.recruitmentTickets)
+    }
+
+    @Test
+    fun invalidJsonReturnsNullAndRecordsFailure() {
         assertNull(PlaySessionSnapshotJson.decode("not-json"))
+        assertNotNull(PlaySessionSnapshotJson.lastDecodeFailure)
     }
 }

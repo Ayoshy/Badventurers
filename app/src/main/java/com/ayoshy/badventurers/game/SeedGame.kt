@@ -132,8 +132,8 @@ object SeedGame {
             recommendedHeroIds = listOf("nell", "vex", "sable", "mira", "pippa", "quill", "ledger", "expert_en_demolition"),
             unlockRequirement = QuestUnlockRequirement(
                 conditions = listOf(
-                    QuestUnlockCondition(minCompletedQuestCount = 6),
-                    QuestUnlockCondition(minReputation = 22),
+                    QuestUnlockCondition(minCompletedQuestCount = 5),
+                    QuestUnlockCondition(minReputation = 20),
                     QuestUnlockCondition(minTrainingYardLevel = 3),
                 ),
             ),
@@ -152,9 +152,88 @@ object SeedGame {
             recommendedHeroIds = listOf("morrow", "chevalier_de_la_mort", "pax", "paladin", "quill", "ledger", "comptable"),
             unlockRequirement = QuestUnlockRequirement(
                 conditions = listOf(
-                    QuestUnlockCondition(minCompletedQuestCount = 6),
-                    QuestUnlockCondition(minReputation = 25),
+                    QuestUnlockCondition(minCompletedQuestCount = 5),
+                    QuestUnlockCondition(minReputation = 22),
                     QuestUnlockCondition(minNoticeBoardLevel = 3),
+                ),
+            ),
+        ),
+
+        Quest(
+            id = "paperwork_toll_of_chaos",
+            title = "Paperwork Toll of Chaos",
+            summary = "210 s. Medium risk. The checkpoint inspector loves receipts more than blood.",
+            durationSeconds = 210,
+            difficulty = 300,
+            risk = QuestRisk.Medium,
+            baseGold = 920,
+            pityGold = 95,
+            partySlots = 4,
+            tags = listOf(QuestTag.Paperwork, QuestTag.Urban, QuestTag.Trap, QuestTag.Contract, QuestTag.Stealth),
+            recommendedHeroIds = listOf("quill", "ledger", "comptable", "nell", "vex", "sable"),
+            unlockRequirement = QuestUnlockRequirement(
+                conditions = listOf(
+                    QuestUnlockCondition(minCompletedQuestCount = 8, minReputation = 30, minNoticeBoardLevel = 2),
+                ),
+            ),
+        ),
+        Quest(
+            id = "licensed_guild_caravan_haunt",
+            title = "Licensed Guild Caravan Haunt",
+            summary = "240 s. High risk. A sanctioned caravan still collects penalties in triplicate.",
+            durationSeconds = 240,
+            difficulty = 318,
+            risk = QuestRisk.High,
+            baseGold = 1060,
+            pityGold = 110,
+            partySlots = 4,
+            tags = listOf(QuestTag.Contract, QuestTag.Heist, QuestTag.Escort, QuestTag.Paperwork, QuestTag.Urban),
+            recommendedHeroIds = listOf("mira", "pax", "vex", "bramble", "jardinier", "quill"),
+            unlockRequirement = QuestUnlockRequirement(
+                conditions = listOf(
+                    QuestUnlockCondition(minCompletedQuestCount = 9, minReputation = 34, minTrainingYardLevel = 2),
+                ),
+            ),
+        ),
+        Quest(
+            id = "notary_night_patrol",
+            title = "Notary Night Patrol",
+            summary = "270 s. High risk. Everyone wears a robe, a lantern, and a form in triplicate.",
+            durationSeconds = 270,
+            difficulty = 312,
+            risk = QuestRisk.High,
+            baseGold = 1120,
+            pityGold = 125,
+            partySlots = 4,
+            tags = listOf(QuestTag.Contract, QuestTag.Paperwork, QuestTag.Guard, QuestTag.LongQuest, QuestTag.Urban),
+            recommendedHeroIds = listOf("ledger", "chevalier_de_la_mort", "paladin", "morrow", "pippa", "vex"),
+            unlockRequirement = QuestUnlockRequirement(
+                conditions = listOf(
+                    QuestUnlockCondition(minCompletedQuestCount = 10, minReputation = 38, minBunkRoomLevel = 2),
+                ),
+            ),
+        ),
+        Quest(
+            id = "inspectorate_cove_banquet",
+            title = "Inspectorate Cove Banquet",
+            summary = "300 s. High risk. The official meal is compulsory; forgetting a form starts an emergency audit.",
+            durationSeconds = 300,
+            difficulty = 336,
+            risk = QuestRisk.High,
+            baseGold = 1180,
+            pityGold = 135,
+            partySlots = 5,
+            tags = listOf(QuestTag.Siege, QuestTag.Camp, QuestTag.Contract, QuestTag.Paperwork, QuestTag.Urban),
+            recommendedHeroIds = listOf("vex", "sable", "ledger", "elementaire_de_sel", "comptable", "brugg", "pippa"),
+            unlockRequirement = QuestUnlockRequirement(
+                conditions = listOf(
+                    QuestUnlockCondition(
+                        minCompletedQuestCount = 11,
+                        minReputation = 42,
+                        minNoticeBoardLevel = 3,
+                        minTrainingYardLevel = 3,
+                        minBunkRoomLevel = 2,
+                    ),
                 ),
             ),
         ),

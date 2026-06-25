@@ -21,6 +21,7 @@ class PlaySessionSnapshotTest {
             trainingYardLevel = 2,
             bunkRoomLevel = 3,
             heroes = HeroCatalog.starterHeroes + extraHero,
+            coreCrewHeroIds = (HeroCatalog.starterHeroes.take(2) + extraHero).map { it.id },
             lootRolls = 7,
             lootItems = generatedLoot.drop(1),
             pendingLootItems = generatedLoot.take(1),
@@ -28,6 +29,25 @@ class PlaySessionSnapshotTest {
             pendingLootKeptCount = 0,
             equippedLoot = listOf(EquippedLoot(extraHero.id, generatedLoot.first())),
             journalEntries = listOf(JournalEntry(id = "note-1", text = "The ledger survived.")),
+            lastOfflinePassiveIncome = PassiveIncomeReport(
+                sinceMillis = 1_000L,
+                untilMillis = 91_000L,
+                elapsedSeconds = 90L,
+                cappedSeconds = 90L,
+                activeSeconds = 45L,
+                idleSeconds = 45L,
+                gold = 3,
+                goldPerHour = 120,
+                activeGoldPerHour = 80,
+                coreCrewHeroIds = (HeroCatalog.starterHeroes.take(2) + extraHero).map { it.id },
+            ),
+            lastOfflinePassiveIncidents = listOf(
+                PassiveIncident(
+                    id = "watch-ledger",
+                    text = "Brugg watched the ledgers blink.",
+                    reward = PassiveIncidentReward(gold = 4, reputation = 1),
+                ),
+            ),
         )
 
         val snapshot = PlaySessionSnapshot.fromState(state)
@@ -134,6 +154,19 @@ class PlaySessionSnapshotTest {
     }
 
     @Test
+    fun snapshotMigratesCoreCrewToKnownHeroesAndSlotLimit() {
+        val roster = HeroCatalog.heroes.map { it.toHero() }
+        val snapshot = PlaySessionSnapshot.fromState(
+            PlaySessionState.initial().copy(heroes = roster, bunkRoomLevel = 1),
+        ).copy(coreCrewHeroIds = roster.map { it.id } + "missing")
+
+        val restored = snapshot.toState()
+
+        assertEquals(3, restored.coreCrewSlots())
+        assertEquals(roster.take(3).map { it.id }, restored.normalizedCoreCrewHeroIds())
+    }
+
+    @Test
     fun snapshotMigratesPendingLootWithoutCarryLimitToOneChoice() {
         val pendingLoot = LootGenerator.generate(2, seed = 13)
         val snapshot = PlaySessionSnapshot.initial().copy(
@@ -165,6 +198,21 @@ class PlaySessionSnapshotTest {
         assertEquals(breakdown, restored.pendingLootRecoveryBreakdown())
         assertEquals(3, restored.pendingLootEffectiveKeepLimit())
     }
+    @Test
+    fun snapshotRoundTripsRecruitmentTickets() {
+        val tickets = RecruitmentTicketCatalog.normalizedInventory(
+            mapOf(
+                RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 2,
+                RecruitmentTicketCatalog.VETERAN_TICKET_ID to 1,
+            ),
+        )
+        val restored = PlaySessionSnapshot.fromState(
+            PlaySessionState.initial().copy(recruitmentTickets = tickets),
+        ).toState()
+
+        assertEquals(tickets, restored.recruitmentTickets)
+    }
+
     @Test
     fun snapshotVersionIsExplicitlyCurrent() {
         val snapshot = PlaySessionSnapshot.initial()

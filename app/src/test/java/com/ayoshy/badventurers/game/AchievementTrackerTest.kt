@@ -92,6 +92,40 @@ class AchievementTrackerTest {
         assertEquals(state.achievementSeals(), restored.achievementSeals())
     }
 
+    @Test
+    fun claimAchievementAddsTicketRewardOnlyOnce() {
+        val state = PlaySessionState.initial().copy(
+            achievementProgress = completedProgress("first_hire"),
+        )
+        val claimed = state.claimAchievement("first_hire", nowMillis = 5_000L)
+
+        val expected = RecruitmentTicketCatalog.normalizedInventory(
+            mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1),
+        )
+
+        assertEquals(expected, claimed.recruitmentTickets)
+        assertEquals(expected, claimed.claimAchievement("first_hire", nowMillis = 6_000L).recruitmentTickets)
+    }
+
+    @Test
+    fun claimAllAchievementsIsDeterministicAndDoesNotDuplicateTicketRewards() {
+        val state = PlaySessionState.initial().copy(
+            achievementProgress = completedProgress("first_hire", "tiny_hr_department", "suspiciously_funded"),
+        )
+
+        val claimed = state.claimAllAchievements(nowMillis = 9_000L)
+        val withAll = RecruitmentTicketCatalog.normalizedInventory(
+            mapOf(
+                RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1,
+                RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1,
+                RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1,
+            ),
+        )
+
+        assertEquals(withAll, claimed.recruitmentTickets)
+        assertEquals(withAll, claimed.claimAllAchievements(nowMillis = 10_000L).recruitmentTickets)
+    }
+
     private fun PlaySessionState.isCompleted(achievementId: String): Boolean {
         val definition = AchievementCatalog.byId.getValue(achievementId)
         return achievementProgressFor(definition).isCompleted(definition)
@@ -115,20 +149,24 @@ class AchievementTrackerTest {
         ),
     )
 
-    private fun claimedProgress(vararg achievementIds: String): List<AchievementProgress> {
-        val claimedIds = achievementIds.toSet()
-        return AchievementCatalog.definitions.map { definition ->
-            if (definition.id in claimedIds) {
+    private fun completedProgress(vararg achievementIds: String): List<AchievementProgress> =
+        progressFor(achievementIds = achievementIds.toSet(), claimed = false)
+
+    private fun claimedProgress(vararg achievementIds: String): List<AchievementProgress> =
+        progressFor(achievementIds = achievementIds.toSet(), claimed = true)
+
+    private fun progressFor(achievementIds: Set<String>, claimed: Boolean): List<AchievementProgress> =
+        AchievementCatalog.definitions.map { definition ->
+            if (definition.id in achievementIds) {
                 AchievementProgress(
                     achievementId = definition.id,
                     current = definition.target,
                     completedAtMillis = 1_000L,
-                    claimedAtMillis = 2_000L,
-                    seen = true,
+                    claimedAtMillis = if (claimed) 2_000L else null,
+                    seen = claimed,
                 )
             } else {
                 AchievementProgress(achievementId = definition.id)
             }
         }
-    }
 }

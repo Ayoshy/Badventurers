@@ -9,6 +9,7 @@ data class PlaySessionState(
     val trainingYardLevel: Int = 1,
     val bunkRoomLevel: Int = 1,
     val heroes: List<Hero> = HeroCatalog.starterHeroes,
+    val coreCrewHeroIds: List<String> = defaultCoreCrewHeroIds(),
     val lootRolls: Int = 0,
     val lootItems: List<LootItem> = emptyList(),
     val pendingLootItems: List<LootItem> = emptyList(),
@@ -19,6 +20,9 @@ data class PlaySessionState(
     val journalEntries: List<JournalEntry> = emptyList(),
     val expedition: ExpeditionRun? = null,
     val achievementProgress: List<AchievementProgress> = AchievementCatalog.initialProgress(),
+    val lastOfflinePassiveIncome: PassiveIncomeReport? = null,
+    val lastOfflinePassiveIncidents: List<PassiveIncident> = emptyList(),
+    val recruitmentTickets: Map<String, Int> = RecruitmentTicketCatalog.normalizedInventory()
 ) {
     val phase: PlayPhase
         get() = when {
@@ -53,6 +57,8 @@ data class PlaySessionState(
                 endsAtMillis = nowMillis + ExpeditionPlanCatalog.durationSeconds(quest, planId) * 1000L,
                 planId = ExpeditionPlanCatalog.coercePlanId(planId),
             ),
+            lastOfflinePassiveIncome = null,
+            lastOfflinePassiveIncidents = emptyList(),
         )
     }
 
@@ -128,6 +134,8 @@ data class PlaySessionState(
             heroes = advancedHeroes,
             journalEntries = (journalEntries + generatedJournal).takeLast(12),
             expedition = null,
+            lastOfflinePassiveIncome = null,
+            lastOfflinePassiveIncidents = emptyList(),
         ).appendPendingLoot(generatedLoot, lootCarryBreakdown(advancedParty))
         return AchievementTracker.applyEvent(
             state = collected,
@@ -142,7 +150,27 @@ data class PlaySessionState(
     fun markOfflineReportCollected(nowMillis: Long = 0L): PlaySessionState {
         val run = expedition ?: return this
         if (run.result == null) return this
-        return AchievementTracker.applyEvent(this, AchievementEvent.OfflineCollected, nowMillis)
+
+        val tracked = AchievementTracker.applyEvent(this, AchievementEvent.OfflineCollected, nowMillis)
+        if (tracked.lastOfflinePassiveIncome != null) return tracked
+
+        val reportUntilMillis = nowMillis.takeIf { it > 0L } ?: run.endsAtMillis
+        val passiveReport = tracked.passiveIncomeReport(
+            sinceMillis = run.startedAtMillis,
+            untilMillis = reportUntilMillis,
+            activeExpeditionHeroIds = run.partyHeroIds,
+            activeUntilMillis = run.endsAtMillis,
+        )
+        val incidents = PassiveIncidentGenerator.generate(tracked, reportUntilMillis)
+        val incidentGold = incidents.sumOf { it.reward.gold }
+        val incidentReputation = incidents.sumOf { it.reward.reputation }
+
+        return tracked.copy(
+            gold = tracked.gold + passiveReport.gold + incidentGold,
+            reputation = (tracked.reputation + incidentReputation).coerceAtLeast(0),
+            lastOfflinePassiveIncome = passiveReport,
+            lastOfflinePassiveIncidents = incidents,
+        )
     }
 
     fun isQuestUnlocked(quest: Quest): Boolean {
@@ -250,10 +278,36 @@ data class PlaySessionState(
 
     fun claimableAchievementCount(): Int = claimableAchievements().size
 
+    fun claimableAchievementSeals(): Int =
+        claimableAchievements().sumOf { it.sealReward }
+
+    fun claimableRecruitmentTicketRewards(): Map<String, Int> =
+        claimableAchievements().fold(RecruitmentTicketCatalog.normalizedInventory()) { inventory, definition ->
+            RecruitmentTicketCatalog.addToInventory(inventory, recruitmentTicketRewards(definition.reward))
+        }
+
+    fun offlineReportHighlights(postCollectSession: PlaySessionState = collectResult()): OfflineReportHighlights =
+        OfflineReportHighlights(
+            ticketInventory = normalizedRecruitmentTickets(),
+            completedAchievementDelta = (postCollectSession.completedAchievementCount() - completedAchievementCount()).coerceAtLeast(0),
+            claimableAchievementDelta = (postCollectSession.claimableAchievementCount() - claimableAchievementCount()).coerceAtLeast(0),
+            claimableSealDelta = (postCollectSession.claimableAchievementSeals() - claimableAchievementSeals()).coerceAtLeast(0),
+            claimableTicketRewardDelta = recruitmentTicketRewardDeltaTo(postCollectSession),
+        )
+
     fun achievementProgressFor(definition: AchievementDefinition): AchievementProgress =
         refreshedAchievementProgress()
             .firstOrNull { it.achievementId == definition.id }
             ?: AchievementProgress(achievementId = definition.id)
+
+    fun normalizedRecruitmentTickets(): Map<String, Int> =
+        RecruitmentTicketCatalog.normalizedInventory(recruitmentTickets)
+
+    fun recruitmentTicketCount(ticketId: String): Int =
+        normalizedRecruitmentTickets()[ticketId] ?: 0
+
+    fun totalRecruitmentTicketCount(): Int =
+        normalizedRecruitmentTickets().values.sum()
 
     fun nextAchievementMilestone(): CharterMilestone? =
         AchievementCatalog.nextMilestone(achievementProgress)
@@ -290,6 +344,124 @@ data class PlaySessionState(
             nextState.claimAchievement(definition.id, nowMillis)
         }
 
+    private fun recruitmentTicketRewardDeltaTo(after: PlaySessionState): Map<String, Int> {
+        val beforeRewards = claimableRecruitmentTicketRewards()
+        val afterRewards = after.claimableRecruitmentTicketRewards()
+        return RecruitmentTicketCatalog.normalizedInventory(
+            afterRewards.mapValues { (ticketId, count) ->
+                count - (beforeRewards[ticketId] ?: 0)
+            },
+        )
+    }
+
+    fun normalizedCoreCrewHeroIds(): List<String> {
+        val rosterIds = heroes.map { it.id }.toSet()
+        return coreCrewHeroIds
+            .distinct()
+            .filter { it in rosterIds }
+            .take(coreCrewSlots())
+    }
+
+    fun coreCrew(): List<Hero> {
+        val crewIds = normalizedCoreCrewHeroIds()
+        return crewIds.mapNotNull { heroId -> heroes.firstOrNull { it.id == heroId } }
+    }
+
+    fun coreCrewSlots(): Int =
+        BASE_CORE_CREW_SLOTS + bunkRoomCoreCrewSlotBonus()
+
+    fun coreCrewVacancyCount(): Int =
+        (coreCrewSlots() - normalizedCoreCrewHeroIds().size).coerceAtLeast(0)
+
+    fun canAssignCoreCrewHero(heroId: String): Boolean {
+        val normalizedCrew = normalizedCoreCrewHeroIds()
+        return heroes.any { it.id == heroId } &&
+            (heroId in normalizedCrew || normalizedCrew.size < coreCrewSlots())
+    }
+
+    fun toggleCoreCrewHero(heroId: String): PlaySessionState {
+        if (heroes.none { it.id == heroId }) return this
+        val normalizedCrew = normalizedCoreCrewHeroIds()
+        val nextCrew = when {
+            heroId in normalizedCrew -> normalizedCrew - heroId
+            normalizedCrew.size < coreCrewSlots() -> normalizedCrew + heroId
+            else -> normalizedCrew
+        }
+        return copy(coreCrewHeroIds = nextCrew)
+    }
+
+    fun passiveGoldPerHour(activeExpeditionHeroIds: Collection<String> = emptyList()): Int {
+        val crew = coreCrew()
+        if (crew.isEmpty()) return 0
+
+        val activeIds = activeExpeditionHeroIds.toSet()
+        val crewGold = crew.sumOf { hero -> coreCrewContribution(hero, activeIds).goldPerHour }
+        return PASSIVE_BASE_GOLD_PER_HOUR +
+            guildLevel * PASSIVE_GUILD_LEVEL_GOLD_PER_HOUR +
+            noticeBoardPassiveGoldPerHour() +
+            accountantOfficePassiveGoldPerHour() +
+            crewGold
+    }
+
+    fun coreCrewContribution(
+        hero: Hero,
+        activeExpeditionHeroIds: Collection<String> = emptyList(),
+    ): CoreCrewContribution {
+        val basePower = PartyPowerCalculator.basePower(hero) + equipmentBonus(hero.id)
+        val rarityBonus = basePower * passiveRarityBonusPercent(hero.rarity) / 100
+        val fullGoldPerHour = PASSIVE_HERO_BASE_GOLD_PER_HOUR +
+            basePower / 2 +
+            hero.level * PASSIVE_HERO_LEVEL_GOLD_PER_HOUR +
+            rarityBonus +
+            passiveSpecialGoldPerHour(hero.special)
+        val activePenaltyPercent = if (hero.id in activeExpeditionHeroIds) ACTIVE_EXPEDITION_CORE_CREW_PENALTY_PERCENT else 0
+        val adjustedGoldPerHour = fullGoldPerHour * (100 - activePenaltyPercent) / 100
+        return CoreCrewContribution(
+            heroId = hero.id,
+            heroName = hero.name,
+            fullGoldPerHour = fullGoldPerHour,
+            goldPerHour = adjustedGoldPerHour,
+            activeExpeditionPenaltyPercent = activePenaltyPercent,
+        )
+    }
+
+    fun passiveIncomeReport(
+        sinceMillis: Long,
+        untilMillis: Long,
+        activeExpeditionHeroIds: Collection<String> = emptyList(),
+        activeUntilMillis: Long = sinceMillis,
+    ): PassiveIncomeReport {
+        val elapsedSeconds = ((untilMillis - sinceMillis) / 1000L).coerceAtLeast(0L)
+        val cappedSeconds = elapsedSeconds.coerceAtMost(passiveIncomeCapSeconds())
+        val activeSeconds = ((activeUntilMillis.coerceAtMost(untilMillis) - sinceMillis) / 1000L)
+            .coerceAtLeast(0L)
+            .coerceAtMost(cappedSeconds)
+        val idleSeconds = (cappedSeconds - activeSeconds).coerceAtLeast(0L)
+        val activeGoldPerHour = passiveGoldPerHour(activeExpeditionHeroIds)
+        val idleGoldPerHour = passiveGoldPerHour()
+        val rawGold = proratedGold(activeGoldPerHour, activeSeconds) + proratedGold(idleGoldPerHour, idleSeconds)
+        val gold = if (cappedSeconds > 0L && maxOf(activeGoldPerHour, idleGoldPerHour) > 0) {
+            rawGold.coerceAtLeast(1)
+        } else {
+            0
+        }
+
+        return PassiveIncomeReport(
+            sinceMillis = sinceMillis,
+            untilMillis = untilMillis,
+            elapsedSeconds = elapsedSeconds,
+            cappedSeconds = cappedSeconds,
+            activeSeconds = activeSeconds,
+            idleSeconds = idleSeconds,
+            gold = gold,
+            goldPerHour = idleGoldPerHour,
+            activeGoldPerHour = activeGoldPerHour,
+            coreCrewHeroIds = normalizedCoreCrewHeroIds(),
+        )
+    }
+
+    fun passiveIncomeCapSeconds(): Long = PASSIVE_INCOME_CAP_SECONDS
+
     fun adjustGold(delta: Int): PlaySessionState =
         copy(gold = (gold + delta).coerceAtLeast(0))
 
@@ -306,6 +478,7 @@ data class PlaySessionState(
             trainingYardLevel = 1,
             bunkRoomLevel = 1,
             heroes = HeroCatalog.starterHeroes,
+            coreCrewHeroIds = defaultCoreCrewHeroIds(),
             lootRolls = 0,
             lootItems = emptyList(),
             pendingLootItems = emptyList(),
@@ -316,8 +489,10 @@ data class PlaySessionState(
             journalEntries = emptyList(),
             expedition = null,
             achievementProgress = AchievementCatalog.initialProgress(),
+            lastOfflinePassiveIncome = null,
+            lastOfflinePassiveIncidents = emptyList(),
+            recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(),
         )
-
     fun effectivePartySlots(quest: Quest): Int =
         quest.partySlots.coerceAtLeast(1) + (bunkRoomLevel - 1).coerceAtLeast(0)
 
@@ -466,6 +641,7 @@ data class PlaySessionState(
         val releasedEquipment = equippedLoot.filter { it.heroId == heroId }
         return copy(
             heroes = heroes.filterNot { it.id == heroId },
+            coreCrewHeroIds = normalizedCoreCrewHeroIds().filterNot { it == heroId },
             lootItems = lootItems + releasedEquipment.map { it.item },
             equippedLoot = equippedLoot.filterNot { it.heroId == heroId },
         )
@@ -474,7 +650,16 @@ data class PlaySessionState(
     fun recruitHero(seed: Int): HeroRecruitmentResult? {
         if (gold < HeroGacha.RECRUIT_COST) return null
 
-        val hero = HeroGacha.summon(pulls = 1, seed = seed).single()
+        val recruitmentProfile = if (isLicensedTroubleRecruitmentReady()) {
+            HeroGacha.palier2RecruitmentProfile
+        } else {
+            HeroGacha.baseRecruitmentProfile
+        }
+        val hero = HeroGacha.summon(
+            pulls = 1,
+            seed = seed,
+            recruitmentProfile = recruitmentProfile,
+        ).single()
         val duplicate = heroes.any { it.id == hero.id }
         val reputationReward = if (duplicate) HeroGacha.DUPLICATE_REPUTATION_REWARD else 0
         val recruited = copy(
@@ -495,6 +680,30 @@ data class PlaySessionState(
         )
     }
 
+    private fun isLicensedTroubleRecruitmentReady(): Boolean =
+        completedQuestCount >= HeroGacha.LICENSED_TROUBLE_RECRUITMENT_COMPLETED_QUEST_THRESHOLD
+    fun recruitHeroWithTicket(ticketId: String, seed: Int): HeroRecruitmentResult? {
+        val ticket = RecruitmentTicketCatalog.byId[ticketId]?.takeIf { it.isRecruitmentTicket } ?: return null
+        val nextTickets = RecruitmentTicketCatalog.consumeFromInventory(recruitmentTickets, ticketId) ?: return null
+        val result = RecruitmentTicketResolver.resolve(ticket = ticket, seed = seed, roster = heroes)
+        val hero = result.hero ?: return null
+        val recruited = copy(
+            recruitmentTickets = nextTickets,
+            reputation = reputation + result.reputationReward,
+            heroes = if (result.duplicate) heroes else heroes + hero,
+        )
+        val tracked = AchievementTracker.applyEvent(
+            state = recruited,
+            event = AchievementEvent.HeroRecruited(hero = hero, duplicate = result.duplicate),
+        )
+        return HeroRecruitmentResult(
+            session = tracked,
+            hero = hero,
+            cost = 0,
+            duplicate = result.duplicate,
+            reputationReward = result.reputationReward,
+        )
+    }
     companion object {
         private const val TRAINING_YARD_POWER_PER_LEVEL = 8
         private const val TRAINING_YARD_XP_BONUS_PERCENT_PER_LEVEL = 10
@@ -504,6 +713,16 @@ data class PlaySessionState(
         private const val BASE_LOOT_KEEP_LIMIT = 1
         private const val VETERAN_LOOT_CARRY_LEVEL = 5
         private const val SPECIALIST_LOOT_CARRY_LEVEL = 3
+        private const val BASE_CORE_CREW_SLOTS = 3
+        private const val CORE_CREW_EXTRA_SLOT_BUNK_ROOM_LEVEL = 2
+        private const val PASSIVE_INCOME_CAP_SECONDS = 4 * 60 * 60L
+        private const val PASSIVE_BASE_GOLD_PER_HOUR = 18
+        private const val PASSIVE_GUILD_LEVEL_GOLD_PER_HOUR = 6
+        private const val PASSIVE_NOTICE_BOARD_GOLD_PER_HOUR_PER_LEVEL = 5
+        private const val PASSIVE_ACCOUNTANT_GOLD_PER_HOUR_PER_LEVEL = 14
+        private const val PASSIVE_HERO_BASE_GOLD_PER_HOUR = 6
+        private const val PASSIVE_HERO_LEVEL_GOLD_PER_HOUR = 3
+        private const val ACTIVE_EXPEDITION_CORE_CREW_PENALTY_PERCENT = 50
 
         fun initial(): PlaySessionState = PlaySessionState()
 
@@ -534,6 +753,38 @@ data class PlaySessionState(
 
     private fun specialistLootCarryBonus(party: List<Hero>): Int =
         if (party.any { it.level >= SPECIALIST_LOOT_CARRY_LEVEL && HeroSpecialCatalog.isLootRecoverySpecial(it.special) }) 1 else 0
+
+    private fun bunkRoomCoreCrewSlotBonus(): Int =
+        if (bunkRoomLevel >= CORE_CREW_EXTRA_SLOT_BUNK_ROOM_LEVEL) 1 else 0
+
+    private fun noticeBoardPassiveGoldPerHour(): Int =
+        (noticeBoardLevel - 1).coerceAtLeast(0) * PASSIVE_NOTICE_BOARD_GOLD_PER_HOUR_PER_LEVEL
+
+    private fun accountantOfficePassiveGoldPerHour(): Int =
+        facilityLevel(GuildFacility.AccountantOffice) * PASSIVE_ACCOUNTANT_GOLD_PER_HOUR_PER_LEVEL
+
+    private fun passiveRarityBonusPercent(rarity: HeroRarity): Int = when (rarity) {
+        HeroRarity.Common -> 0
+        HeroRarity.Uncommon -> 8
+        HeroRarity.Rare -> 16
+        HeroRarity.Epic -> 25
+        HeroRarity.Legendary -> 40
+    }
+
+    private fun passiveSpecialGoldPerHour(special: HeroSpecial): Int = when (special) {
+        HeroSpecial.BalancedBooks,
+        HeroSpecial.HostileAudit -> 12
+        HeroSpecial.MoraleRations,
+        HeroSpecial.GreenThumb,
+        HeroSpecial.PreservationSalt -> 8
+        HeroSpecial.LightFingers,
+        HeroSpecial.DirtyJackpot,
+        HeroSpecial.FreshTrail -> 6
+        else -> 3
+    }
+
+    private fun proratedGold(goldPerHour: Int, seconds: Long): Int =
+        (goldPerHour.toLong() * seconds / 3600L).toInt()
 
     private fun achievementAdjustedRewardGold(result: ExpeditionResult): Int {
         val pityBonusPercent = if (
@@ -586,14 +837,32 @@ data class PlaySessionState(
                 lootRolls = lootRolls + reward.lootRolls,
             ).appendPendingLoot(generatedLoot, lootCarryBreakdown())
         }
+        is AchievementReward.Tickets -> copy(
+            recruitmentTickets = RecruitmentTicketCatalog.addToInventory(recruitmentTickets, reward.tickets),
+        )
         is AchievementReward.Composite -> reward.rewards.fold(this) { state, item ->
             state.applyAchievementReward(item, achievementId)
         }
         AchievementReward.None -> this
     }
 
+
     private fun achievementRewardSeed(achievementId: String): Int =
         achievementId.fold(lootRolls * 31 + gold) { acc, char -> acc * 31 + char.code }
+}
+
+data class OfflineReportHighlights(
+    val ticketInventory: Map<String, Int> = emptyMap(),
+    val completedAchievementDelta: Int = 0,
+    val claimableAchievementDelta: Int = 0,
+    val claimableSealDelta: Int = 0,
+    val claimableTicketRewardDelta: Map<String, Int> = emptyMap(),
+) {
+    val hasTicketProgress: Boolean
+        get() = ticketInventory.isNotEmpty() || claimableTicketRewardDelta.isNotEmpty()
+
+    val hasAchievementProgress: Boolean
+        get() = completedAchievementDelta > 0 || claimableAchievementDelta > 0 || claimableSealDelta > 0
 }
 
 data class LootCarryBreakdown(
@@ -615,6 +884,27 @@ data class LootCarryBreakdown(
     fun withMinimumBase(minimumBase: Int): LootCarryBreakdown =
         if (total >= minimumBase) this else copy(base = base + minimumBase - total)
 }
+
+data class CoreCrewContribution(
+    val heroId: String,
+    val heroName: String,
+    val fullGoldPerHour: Int,
+    val goldPerHour: Int,
+    val activeExpeditionPenaltyPercent: Int = 0,
+)
+
+data class PassiveIncomeReport(
+    val sinceMillis: Long,
+    val untilMillis: Long,
+    val elapsedSeconds: Long,
+    val cappedSeconds: Long,
+    val activeSeconds: Long,
+    val idleSeconds: Long,
+    val gold: Int,
+    val goldPerHour: Int,
+    val activeGoldPerHour: Int,
+    val coreCrewHeroIds: List<String>,
+)
 
 data class ExpeditionRun(
     val quest: Quest,
@@ -638,3 +928,15 @@ sealed interface PlayPhase {
     data object Running : PlayPhase
     data object ResultReady : PlayPhase
 }
+
+private fun recruitmentTicketRewards(reward: AchievementReward): Map<String, Int> = when (reward) {
+    is AchievementReward.Tickets -> reward.tickets
+    is AchievementReward.Composite -> reward.rewards.fold(RecruitmentTicketCatalog.normalizedInventory()) { inventory, item ->
+        RecruitmentTicketCatalog.addToInventory(inventory, recruitmentTicketRewards(item))
+    }
+    is AchievementReward.Currency,
+    AchievementReward.None -> RecruitmentTicketCatalog.normalizedInventory()
+}
+
+private fun defaultCoreCrewHeroIds(): List<String> =
+    HeroCatalog.starterHeroes.take(3).map { it.id }

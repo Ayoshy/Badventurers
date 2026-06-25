@@ -37,6 +37,7 @@ enum class LootIcon {
     Hood,
     Tankard,
     Potion,
+    Blade,
 }
 
 data class LootDefinition(
@@ -64,7 +65,7 @@ object LootCatalog {
         LootDefinition("weapon_bent_spoon", "Bent Spoon", LootSlot.Weapon, LootIcon.Spoon),
         LootDefinition("weapon_fork_spear", "Fork Spear", LootSlot.Weapon, LootIcon.Weapon),
         LootDefinition("weapon_moon_axe", "Moon Axe", LootSlot.Weapon, LootIcon.Weapon),
-        LootDefinition("weapon_nibblade", "Nibblade", LootSlot.Weapon, LootIcon.Weapon),
+        LootDefinition("weapon_nibblade", "Nibblade", LootSlot.Weapon, LootIcon.Blade),
         LootDefinition("weapon_toast_mace", "Toast Spoon", LootSlot.Weapon, LootIcon.Spoon),
 
         LootDefinition("armor_patch_hood", "Patch Cloak", LootSlot.Armor, LootIcon.Hood),
