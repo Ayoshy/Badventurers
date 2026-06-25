@@ -103,6 +103,10 @@ object JournalGenerator {
             "the_hungry_siege" -> "The bread-crate barricade held, mostly out of spite."
             "the_last_locked_door" -> "The last locked door considered the paperwork and blinked first."
             "crypt_of_unpaid_debts" -> "The crypt itemized every scream and added interest."
+            "paperwork_toll_of_chaos" -> "The checkpoint stamped the party twice and charged for the echo."
+            "licensed_guild_caravan_haunt" -> "The caravan's ghost accepted the manifest, then haunted the duplicate."
+            "notary_night_patrol" -> "The night patrol swore the same oath until the lanterns looked supervised."
+            "inspectorate_cove_banquet" -> "The banquet served soup, subpoenas, and one extremely audited dessert."
             else -> "${quest.title} left a suspiciously specific note."
         }
 

@@ -219,7 +219,7 @@
     {
       "id": "BV-005",
       "title": "Palier 2: add quest banners and generated journal lines",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "content",
       "track": "Palier 2",
@@ -227,19 +227,19 @@
       "acceptance": [
         {
           "text": "Add or brief banners for quests 9 to 12.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add generated journal lines for Palier 2 quests.",
-          "done": false
+          "done": true
         },
         {
           "text": "Ensure art references resolve in UI.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add tests or checks for quest catalog references.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -248,7 +248,9 @@
         "app/src/main/res-quests/drawable-nodpi/"
       ],
       "notes": [
-        "Migrated from Palier 2 and Palier 3 banner items."
+        "Migrated from Palier 2 and Palier 3 banner items.",
+        "2026-06-25: Started implementation; adding Palier 2 quest journal lines, art reference coverage, and catalog checks.",
+        "2026-06-25: Added Palier 2 quest journal lines, fallback banner art briefs, UI art-reference checks, and catalog CSV/docs updates. Targeted tests, full test, assembleDebug, and lintDebug passed."
       ]
     },
     {
@@ -768,6 +770,23 @@
       "track": "Backlog",
       "summary": "",
       "acceptance": [],
+      "refs": [],
+      "notes": []
+    },
+    {
+      "id": "BV-021",
+      "title": "New items",
+      "status": "ready",
+      "priority": "P2",
+      "area": "loot",
+      "track": "Backlog",
+      "summary": "We need to create new items. New rule is that 1 item = 1 artwork. All existing items will be reassigned to the common rarity. \nWe will create 8 items per other rarity level, with corresponding name, artwork, stats etc etc. Refer to the loot excel sheet items.csv",
+      "acceptance": [
+        {
+          "text": "Create artwork for",
+          "done": false
+        }
+      ],
       "refs": [],
       "notes": []
     }

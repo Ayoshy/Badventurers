@@ -372,17 +372,42 @@ internal fun questFrameResource(difficulty: Int): Int =
     }
 
 internal fun questBannerResource(quest: Quest): Int =
+    questBannerArtReference(quest).resourceId
+
+internal data class QuestBannerArtReference(
+    val resourceId: Int,
+    val temporaryBrief: String? = null,
+)
+
+internal fun questBannerArtReference(quest: Quest): QuestBannerArtReference =
     when (quest.id) {
-        "cave_minor_regrets" -> R.drawable.quest_banner_cave_minor_regrets
-        "bandit_tax_office" -> R.drawable.quest_banner_bandit_tax_office_v2
-        "forest_of_wrong_turns" -> R.drawable.quest_banner_forest_of_wrong_turns
-        "salted_swamp_chapel" -> R.drawable.quest_banner_salted_swamp_chapel
-        "moonlit_smuggler_run" -> R.drawable.quest_banner_moonlit_smuggler_run
-        "the_hungry_siege" -> R.drawable.quest_banner_the_hungry_siege
-        "the_last_locked_door" -> R.drawable.quest_banner_the_last_locked_door
-        "crypt_of_unpaid_debts" -> R.drawable.quest_banner_crypt_of_unpaid_debts
-        else -> R.drawable.quest_banner_03
+        "cave_minor_regrets" -> QuestBannerArtReference(R.drawable.quest_banner_cave_minor_regrets)
+        "bandit_tax_office" -> QuestBannerArtReference(R.drawable.quest_banner_bandit_tax_office_v2)
+        "forest_of_wrong_turns" -> QuestBannerArtReference(R.drawable.quest_banner_forest_of_wrong_turns)
+        "salted_swamp_chapel" -> QuestBannerArtReference(R.drawable.quest_banner_salted_swamp_chapel)
+        "moonlit_smuggler_run" -> QuestBannerArtReference(R.drawable.quest_banner_moonlit_smuggler_run)
+        "the_hungry_siege" -> QuestBannerArtReference(R.drawable.quest_banner_the_hungry_siege)
+        "the_last_locked_door" -> QuestBannerArtReference(R.drawable.quest_banner_the_last_locked_door)
+        "crypt_of_unpaid_debts" -> QuestBannerArtReference(R.drawable.quest_banner_crypt_of_unpaid_debts)
+        "paperwork_toll_of_chaos" -> QuestBannerArtReference(
+            resourceId = R.drawable.quest_banner_03,
+            temporaryBrief = "Border checkpoint booth stacked with stamped receipts, chaos toll signs, and nervous adventurers.",
+        )
+        "licensed_guild_caravan_haunt" -> QuestBannerArtReference(
+            resourceId = R.drawable.quest_banner_03,
+            temporaryBrief = "Licensed caravan at dusk with spectral cargo straps, official seals, and triplicate manifests.",
+        )
+        "notary_night_patrol" -> QuestBannerArtReference(
+            resourceId = R.drawable.quest_banner_03,
+            temporaryBrief = "Lantern-lit notary patrol in identical robes, oath scrolls, and suspiciously legal shadows.",
+        )
+        "inspectorate_cove_banquet" -> QuestBannerArtReference(
+            resourceId = R.drawable.quest_banner_03,
+            temporaryBrief = "Coastal banquet table with inspector seals, emergency audit papers, and anxious serving covers.",
+        )
+        else -> QuestBannerArtReference(R.drawable.quest_banner_03)
     }
+
 internal fun rarityBorderStyle(
     border: Color,
     inner: Color,

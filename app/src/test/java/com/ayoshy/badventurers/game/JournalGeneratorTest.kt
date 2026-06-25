@@ -52,6 +52,16 @@ class JournalGeneratorTest {
     }
 
     @Test
+    fun everyCurrentQuestHasSpecificQuestJournalLine() {
+        SeedGame.quests.forEach { quest ->
+            val entries = JournalGenerator.generate(result(ExpeditionOutcome.Success), SeedGame.heroes, quest)
+            val questLine = entries.single { it.id == "quest-${quest.id}" }
+
+            assertTrue("${quest.id} is still using fallback journal copy", !questLine.text.contains("suspiciously specific note"))
+        }
+    }
+
+    @Test
     fun activeSpecialLineAppearsWhenPartyMatchesQuestTags() {
         val entries = JournalGenerator.generate(result(ExpeditionOutcome.Success), SeedGame.heroes, SeedGame.firstQuest)
         val special = entries.single { it.id == "special-brugg-cave_minor_regrets" }

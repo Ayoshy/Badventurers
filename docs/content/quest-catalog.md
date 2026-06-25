@@ -27,7 +27,7 @@ Keep new quest work aligned across these files:
 - Palier 1: Local Disasters, 8 quests.
 - Palier 2: Licensed Trouble, quests 9 to 12.
 - Every implemented quest must have UI localization coverage in `BadventurersUiText.kt` and test coverage through `BadventurersUiLocalizationTest`.
-- Quests 1 to 8 have explicit banner mappings in `BadventurersUiArt.kt`; quests 9 to 12 currently use the fallback banner and need dedicated art or briefs.
+- Quests 1 to 8 have explicit banner mappings in `BadventurersUiArt.kt`; quests 9 to 12 currently use the fallback banner with temporary art briefs tracked in `BadventurersUiArt.kt` and `../data/quests.csv`.
 
 ## New Quest Checklist
 
@@ -59,6 +59,17 @@ Use this template before adding the Kotlin object. It is intentionally stricter 
 | Localization | EN/FR title and summary resources, tag label coverage, `localizedQuestTextIds` entry |
 | Art | Dedicated `quest_banner_*` resource or a temporary art brief that can be turned into one |
 | Tests/checks | Unlock ladder, balance odds, recommended hero ids, plan availability, localization mapping, banner mapping or fallback audit |
+
+## Palier 2 Temporary Banner Briefs
+
+Until dedicated Palier 2 banner files exist, quests 9 to 12 intentionally resolve to `quest_banner_03` with these briefs:
+
+| Quest | Temporary Brief |
+| --- | --- |
+| `paperwork_toll_of_chaos` | Border checkpoint booth stacked with stamped receipts, chaos toll signs, and nervous adventurers. |
+| `licensed_guild_caravan_haunt` | Licensed caravan at dusk with spectral cargo straps, official seals, and triplicate manifests. |
+| `notary_night_patrol` | Lantern-lit notary patrol in identical robes, oath scrolls, and suspiciously legal shadows. |
+| `inspectorate_cove_banquet` | Coastal banquet table with inspector seals, emergency audit papers, and anxious serving covers. |
 
 ## CSV Mirror Fields
 
