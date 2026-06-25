@@ -4,6 +4,8 @@ Source scope: `docs/data/items.csv`, `docs/content/hero-item-catalog.md`, and `d
 
 Purpose: reviewed-ready briefs for the 25 existing Common loot items. These are for art production or image-generation passes only; they do not replace the item catalog.
 
+Integration status: BV-024 Common PNGs are integrated under `app/src/main/res-loot/drawable-nodpi/loot_art_<item_id>.png`, reviewed as a batch in `docs/content/common-loot-art-contact-sheet.png`, and validated by `tools/validate-loot-art.ps1`.
+
 Common art target: polished 16-bit-inspired pixel icons with chunky silhouettes, warm/cool lighting contrast, restrained rarity treatment, and enough absurd fantasy detail to read before the player reads the item name. Avoid readable text in the art.
 
 ## Production Checklist

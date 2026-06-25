@@ -447,7 +447,7 @@ internal fun LootIconPanel(item: LootItem, contentDescription: String) {
             contentAlignment = Alignment.Center,
         ) {
             Image(
-                painter = painterResource(lootIconResource(item.icon)),
+                painter = painterResource(lootArtResource(item)),
                 contentDescription = contentDescription,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit,
@@ -455,6 +455,37 @@ internal fun LootIconPanel(item: LootItem, contentDescription: String) {
         }
     }
 }
+
+internal fun lootArtResource(item: LootItem): Int =
+    commonLootArtResourceIds[item.id] ?: lootIconResource(item.icon)
+
+internal val commonLootArtResourceIds: Map<String, Int> = mapOf(
+    "weapon_bent_spoon" to R.drawable.loot_art_weapon_bent_spoon,
+    "weapon_fork_spear" to R.drawable.loot_art_weapon_fork_spear,
+    "weapon_moon_axe" to R.drawable.loot_art_weapon_moon_axe,
+    "weapon_nibblade" to R.drawable.loot_art_weapon_nibblade,
+    "weapon_toast_mace" to R.drawable.loot_art_weapon_toast_mace,
+    "armor_patch_hood" to R.drawable.loot_art_armor_patch_hood,
+    "armor_moss_coat" to R.drawable.loot_art_armor_moss_coat,
+    "armor_winged_boots" to R.drawable.loot_art_armor_winged_boots,
+    "armor_travel_boots" to R.drawable.loot_art_armor_travel_boots,
+    "trinket_lucky_ring" to R.drawable.loot_art_trinket_lucky_ring,
+    "trinket_pocket_ring" to R.drawable.loot_art_trinket_pocket_ring,
+    "trinket_spare_ring" to R.drawable.loot_art_trinket_spare_ring,
+    "trinket_dusty_ring" to R.drawable.loot_art_trinket_dusty_ring,
+    "trinket_quiet_ring" to R.drawable.loot_art_trinket_quiet_ring,
+    "armor_panic_helm" to R.drawable.loot_art_armor_panic_helm,
+    "headgear_soup_helm" to R.drawable.loot_art_headgear_soup_helm,
+    "headgear_wobble_cap" to R.drawable.loot_art_headgear_wobble_cap,
+    "headgear_paper_crown" to R.drawable.loot_art_headgear_paper_crown,
+    "headgear_lantern_hat" to R.drawable.loot_art_headgear_lantern_hat,
+    "headgear_grin_hood" to R.drawable.loot_art_headgear_grin_hood,
+    "consumable_stale_potion" to R.drawable.loot_art_consumable_stale_potion,
+    "consumable_brave_brew" to R.drawable.loot_art_consumable_brave_brew,
+    "consumable_tiny_flask" to R.drawable.loot_art_consumable_tiny_flask,
+    "consumable_odd_elixir" to R.drawable.loot_art_consumable_odd_elixir,
+    "consumable_snap_tonic" to R.drawable.loot_art_consumable_snap_tonic,
+)
 
 internal fun lootIconResource(icon: LootIcon): Int =
     when (icon) {

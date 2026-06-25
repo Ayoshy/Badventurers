@@ -851,7 +851,7 @@ internal fun HeroOverlayEquipmentSlot(
         borderStyle != null -> borderStyle.borderColor
         else -> Color(0xFFE0C66F)
     }
-    val iconResource = item?.let { lootIconResource(it.icon) } ?: emptySlotIconResource(slot)
+    val iconResource = item?.let(::lootArtResource) ?: emptySlotIconResource(slot)
 
     Box(
         modifier = modifier

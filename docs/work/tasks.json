@@ -814,7 +814,8 @@
         "2026-06-25: Started implementation after pushing BV-005. Scope: fixed-rarity item catalog, 8 items per non-common rarity, and one artwork reference per item while preserving legacy LootIcon snapshots.",
         "2026-06-25: Added fixed-rarity loot definitions with 25 Common legacy items and 8 items each for Uncommon/Rare/Epic/Relic, generated one vector art resource per item, moved item rendering to LootArt, updated CSV/catalog docs, and verified targeted tests, full test, assembleDebug, and lintDebug.",
         "2026-06-25: User rejected the generated XML placeholder shapes as unacceptable item artwork. BV-021 is blocked/not accepted until the placeholder resources are removed or replaced by real reviewed item art.",
-        "2026-06-25: BV-022/BV-023 remediation completed and documented; BV-021 remains blocked until BV-024/BV-025/BV-026 deliver accepted production item art."
+        "2026-06-25: BV-022/BV-023 remediation completed and documented; BV-021 remains blocked until BV-024/BV-025/BV-026 deliver accepted production item art.",
+        "2026-06-25: BV-024 Common artwork is now accepted and integrated; BV-021 remains blocked until BV-025 and BV-026 provide accepted production art for Uncommon/Rare/Epic/Relic items."
       ]
     },
     {
@@ -898,7 +899,7 @@
     {
       "id": "BV-024",
       "title": "Produce reviewed Common loot artwork batch",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "art",
       "track": "Loot Art Production",
@@ -927,7 +928,8 @@
         "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiArt.kt"
       ],
       "notes": [
-        "2026-06-25: Added docs/content/common-loot-art-briefs.md with briefs for all 25 Common items. Actual reviewed artwork creation, integration, and phone-size verification remain open."
+        "2026-06-25: Added docs/content/common-loot-art-briefs.md with briefs for all 25 Common items. Actual reviewed artwork creation, integration, and phone-size verification remain open.",
+        "2026-06-25: Integrated 25 Common loot PNG assets under app/src/main/res-loot/drawable-nodpi, wired Common item ids through lootArtResource with legacy fallback for non-Common items, added PNG validator and UI resolver tests, generated docs/content/common-loot-art-contact-sheet.png, verified test/assembleDebug/lintDebug, and captured emulator Loot/Heroes runtime checks under artifacts/screenshots/bv024."
       ]
     },
     {

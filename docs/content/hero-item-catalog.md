@@ -100,7 +100,7 @@ Current item rarity profiles are progression-gated in `LootGenerator`:
 
 | Rarity | Catalog Count | Stat Slots | Art Status |
 | --- | ---: | ---: | --- |
-| Common | 25 | 1 | Needs reviewed production art in BV-024. |
+| Common | 25 | 1 | Accepted BV-024 PNG art in app resources. |
 | Uncommon | 8 | 2 | Needs reviewed production art in BV-025. |
 | Rare | 8 | 3 | Needs reviewed production art in BV-025. |
 | Epic | 8 | 4 | Needs reviewed production art in BV-026. |
@@ -108,37 +108,37 @@ Current item rarity profiles are progression-gated in `LootGenerator`:
 
 Each stat slot chooses a unique stat type and a weighted value from `1` to `10`. Item stat values are flat bonuses; items do not level up yet.
 
-The rejected generated XML placeholder batch is not accepted item artwork. Until reviewed item art exists, runtime item cards intentionally render through the older `LootIcon` family fallback. Resource existence alone must not be treated as art acceptance.
+The rejected generated XML placeholder batch is not accepted item artwork. Common items now render through accepted item-specific PNGs under `app/src/main/res-loot/drawable-nodpi`; Uncommon and higher items still render through the older `LootIcon` family fallback until their production art tickets are complete. Resource existence alone must not be treated as art acceptance.
 
 ## Items
 
 | ID | Artwork Status | Slot | Name | Fixed Rarity | Stats Distribution | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| weapon_bent_spoon | Needs reviewed art; legacy fallback `Spoon` | Weapon | Bent Spoon | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_fork_spear | Needs reviewed art; legacy fallback `Weapon` | Weapon | Fork Spear | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_moon_axe | Needs reviewed art; legacy fallback `Weapon` | Weapon | Moon Axe | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_nibblade | Needs reviewed art; legacy fallback `Blade` | Weapon | Nibblade | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_toast_mace | Needs reviewed art; legacy fallback `Spoon` | Weapon | Toast Spoon | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| armor_patch_hood | Needs reviewed art; legacy fallback `Hood` | Armor | Patch Cloak | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| armor_moss_coat | Needs reviewed art; legacy fallback `Hood` | Armor | Moss Coat | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| armor_winged_boots | Needs reviewed art; legacy fallback `Boots` | Footwear | Winged Boots | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| armor_travel_boots | Needs reviewed art; legacy fallback `Boots` | Footwear | Travel Boots | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_lucky_ring | Needs reviewed art; legacy fallback `Ring` | Trinket | Lucky Ring | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_pocket_ring | Needs reviewed art; legacy fallback `Ring` | Trinket | Pocket Ring | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_spare_ring | Needs reviewed art; legacy fallback `Ring` | Trinket | Spare Ring | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_dusty_ring | Needs reviewed art; legacy fallback `Ring` | Trinket | Dusty Ring | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_quiet_ring | Needs reviewed art; legacy fallback `Ring` | Trinket | Quiet Ring | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| armor_panic_helm | Needs reviewed art; legacy fallback `Helmet` | Headgear | Panic Helm | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| headgear_soup_helm | Needs reviewed art; legacy fallback `Helmet` | Headgear | Soup Helm | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| headgear_wobble_cap | Needs reviewed art; legacy fallback `Hood` | Headgear | Wobble Cap | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| headgear_paper_crown | Needs reviewed art; legacy fallback `Helmet` | Headgear | Paper Crown | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| headgear_lantern_hat | Needs reviewed art; legacy fallback `Helmet` | Headgear | Lantern Hat | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| headgear_grin_hood | Needs reviewed art; legacy fallback `Hood` | Headgear | Grin Hood | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_stale_potion | Needs reviewed art; legacy fallback `Potion` | Consumable | Stale Potion | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_brave_brew | Needs reviewed art; legacy fallback `Tankard` | Consumable | Brave Brew | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_tiny_flask | Needs reviewed art; legacy fallback `Potion` | Consumable | Tiny Flask | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_odd_elixir | Needs reviewed art; legacy fallback `Potion` | Consumable | Odd Elixir | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_snap_tonic | Needs reviewed art; legacy fallback `Potion` | Consumable | Snap Tonic | Common | 1 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
+| weapon_bent_spoon | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_bent_spoon.png` | Weapon | Bent Spoon | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Spoon` remains fallback coverage. |
+| weapon_fork_spear | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_fork_spear.png` | Weapon | Fork Spear | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Weapon` remains fallback coverage. |
+| weapon_moon_axe | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_moon_axe.png` | Weapon | Moon Axe | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Weapon` remains fallback coverage. |
+| weapon_nibblade | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_nibblade.png` | Weapon | Nibblade | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Blade` remains fallback coverage. |
+| weapon_toast_mace | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_toast_mace.png` | Weapon | Toast Spoon | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Spoon` remains fallback coverage. |
+| armor_patch_hood | `app/src/main/res-loot/drawable-nodpi/loot_art_armor_patch_hood.png` | Armor | Patch Cloak | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Hood` remains fallback coverage. |
+| armor_moss_coat | `app/src/main/res-loot/drawable-nodpi/loot_art_armor_moss_coat.png` | Armor | Moss Coat | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Hood` remains fallback coverage. |
+| armor_winged_boots | `app/src/main/res-loot/drawable-nodpi/loot_art_armor_winged_boots.png` | Footwear | Winged Boots | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Boots` remains fallback coverage. |
+| armor_travel_boots | `app/src/main/res-loot/drawable-nodpi/loot_art_armor_travel_boots.png` | Footwear | Travel Boots | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Boots` remains fallback coverage. |
+| trinket_lucky_ring | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_lucky_ring.png` | Trinket | Lucky Ring | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Ring` remains fallback coverage. |
+| trinket_pocket_ring | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_pocket_ring.png` | Trinket | Pocket Ring | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Ring` remains fallback coverage. |
+| trinket_spare_ring | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_spare_ring.png` | Trinket | Spare Ring | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Ring` remains fallback coverage. |
+| trinket_dusty_ring | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_dusty_ring.png` | Trinket | Dusty Ring | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Ring` remains fallback coverage. |
+| trinket_quiet_ring | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_quiet_ring.png` | Trinket | Quiet Ring | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Ring` remains fallback coverage. |
+| armor_panic_helm | `app/src/main/res-loot/drawable-nodpi/loot_art_armor_panic_helm.png` | Headgear | Panic Helm | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Helmet` remains fallback coverage. |
+| headgear_soup_helm | `app/src/main/res-loot/drawable-nodpi/loot_art_headgear_soup_helm.png` | Headgear | Soup Helm | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Helmet` remains fallback coverage. |
+| headgear_wobble_cap | `app/src/main/res-loot/drawable-nodpi/loot_art_headgear_wobble_cap.png` | Headgear | Wobble Cap | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Hood` remains fallback coverage. |
+| headgear_paper_crown | `app/src/main/res-loot/drawable-nodpi/loot_art_headgear_paper_crown.png` | Headgear | Paper Crown | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Helmet` remains fallback coverage. |
+| headgear_lantern_hat | `app/src/main/res-loot/drawable-nodpi/loot_art_headgear_lantern_hat.png` | Headgear | Lantern Hat | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Helmet` remains fallback coverage. |
+| headgear_grin_hood | `app/src/main/res-loot/drawable-nodpi/loot_art_headgear_grin_hood.png` | Headgear | Grin Hood | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Hood` remains fallback coverage. |
+| consumable_stale_potion | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_stale_potion.png` | Consumable | Stale Potion | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Potion` remains fallback coverage. |
+| consumable_brave_brew | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_brave_brew.png` | Consumable | Brave Brew | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Tankard` remains fallback coverage. |
+| consumable_tiny_flask | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_tiny_flask.png` | Consumable | Tiny Flask | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Potion` remains fallback coverage. |
+| consumable_odd_elixir | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_odd_elixir.png` | Consumable | Odd Elixir | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Potion` remains fallback coverage. |
+| consumable_snap_tonic | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_snap_tonic.png` | Consumable | Snap Tonic | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Potion` remains fallback coverage. |
 | weapon_receipt_cutter | Needs reviewed art; legacy fallback `Blade` | Weapon | Receipt Cutter | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
 | weapon_mop_halberd | Needs reviewed art; legacy fallback `Weapon` | Weapon | Mop Halberd | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
 | armor_buttoned_barrel | Needs reviewed art; legacy fallback `Hood` | Armor | Buttoned Barrel | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
