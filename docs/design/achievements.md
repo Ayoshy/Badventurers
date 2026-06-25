@@ -18,17 +18,7 @@ The system should feel like a slightly official guild ledger: proud, useful, and
 
 ## Visuals
 
-![Achievement system flow](diagrams/achievement-system-flow.svg)
-
-![Achievement reward ladder](diagrams/achievement-reward-ladder.svg)
-
-Concept art lives in `docs/art/batch-04-achievements/`:
-
-![Achievement hall concept](art/batch-04-achievements/achievement-hall-concept.png)
-
-![Achievement badge sheet](art/batch-04-achievements/achievement-badges-sheet.png)
-
-![Achievement unlock banner](art/batch-04-achievements/achievement-unlock-banner.png)
+Early concept-art files were removed from the active docs tree during docs cleanup. Treat this document as system design intent; runtime achievement art lives under Android resources when integrated.
 
 ## Core Model
 

@@ -1,6 +1,6 @@
 # Cahier Des Charges
 
-Last updated: 2026-06-21
+Last updated: 2026-06-25
 
 ## Scope
 
@@ -35,7 +35,7 @@ Build a portrait Android idle RPG for public release on Google Play. The first p
 
 - Items have rarity, slot, stat modifiers, and flavor text.
 - Early loot should be abundant and funny.
-- Rarity tiers for MVP: Common, Uncommon, Rare, Epic.
+- Current loot rarity tiers: Common, Uncommon, Rare, Epic, Relic.
 
 ### Journal
 

@@ -1,6 +1,6 @@
 # Badventurers Agent Context
 
-Last updated: 2026-06-24.
+Last updated: 2026-06-25.
 
 This file is the first stop for future Codex work on this repo. Read it before doing a broad scan. Then inspect only the specific docs/code touched by the user's request.
 
@@ -22,10 +22,28 @@ This workspace repeatedly hits Windows sandbox/ACL failures when Codex uses `app
 ## How To Start A New Thread
 
 - Run `git status --short` before assuming the repo state. This project often has useful in-progress work in the working tree.
-- Prefer this read order: `AGENTS.md`, `docs/04-kanban.md`, `docs/12-gameplay-screen-loop.md` if present, then the targeted code files.
+- Prefer this read order: `AGENTS.md`, `docs/work/tasks.json`, then `docs/product/kanban.md` only for product context, then the targeted code files.
 - Do not claim access to past chat history unless it is saved in this repo or exposed through an installed connector. No local `.codex` or `.agents` memory folder exists in this workspace.
-- GitHub source of truth is `Ayoshy/Badventurers`, but the GitHub connector/CLI was unavailable from the agent environment during this context pass. Use repo docs and local Git history unless GitHub access is explicitly restored.
+- GitHub source of truth is `Ayoshy/Badventurers`. Verify live GitHub state when connector/CLI access is available; otherwise rely on repo docs and local Git history.
 - Keep progress updates concise. Avoid generic "I will read the project first" preambles when this file already answers the orientation question.
+
+## Active Task Tracking
+
+The daily todo list is no longer `docs/product/kanban.md`. The active source of truth for implementation tasks is `docs/work/tasks.json`, viewed through the local Workboard.
+
+Always make the Workboard available on the fixed local URL before using or updating the task list:
+
+```powershell
+node tools/task-board/server.mjs 4173
+```
+
+Then use:
+
+```text
+http://127.0.0.1:4173
+```
+
+Keep the port stable at `127.0.0.1:4173` unless that port is genuinely occupied. Codex may update `docs/work/tasks.json` directly or through the Workboard API. Use `docs/product/kanban.md` as product context and historical backlog only.
 
 ## Product Snapshot
 
@@ -53,61 +71,71 @@ Core loop to protect:
 - Android native, Kotlin, Jetpack Compose. ADR: `docs/decisions/0001-stack-android-native-compose.md`.
 - Portrait-only MVP.
 - Domain/gameplay logic belongs in plain Kotlin under `app/src/main/java/com/ayoshy/badventurers/game`.
-- Compose UI lives mostly in `app/src/main/java/com/ayoshy/badventurers/ui/BadventurersApp.kt` for the current prototype.
-- Local persistence is snapshot-based. Current WIP uses `PlaySessionSnapshot` plus `storage/PlaySessionStore.kt` with SharedPreferences JSON.
-- Visible UI strings should use Android resources in `values/strings.xml` and `values-fr/strings.xml`. Generated journal/loot text is still English/hardcoded and needs localization/template work.
+- Compose UI is split by responsibility under `app/src/main/java/com/ayoshy/badventurers/ui`.
+- `BadventurersApp.kt` is the app shell only: theme, top-level remembered state, tab routing, and session update wiring. Keep it below 1,000 lines.
+- Screen-level UI belongs in focused files: `GuildScreen.kt`, `QuestsPrepScreens.kt`, `ResultsScreens.kt`, `HeroesScreen.kt`, `LootScreen.kt`, and `UpgradesAchievementsScreens.kt`.
+- Shared UI concerns belong in `BadventurersUiArt.kt`, `BadventurersUiText.kt`, `BadventurersUiLogic.kt`, and `BadventurersUiComponents.kt`.
+- Local persistence is snapshot-based. `PlaySessionSnapshot` plus `storage/PlaySessionStore.kt` store SharedPreferences JSON; move to DataStore or Room only if save complexity grows.
+- SharedPreferences save state is explicitly excluded from Android backup with `android:allowBackup="false"`; keep backup policy explicit if storage changes.
+- Visible UI strings should use Android resources in `values/strings.xml` and `values-fr/strings.xml`. Generated journal/loot/passive incident text is still partly English/hardcoded and needs localization/template work.
 
 ## Current App State
 
 Implemented in the Android prototype:
 
 - `MainActivity` loads an initial session from `PlaySessionStore` and passes `onSessionChanged` into `BadventurersApp`.
-- `BadventurersApp` has five bottom tabs: Guild, Quests, Heroes, Loot, Upgrades.
-- Guild tab supports idle, running, and result-ready states.
-- Quests tab starts `SeedGame.firstQuest`.
-- Running expeditions tick on a coroutine and can be force-finished in debug builds.
-- Collecting results grants gold, generated loot items, and generated journal entries.
-- Loot tab shows the latest generated item with sliced icon assets.
-- Heroes tab shows the current session hero roster and party power.
-- Upgrades tab can buy Notice Board upgrades affecting quest gold.
-- Batch 01 art is integrated as Android drawable resources.
+- `BadventurersApp` has five bottom tabs: Guild, Quests, Heroes, Loot, Upgrades, plus internal Offline Summary, Quest Result, Reward Loot, Achievements, Hero Detail, and Expedition Prep states.
+- Guild tab supports idle, running, result-ready, offline-return, core crew, passive income, passive incidents, achievements, facilities, and recommendation states.
+- Quests tab exposes the 12 current quests, unlock requirements, recommended heroes, party selection, and contract plan selection.
+- Running expeditions tick on a coroutine, persist their selected party and plan, can complete offline, and can be force-finished in debug builds.
+- Collecting results grants gold, XP, pending loot recovery choices, generated journal entries, achievement progress, deterministic result causes, and ticket rewards where applicable.
+- Loot tab supports inventory, item detail, sell/equip flow, and reward recovery capacity breakdown.
+- Heroes tab supports roster details, recruitment, recruitment tickets, duplicate reputation, release, equipment, XP progression, and authored level-up recovery rewards.
+- Upgrades tab can buy Notice Board, Training Yard, and Bunk Room upgrades; later facilities are cataloged but not implemented.
+- Batch 01 and later art batches are integrated as Android drawable resources where available.
 
 Current domain systems:
 
-- `Models.kt`: hero class, hero rarity, traits, quest risk, outcomes, stats, hero, quest, reward, result.
-- `HeroGacha.kt`: hero catalog, starter heroes, rarity pools, deterministic weighted summons.
-- `ExpeditionEngine.kt`: party power, risk penalty, outcome bands, rewards.
-- `Loot.kt`: explicit loot catalog, rarities, slots, icons, deterministic generator.
+- `Models.kt`: hero class, hero rarity, traits, quest risk/tags, outcomes, stats, hero, quest, reward, result.
+- `HeroGacha.kt`: hero catalog, starter heroes, rarity pools, deterministic weighted summons, duplicate handling.
+- `HeroProgression.kt`: XP curve, stat growth, preview data, and authored level-up rewards.
+- `HeroSpecialCatalog.kt`: hero special modifiers and shared loot-recovery specialist definitions.
+- `ExpeditionPlans.kt`: generic and quest-specific contract clauses with risk/reward modifiers.
+- `ExpeditionEngine.kt`: party power, risk penalty, outcome bands, plan/special/facility modifiers, rewards.
+- `ResultCauses.kt`: deterministic result cause cards for plans, specials, facilities, and achievement features.
+- `Loot.kt`: explicit loot catalog, rarities, slots, icons, deterministic generator, sell economy.
+- `GuildFacilities.kt`: implemented and future facility catalog, costs, unlocks, and upgrade state.
+- `Achievements.kt`: achievement definitions, rewards, charter milestones, event tracker, feature unlocks.
+- `ProgressionAdvisor.kt`: next-action recommendations for reports, loot, upgrades, recruitment, and quests.
+- `PassiveIncidents.kt`: deterministic offline passive incident generation for core crew/facility states.
+- `RecruitmentTickets.kt`: ticket metadata, inventory normalization, deterministic ticket recruitment, and blank-contract handling.
 - `Journal.kt`: short generated English journal lines.
-- `PlaySessionState.kt`: resources, heroes, loot, journal, active expedition, progress, start/tick/finish/collect/upgrade.
-- `PlaySessionSnapshot.kt`: snapshot version 2 with heroes, loot items, journal entries, and expedition snapshots.
-- `PlaySessionStore.kt`: SharedPreferences JSON load/save wrapper; currently untracked at the time this file was created.
+- `PlaySessionState.kt`: resources, heroes, loot, journal, tickets, passive incidents, active expedition, progress, start/tick/finish/collect/upgrade/recruit/achievement state.
+- `PlaySessionSnapshot.kt`: snapshot version 13 with heroes, loot, tickets, passive incidents, pending recovery breakdown, journal, achievements, and expedition snapshots.
+- `PlaySessionStore.kt`: SharedPreferences JSON load/save wrapper with observable decode failures.
 
 ## Screen Map
 
 Current Compose tabs/screens:
 
-- Guild Home: current hub, resources, expedition state, recent journal, recommended upgrade.
-- Quests: current quest choice surface, still only one seeded quest.
-- Heroes: current roster readout, no detail/recruit interactions yet.
-- Loot: current latest-item view, not a real inventory list yet.
-- Upgrades: current Notice Board purchase plus placeholder facility rows.
+- Guild Home: current hub, resources, expedition state, recent journal, core crew, facilities, achievement ledger preview, and progression advice.
+- Quests: 12-quest catalogue with unlock gates, quest art, recommended heroes, and prepare flow.
+- Expedition Prep: party selection, success estimate, best-fit hero reasons, and contract plan selection.
+- Quest Result: result causality, plan-specific copy, level-up reveals, rewards, fake rewarded-ad debug hook, and next action.
+- Offline Summary: combined return report with completed expedition, away time, rewards, passive incidents, charter progress, and projected next action.
+- Reward Loot: limited recovery choice with base/Bunk Room/veteran/specialist capacity breakdown.
+- Heroes: roster, gacha recruitment, recruitment tickets, duplicate reputation, hero detail, equipment picker, release, and level progression.
+- Loot: inventory, item detail, sell/equip flow, and generated icon art.
+- Upgrades: Notice Board, Training Yard, Bunk Room, and achievement ledger access; later facilities are visible/cataloged as future work.
+- Achievements: Trophy Ledger, claim all/single claim, charter milestones, and reward summaries.
 
-Current states inside Guild:
-
-- Expedition Active: represented as Guild running state.
-- Result Ready: represented as Guild result state.
-
-Future MVP screens/states from `docs/08-ux-flow.md` and `docs/12-gameplay-screen-loop.md`:
+Future MVP screens/states from `docs/design/ux-screen-map.md`, `docs/design/gameplay-loop.md`, and `docs/product/kanban.md`:
 
 - First launch, language select, guild naming, tutorial first quest.
-- Expedition Prep with party selection and success estimate.
-- Offline Summary.
-- Dedicated Quest Result and Reward Choice.
-- Item Detail and Equip Item.
-- Hero Detail.
-- Deeper Facilities/Upgrades.
+- Deeper facilities with active/passive gameplay effects beyond Notice Board, Training Yard, and Bunk Room.
 - Settings.
+- Better localization/template coverage for generated journal, loot, and passive incident text.
+- Beta analytics/crash reporting and store-readiness surfaces.
 
 Future long-term:
 
@@ -125,9 +153,9 @@ Use the approved Batch 01 direction:
 
 Important files:
 
-- `docs/09-art-direction.md`
-- `docs/art/batch-01/README.md`
-- `docs/mockups/mobile-flow-art.html`
+- `docs/design/art-direction.md`
+- `docs/README.md`
+- `docs/design/ux-screen-map.md`
 - `app/src/main/res/drawable-nodpi/*`
 
 ## Local History
@@ -149,53 +177,56 @@ Local Git commit timeline:
 - `e537669`: loot icon crop mapping fixes.
 - `f22b9a2`: explicit loot catalog.
 
-In-progress working tree observed while creating this file:
+Current working-tree caveat:
 
-- Hero rarity and gacha foundation in `Models.kt`, `HeroGacha.kt`, `SeedGame.kt`, `BadventurersApp.kt`, and `HeroGachaTest.kt`.
-- Snapshot/persistence expansion in `PlaySessionState.kt`, `PlaySessionSnapshot.kt`, `PlaySessionSnapshotTest.kt`, and untracked `storage/PlaySessionStore.kt`.
-- Updated kanban items for gacha and persistence.
-- Untracked gameplay screen-loop doc and SVG: `docs/12-gameplay-screen-loop.md`, `docs/diagrams/gameplay-screen-loop.svg`.
+- `docs/content/hero-item-catalog.md` and `docs/data/*.csv` are active content references. Update them with hero, item, quest, and plan data changes.
 
-Treat those as user/agent work in progress. Inspect before editing; do not revert.
+## Current Priorities
 
-## Next Build Order
+Follow the Workboard in `docs/work/tasks.json` first. Keep it mounted at `http://127.0.0.1:4173` when working on tasks. Use `docs/product/kanban.md` only as product context, and verify any context against code before treating it as current. Highest-value priorities now are:
 
-Follow `docs/04-kanban.md`, adjusted for the persistence WIP:
+1. Keep `main` releasable: unit tests, debug build, lint, and CI should stay green.
+2. Continue behavior-preserving UI decomposition when touching large surfaces; `HeroesScreen.kt` is the next likely split candidate.
+3. Continue bilingual cleanup for generated journal, loot, passive incident, and ticket-adjacent copy.
+4. Make Scout Table, Armory/Forge, Infirmary, Tavern/Kitchen, and Accountant Office affect real decisions.
+5. Add settings, smoke-test checklist, beta analytics/crash reporting, and store assets after loop polish.
+6. Create/update GitHub issues/project when connector or CLI access works.
 
-1. Finish and verify local persistence: snapshot v2 tests, store behavior, app save/load, active expedition/offline handling.
-2. Add hero gacha recruitment UI: costs, rarity reveal, result screen, duplicate handling.
-3. Persist recruited roster and duplicate compensation/merge behavior.
-4. Replace latest-item/raw loot display with a small inventory list.
-5. Localize generated journal and loot display through stable content keys/templates.
-6. Slice/normalize Batch 01 sheets into Android-ready assets.
-7. Add repeatable emulator smoke-test checklist.
-8. Create GitHub issues/project once connector or CLI access works.
-
-## Testing And Commands
+## Quality Bar And Commands
 
 From repo root:
 
 ```powershell
-.\gradlew test
-.\gradlew assembleDebug
-.\gradlew installDebug
+.\gradlew.bat test
+.\gradlew.bat assembleDebug
+.\gradlew.bat lintDebug
+.\gradlew.bat installDebug
 .\tools\capture-emulator.ps1
 ```
+
+CI parity:
+
+- `.github/workflows/android-ci.yml` runs `test`, `assembleDebug`, and `lintDebug` on Windows.
+- If local work changes code, resources, build config, or UI mappings, run the same three verification commands when feasible.
 
 Testing expectations:
 
 - Formula/domain changes need unit tests.
-- Persistence changes need snapshot/store tests and an emulator smoke check if possible.
+- Passive incident, recruitment ticket, quest/plan, and facility changes need focused regression coverage.
+- Persistence changes need snapshot/store tests, decode-failure observability, and an emulator smoke check if possible.
 - UI-visible strings need English and French resources unless explicitly generated content is being staged for later localization.
-- After code changes, run at least `.\gradlew test`; run `assembleDebug` for Android/resource/UI changes when feasible.
+- New quests and expedition plans must update UI localization mapping coverage through `localizedQuestTextIds` and `localizedExpeditionPlanTextIds`.
+- Android resource string literals that include `%` must escape it as `%%` unless they are format placeholders.
 
 Current snapshot test intent:
 
-- `PlaySessionSnapshotTest` expects snapshot v2 to round-trip heroes, loot, journal entries, running expeditions, and ready results, with a starter-hero fallback for unknown saved rosters.
+- `PlaySessionSnapshotTest` expects the current snapshot version to round-trip heroes, loot, recruitment tickets, passive incidents, pending recovery breakdown, journal entries, achievements, running expeditions, and ready results, with a starter-hero fallback for unknown saved rosters.
 
 ## Editing Notes
 
-- Follow the Critical Windows ACL Editing Rule near the top of this file. The short version: one normal patch/read attempt, then guarded PowerShell or elevated read fallback for ACL failures.
+- Follow the Critical Windows ACL Editing Rule near the top of this file. The short version: guarded PowerShell edits or elevated read fallback for ACL failures, with narrow exact replacements.
 - Do not use broad rewrites, formatting churn, or cleanup unrelated to the request.
+- Keep `BadventurersApp.kt` as a small shell. New feature UI should land in focused screen/helper files, not back in the app shell.
+- Preserve save compatibility. If snapshot fields change, add legacy decode coverage and keep corrupted-save fallback observable.
 - Keep `main` releasable. Use small branches/PRs once GitHub tooling is available.
-- Update docs when decisions or screen scope change.
+- Update docs when decisions, quality gates, or screen scope change.

@@ -1,6 +1,6 @@
 # Setup And Testing
 
-Last updated: 2026-06-22
+Last updated: 2026-06-25
 
 ## Install First
 
@@ -34,15 +34,16 @@ Recommended emulator for early testing:
 Once the Android project exists:
 
 ```powershell
-.\gradlew test
-.\gradlew assembleDebug
-.\gradlew installDebug
+.\gradlew.bat test
+.\gradlew.bat assembleDebug
+.\gradlew.bat lintDebug
+.\gradlew.bat installDebug
 ```
 
 For emulator or device integration tests later:
 
 ```powershell
-.\gradlew connectedDebugAndroidTest
+.\gradlew.bat connectedDebugAndroidTest
 ```
 
 To capture the current emulator screen into `artifacts/screenshots`:
@@ -69,7 +70,7 @@ adb devices
 3. Build, test, and install the debug app:
 
 ```powershell
-.\gradlew test assembleDebug installDebug
+.\gradlew.bat test assembleDebug installDebug
 ```
 
 4. Relaunch from a clean foreground state:

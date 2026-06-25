@@ -1,0 +1,682 @@
+{
+  "version": 1,
+  "updated": "2026-06-25",
+  "source": "docs/product/kanban.md",
+  "columns": [
+    {
+      "id": "ready",
+      "title": "Ready"
+    },
+    {
+      "id": "doing",
+      "title": "Doing"
+    },
+    {
+      "id": "blocked",
+      "title": "Blocked"
+    },
+    {
+      "id": "later",
+      "title": "Later"
+    },
+    {
+      "id": "done",
+      "title": "Done"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "BV-000",
+      "title": "Migrate active tracking to the visual workboard",
+      "status": "done",
+      "priority": "P1",
+      "area": "workflow",
+      "track": "Tracking",
+      "summary": "Replace the long Markdown kanban as the daily operating surface with a repo-local visual board backed by structured JSON.",
+      "acceptance": [
+        {
+          "text": "Create a structured task store under docs/work/tasks.json.",
+          "done": true
+        },
+        {
+          "text": "Create a local visual board that reads and saves the task store.",
+          "done": true
+        },
+        {
+          "text": "Point docs/product/kanban.md at the new tracker.",
+          "done": true
+        },
+        {
+          "text": "Keep GitHub Projects as a future option once write access or gh is available.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "docs/product/kanban.md",
+        "docs/work/tasks.json",
+        "tools/task-board/"
+      ],
+      "notes": [
+        "GitHub issue creation was blocked by connector write permissions, and gh is not installed in the current shell."
+      ]
+    },
+    {
+      "id": "BV-001",
+      "title": "Offline Summary: surface achievement and ticket progress",
+      "status": "done",
+      "priority": "P1",
+      "area": "offline",
+      "track": "Now",
+      "summary": "The return report already shows expeditions, passive gold, incidents, rewards, party, and next action. It still needs clearer ticket and achievement progress so returning players see what moved.",
+      "acceptance": [
+        {
+          "text": "Show current recruitment ticket inventory in the return report when it matters.",
+          "done": true
+        },
+        {
+          "text": "Show meaningful achievement or charter progress deltas after offline resolution.",
+          "done": true
+        },
+        {
+          "text": "Keep the final next-action panel focused and not crowded.",
+          "done": true
+        },
+        {
+          "text": "Add or update tests for offline report ticket and achievement progress.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/storage/PlaySessionSnapshotJson.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersApp.kt"
+      ],
+      "notes": [
+        "Migrated from Offline Summary 2.0 open item.",
+        "2026-06-25: Offline Summary now surfaces ticket inventory, report-driven achievement deltas, and focused tests for both."
+      ]
+    },
+    {
+      "id": "BV-002",
+      "title": "Reward choice variants after loot recovery",
+      "status": "later",
+      "priority": "P3",
+      "area": "loot",
+      "track": "Now",
+      "summary": "The recovery capacity loop exists. Later variants should turn rewards into more interesting choices than selecting which dropped item survives.",
+      "acceptance": [
+        {
+          "text": "Add an item A versus item B reward choice variant.",
+          "done": false
+        },
+        {
+          "text": "Add a gold versus reputation reward choice variant.",
+          "done": false
+        },
+        {
+          "text": "Add a loot now versus ticket progress reward choice variant.",
+          "done": false
+        },
+        {
+          "text": "Add a safe reward versus risky bonus choice variant.",
+          "done": false
+        },
+        {
+          "text": "Test that choice variants affect a real player decision.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/Loot.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/LootScreen.kt"
+      ],
+      "notes": [
+        "Migrated from Reward Choice / Loot Recovery Friction."
+      ]
+    },
+    {
+      "id": "BV-003",
+      "title": "Palier 2: unlock Rare loot as a visible tier goal",
+      "status": "ready",
+      "priority": "P1",
+      "area": "content",
+      "track": "Palier 2",
+      "summary": "Palier 2 already adds quests 9 to 12 and improves the Rare hero pool. Rare loot should become a visible progression target, not hidden math.",
+      "acceptance": [
+        {
+          "text": "Define the unlock gate for Rare loot visibility.",
+          "done": false
+        },
+        {
+          "text": "Expose Rare loot as a tier goal in progression or quest UI.",
+          "done": false
+        },
+        {
+          "text": "Ensure Rare loot generation is reachable after the gate and still balanced.",
+          "done": false
+        },
+        {
+          "text": "Add EN/FR copy for the visible unlock.",
+          "done": false
+        },
+        {
+          "text": "Add tests for the unlock gate and Rare loot chance behavior.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/Loot.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionEngine.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml"
+      ],
+      "notes": [
+        "Migrated from Palier 2: Licensed Trouble."
+      ]
+    },
+    {
+      "id": "BV-004",
+      "title": "Palier 2: unlock Scout Table as a functional facility",
+      "status": "ready",
+      "priority": "P1",
+      "area": "facilities",
+      "track": "Palier 2",
+      "summary": "Scout Table should become a real gameplay lever rather than just a future facility name.",
+      "acceptance": [
+        {
+          "text": "Define Scout Table unlock gate and level behavior.",
+          "done": false
+        },
+        {
+          "text": "Reveal plan warnings or unlock previews from Scout Table.",
+          "done": false
+        },
+        {
+          "text": "Add at least one passive scouting incident hook.",
+          "done": false
+        },
+        {
+          "text": "Add EN/FR facility and effect copy.",
+          "done": false
+        },
+        {
+          "text": "Add tests proving Scout Table changes a real decision.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/GuildFacilities.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PassiveIncidents.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt"
+      ],
+      "notes": [
+        "Migrated from Palier 2 and Facilities sections."
+      ]
+    },
+    {
+      "id": "BV-005",
+      "title": "Palier 2: add quest banners and generated journal lines",
+      "status": "ready",
+      "priority": "P2",
+      "area": "content",
+      "track": "Palier 2",
+      "summary": "Palier 2 localization and balance coverage exist. The quests still need final banner assets or briefs and generated journal flavor.",
+      "acceptance": [
+        {
+          "text": "Add or brief banners for quests 9 to 12.",
+          "done": false
+        },
+        {
+          "text": "Add generated journal lines for Palier 2 quests.",
+          "done": false
+        },
+        {
+          "text": "Ensure art references resolve in UI.",
+          "done": false
+        },
+        {
+          "text": "Add tests or checks for quest catalog references.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/Journal.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionPlans.kt",
+        "app/src/main/res-quests/drawable-nodpi/"
+      ],
+      "notes": [
+        "Migrated from Palier 2 and Palier 3 banner items."
+      ]
+    },
+    {
+      "id": "BV-006",
+      "title": "Palier 3: add Regional Liability quests 13 to 16",
+      "status": "ready",
+      "priority": "P1",
+      "area": "content",
+      "track": "Palier 3",
+      "summary": "Extend the playable ladder from 12 to 16 quests and make the Palier 3 unlocks carry Epic rewards, high-risk loot, reward choice, and stronger hero-specific hooks.",
+      "acceptance": [
+        {
+          "text": "Add quests 13 to 16 with tags, risk tier, duration, difficulty, reward focus, and unlock gates.",
+          "done": false
+        },
+        {
+          "text": "Unlock Epic hero ticket rewards from achievements and first clears.",
+          "done": false
+        },
+        {
+          "text": "Unlock Epic loot chance through high-risk quests or Armory/Forge.",
+          "done": false
+        },
+        {
+          "text": "Unlock Reward Choice as a regular Great Success payoff.",
+          "done": false
+        },
+        {
+          "text": "Add more hero-specific plan clauses.",
+          "done": false
+        },
+        {
+          "text": "Add banners or explicit temporary art briefs and journal lines.",
+          "done": false
+        },
+        {
+          "text": "Add balance and unlock ladder tests.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionPlans.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/RecruitmentTickets.kt",
+        "app/src/test/java/com/ayoshy/badventurers/game/QuestCatalogueBalanceTest.kt"
+      ],
+      "notes": [
+        "Migrated from Palier 3: Regional Liability."
+      ]
+    },
+    {
+      "id": "BV-007",
+      "title": "Quest content template for every new quest",
+      "status": "ready",
+      "priority": "P1",
+      "area": "design",
+      "track": "Content Rules",
+      "summary": "Before adding more quest batches, keep the content checklist explicit so every quest ships with mechanics, copy, art, and passive hooks.",
+      "acceptance": [
+        {
+          "text": "Document required quest fields: tags, risk tier, duration, difficulty, reward focus, unlock gate.",
+          "done": false
+        },
+        {
+          "text": "Require at least two plan hooks per quest.",
+          "done": false
+        },
+        {
+          "text": "Require at least two hero spotlight interactions per quest.",
+          "done": false
+        },
+        {
+          "text": "Require one passive incident after first clear.",
+          "done": false
+        },
+        {
+          "text": "Require first-clear and repeat rewards.",
+          "done": false
+        },
+        {
+          "text": "Require localized title, summary, and tags.",
+          "done": false
+        },
+        {
+          "text": "Require banner art or a temporary art brief.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "docs/content/quest-catalog.md",
+        "docs/data/quests.csv",
+        "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionPlans.kt"
+      ],
+      "notes": [
+        "Use this as the checklist for BV-006 and later content batches."
+      ]
+    },
+    {
+      "id": "BV-008",
+      "title": "Passive guild economy: supplies, errands, loot finds, and caps",
+      "status": "ready",
+      "priority": "P2",
+      "area": "passive",
+      "track": "Passive Guild Income",
+      "summary": "Passive income currently supports gold and small incidents. Add more idle levers without letting passive rewards eclipse active quests.",
+      "acceptance": [
+        {
+          "text": "Add passive supplies or guild errands as a future prep resource.",
+          "done": false
+        },
+        {
+          "text": "Add low-frequency passive loot finds gated by Armory/Forge and Scout Table.",
+          "done": false
+        },
+        {
+          "text": "Add offline cap upgrades through facilities.",
+          "done": false
+        },
+        {
+          "text": "Keep passive rewards below active quest rewards unless the guild is heavily built for passive income.",
+          "done": false
+        },
+        {
+          "text": "Add domain, snapshot, and JSON tests for any new passive resource.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/PassiveIncidents.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/storage/PlaySessionSnapshotJson.kt"
+      ],
+      "notes": [
+        "Migrated from Passive Income Model."
+      ]
+    },
+    {
+      "id": "BV-009",
+      "title": "Recruitment tickets: Blank Contract, first-clear rewards, and duplicate value",
+      "status": "ready",
+      "priority": "P2",
+      "area": "recruitment",
+      "track": "Achievements And Recruitment Tickets",
+      "summary": "Ticket infrastructure exists. Finish the remaining contract and reward-placement work so achievements and first clears feel like real milestones.",
+      "acceptance": [
+        {
+          "text": "Implement Blank Contract as non-random promotion material.",
+          "done": false
+        },
+        {
+          "text": "Add first-clear ticket rewards to selected Palier 2 and Palier 3 quests.",
+          "done": false
+        },
+        {
+          "text": "Make duplicate handling show immediate reputation and future contract value.",
+          "done": false
+        },
+        {
+          "text": "Add EN/FR copy for Blank Contract and duplicate future value.",
+          "done": false
+        },
+        {
+          "text": "Add tests for one-time first-clear ticket rewards and duplicate conversion messaging.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/RecruitmentTickets.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/HeroPromotion.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/Achievements.kt"
+      ],
+      "notes": [
+        "Migrated from Ticket Types and Achievement Reward Pass."
+      ]
+    },
+    {
+      "id": "BV-010",
+      "title": "Facilities: make each catalog facility change gameplay",
+      "status": "ready",
+      "priority": "P1",
+      "area": "facilities",
+      "track": "Facilities",
+      "summary": "The facility catalog names the right fantasy. The next pass should make each implemented facility unlock an active or passive lever.",
+      "acceptance": [
+        {
+          "text": "Scout Table reveals plan warnings, unlock previews, and passive scouting incidents.",
+          "done": false
+        },
+        {
+          "text": "Armory/Forge improves loot quality, enables item rerolls, and supports passive loot finds.",
+          "done": false
+        },
+        {
+          "text": "Infirmary improves failure recovery and unlocks safe plan variants.",
+          "done": false
+        },
+        {
+          "text": "Tavern/Kitchen improves morale, hero XP, and long expedition support.",
+          "done": false
+        },
+        {
+          "text": "Accountant Office improves passive gold, paperwork bonuses, and duplicate/contract UX.",
+          "done": false
+        },
+        {
+          "text": "Add tests proving each implemented facility changes a real decision.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/GuildFacilities.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
+        "app/src/test/java/com/ayoshy/badventurers/game/GuildFacilityCatalogTest.kt"
+      ],
+      "notes": [
+        "BV-004 can be the first slice of this larger pass."
+      ]
+    },
+    {
+      "id": "BV-011",
+      "title": "Live-Lite expedition prototype",
+      "status": "later",
+      "priority": "P3",
+      "area": "mode",
+      "track": "Live-Lite",
+      "summary": "Prototype a watchable expedition mode that uses the same ExpeditionEngine and gives small optional interventions without punishing offline players.",
+      "acceptance": [
+        {
+          "text": "Prototype a Watch Expedition screen for active expeditions.",
+          "done": false
+        },
+        {
+          "text": "Show heroes auto-acting in a short side-view or card-view sequence.",
+          "done": false
+        },
+        {
+          "text": "Support light interventions: spend supply, safer route, push for loot, encourage hero, hero-specific trick.",
+          "done": false
+        },
+        {
+          "text": "Keep intervention bonuses small and optional.",
+          "done": false
+        },
+        {
+          "text": "Feed the existing ExpeditionEngine rather than creating a separate combat simulator.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionEngine.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/QuestsPrepScreens.kt"
+      ],
+      "notes": [
+        "Medium-term bet if prep/result still needs more energy."
+      ]
+    },
+    {
+      "id": "BV-012",
+      "title": "Asset pack for Live-Lite and passive reports",
+      "status": "later",
+      "priority": "P3",
+      "area": "art",
+      "track": "Live-Lite",
+      "summary": "Define or generate the art needed for watch mode, cause cards, and richer passive reporting.",
+      "acceptance": [
+        {
+          "text": "Create small quest stage backgrounds by biome/theme.",
+          "done": false
+        },
+        {
+          "text": "Create hero action pose sheet: idle, effort, success, mistake, loot.",
+          "done": false
+        },
+        {
+          "text": "Create hazard/event card illustrations.",
+          "done": false
+        },
+        {
+          "text": "Create plan/clause card icons.",
+          "done": false
+        },
+        {
+          "text": "Create result cause card icons.",
+          "done": false
+        },
+        {
+          "text": "Create passive income report illustration for Guild Home or Offline Summary.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "docs/design/art-direction.md",
+        "app/src/main/res-quests/drawable-nodpi/",
+        "app/src/main/res-heroes/drawable-nodpi/"
+      ],
+      "notes": [
+        "Migrated from Live-Lite Asset Needs."
+      ]
+    },
+    {
+      "id": "BV-013",
+      "title": "Long-term progression systems",
+      "status": "later",
+      "priority": "P3",
+      "area": "progression",
+      "track": "Long-Term",
+      "summary": "Keep long-term systems behind the 16-quest ladder and core retention work.",
+      "acceptance": [
+        {
+          "text": "Implement hero promotion rank storage.",
+          "done": false
+        },
+        {
+          "text": "Implement hero contracts and blank contracts.",
+          "done": false
+        },
+        {
+          "text": "Add prestige or Guild Charter reset/non-reset meta layer only after the 16-quest ladder works.",
+          "done": false
+        },
+        {
+          "text": "Add events or seasonal quest packs after the base content ladder feels good.",
+          "done": false
+        },
+        {
+          "text": "Add store/no-ads/cosmetics only after core retention is strong.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "docs/design/long-term-plan.md",
+        "docs/design/hero-promotion.md",
+        "app/src/main/java/com/ayoshy/badventurers/game/HeroPromotion.kt"
+      ],
+      "notes": [
+        "Migrated from Later: Long-Term Progression."
+      ]
+    },
+    {
+      "id": "BV-014",
+      "title": "Polish queue after the core hook is stronger",
+      "status": "later",
+      "priority": "P2",
+      "area": "polish",
+      "track": "Polish",
+      "summary": "Keep polish visible, but avoid letting it distract from the active hook, passive idle loop, and content ladder.",
+      "acceptance": [
+        {
+          "text": "Fix mojibake and encoding issues in French docs and strings.",
+          "done": false
+        },
+        {
+          "text": "Add Settings screen with language and audio controls.",
+          "done": false
+        },
+        {
+          "text": "Clean up Loot screen actions where Keep is already implied.",
+          "done": false
+        },
+        {
+          "text": "Add store listing assets.",
+          "done": false
+        },
+        {
+          "text": "Add beta analytics and crash reporting.",
+          "done": false
+        },
+        {
+          "text": "Add AdMob rewarded ads only after monetization copy and guardrails are validated.",
+          "done": false
+        },
+        {
+          "text": "Add Google Play Billing no-ads product only after the loop is fun enough to test.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/res/values-fr/strings.xml",
+        "app/src/main/res/values/strings.xml",
+        "docs/product/monetization-guardrails.md"
+      ],
+      "notes": [
+        "Migrated from Polish Queue."
+      ]
+    },
+    {
+      "id": "BV-015",
+      "title": "External: create GitHub Issues or Project board when write tooling is available",
+      "status": "done",
+      "priority": "P3",
+      "area": "workflow",
+      "track": "Blocked / External",
+      "summary": "GitHub remains the preferred external visual tracker, but this session cannot create issues or Projects because write access and local CLI tooling are unavailable.",
+      "acceptance": [
+        {
+          "text": "Grant the Codex GitHub connector issue write access to Ayoshy/Badventurers or install/authenticate gh.",
+          "done": false
+        },
+        {
+          "text": "Create a GitHub Project with Ready, Doing, Blocked, Later, Done views.",
+          "done": false
+        },
+        {
+          "text": "Mirror active tasks from docs/work/tasks.json into GitHub Issues.",
+          "done": false
+        },
+        {
+          "text": "Decide whether the repo-local task board remains the source of truth or becomes a mirror.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "docs/work/tasks.json",
+        "https://github.com/Ayoshy/Badventurers/issues"
+      ],
+      "notes": [
+        "Attempted connector issue creation returned 403 Resource not accessible by integration.",
+        "The local shell reported gh is not installed."
+      ]
+    },
+    {
+      "id": "BV-016",
+      "title": "Loot Choice after expedition is wonky",
+      "status": "ready",
+      "priority": "P2",
+      "area": "general",
+      "track": "Backlog",
+      "summary": "Loot recap shows the first item loot and ask to Bring this back or leave the rest. So user does not know which other loots are available before making a decision, and its bugged as right now \"bring this back\" saves the loot and moves to the next, effectively allowing user to save all loot in the end.\n\nThe intended result would be a carousel (can be animation less for now) of the available loots, have the user browse and then pick one. Put a confirmation msg that the other loots will be discarded.\nMax loot in the carousel/to be saved can come from quest/hero passives/tavern upgrades/Contract Plan.",
+      "acceptance": [],
+      "refs": [],
+      "notes": []
+    }
+  ]
+}

@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Badventurers Workboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f4ee;
+      --panel: #ffffff;
+      --panel-2: #fbfaf7;
+      --ink: #1f2520;
+      --muted: #657067;
+      --line: #d9d5ca;
+      --ready: #2f6f73;
+      --doing: #8d5a19;
+      --blocked: #a33a3a;
+      --later: #5d6483;
+      --done: #477242;
+      --accent: #385f8f;
+      --shadow: 0 12px 30px rgba(36, 34, 29, .10);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 8px;
+      min-height: 36px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #b9b3a5;
+      background: #f7f5ef;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .82);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 750;
+    }
+
+    .meta {
+      color: var(--muted);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .toolbar input,
+    .toolbar select {
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 0 10px;
+      color: var(--ink);
+      min-width: 170px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      min-height: calc(100vh - 73px);
+    }
+
+    .board {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(260px, 1fr);
+      gap: 12px;
+      padding: 16px;
+      overflow-x: auto;
+      align-items: start;
+    }
+
+    .column {
+      min-height: calc(100vh - 120px);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .48);
+      padding: 10px;
+    }
+
+    .column header {
+      position: static;
+      padding: 0 0 8px;
+      border: 0;
+      background: transparent;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      backdrop-filter: none;
+    }
+
+    .column h2 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .count {
+      min-width: 26px;
+      height: 22px;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      background: #ece7da;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .task {
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--accent);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 10px;
+      box-shadow: 0 1px 0 rgba(31, 37, 32, .04);
+      cursor: pointer;
+    }
+
+    .task[aria-selected="true"] {
+      outline: 2px solid rgba(56, 95, 143, .34);
+      outline-offset: 2px;
+    }
+
+    .task[data-status="ready"] {
+      border-left-color: var(--ready);
+    }
+
+    .task[data-status="doing"] {
+      border-left-color: var(--doing);
+    }
+
+    .task[data-status="blocked"] {
+      border-left-color: var(--blocked);
+    }
+
+    .task[data-status="later"] {
+      border-left-color: var(--later);
+    }
+
+    .task[data-status="done"] {
+      border-left-color: var(--done);
+    }
+
+    .task-title {
+      font-weight: 720;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+
+    .chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .chip {
+      border-radius: 999px;
+      background: #efebe1;
+      color: #4a524b;
+      padding: 2px 7px;
+      font-size: 11px;
+      min-height: 20px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .progress {
+      height: 6px;
+      background: #e9e3d7;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    aside {
+      border-left: 1px solid var(--line);
+      background: var(--panel-2);
+      padding: 16px;
+      overflow: auto;
+      max-height: calc(100vh - 73px);
+    }
+
+    .detail-empty {
+      display: grid;
+      place-items: center;
+      min-height: 250px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .detail {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 9px 10px;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .checklist,
+    .list-editor {
+      display: grid;
+      gap: 8px;
+    }
+
+    .check-row,
+    .list-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .check-row input[type="text"],
+    .list-row input {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 8px;
+    }
+
+    .icon-button {
+      width: 34px;
+      min-height: 34px;
+      padding: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      position: sticky;
+      bottom: 0;
+      padding-top: 8px;
+      background: var(--panel-2);
+    }
+
+    .drop-target {
+      outline: 2px dashed rgba(56, 95, 143, .35);
+      outline-offset: -4px;
+    }
+
+    @media (max-width: 960px) {
+      header {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: stretch;
+      }
+
+      .toolbar input,
+      .toolbar select,
+      .toolbar button {
+        flex: 1 1 150px;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Badventurers Workboard</h1>
+      <div class="meta">
+        <span id="updated">Updated: -</span>
+        <span id="totals">0 tasks</span>
+        <span>docs/work/tasks.json</span>
+      </div>
+    </div>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search tasks">
+      <select id="area-filter" aria-label="Area filter"></select>
+      <button id="new-task" type="button">+ New</button>
+      <button id="reload" type="button">Reload</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="board" class="board" aria-label="Task board"></section>
+    <aside id="detail" aria-label="Task detail">
+      <div class="detail-empty">Select a task</div>
+    </aside>
+  </main>
+
+  <script>
+    const state = {
+      board: null,
+      selectedId: null,
+      search: "",
+      area: "all",
+      draggingId: null
+    };
+
+    const els = {
+      board: document.querySelector("#board"),
+      detail: document.querySelector("#detail"),
+      updated: document.querySelector("#updated"),
+      totals: document.querySelector("#totals"),
+      search: document.querySelector("#search"),
+      areaFilter: document.querySelector("#area-filter"),
+      newTask: document.querySelector("#new-task"),
+      reload: document.querySelector("#reload")
+    };
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { "content-type": "application/json" },
+        ...options
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || response.statusText);
+      }
+      return response.json();
+    }
+
+    async function loadBoard() {
+      state.board = await api("/api/tasks");
+      if (!state.selectedId && state.board.tasks.length) {
+        const firstReady = state.board.tasks.find((task) => task.status === "ready");
+        state.selectedId = (firstReady || state.board.tasks[0]).id;
+      }
+      render();
+    }
+
+    function taskProgress(task) {
+      if (!task.acceptance.length) return 0;
+      return task.acceptance.filter((item) => item.done).length / task.acceptance.length;
+    }
+
+    function filteredTasks() {
+      const query = state.search.trim().toLowerCase();
+      return state.board.tasks.filter((task) => {
+        const haystack = [
+          task.id,
+          task.title,
+          task.area,
+          task.track,
+          task.priority,
+          task.summary,
+          ...task.refs,
+          ...task.notes,
+          ...task.acceptance.map((item) => item.text)
+        ].join(" ").toLowerCase();
+        const areaMatches = state.area === "all" || task.area === state.area;
+        return areaMatches && (!query || haystack.includes(query));
+      });
+    }
+
+    function renderAreaFilter() {
+      const areas = [...new Set(state.board.tasks.map((task) => task.area))].sort();
+      els.areaFilter.innerHTML = [
+        `<option value="all">All areas</option>`,
+        ...areas.map((area) => `<option value="${escapeAttr(area)}">${escapeHtml(area)}</option>`)
+      ].join("");
+      els.areaFilter.value = state.area;
+    }
+
+    function render() {
+      renderAreaFilter();
+      const tasks = filteredTasks();
+      els.updated.textContent = `Updated: ${state.board.updated}`;
+      els.totals.textContent = `${tasks.length} of ${state.board.tasks.length} tasks`;
+
+      els.board.innerHTML = state.board.columns.map((column) => {
+        const columnTasks = tasks.filter((task) => task.status === column.id);
+        return `
+          <section class="column" data-column="${escapeAttr(column.id)}">
+            <header>
+              <h2>${escapeHtml(column.title)}</h2>
+              <span class="count">${columnTasks.length}</span>
+            </header>
+            <div class="stack">
+              ${columnTasks.map(renderTaskCard).join("")}
+            </div>
+          </section>
+        `;
+      }).join("");
+
+      bindBoardEvents();
+      renderDetail();
+    }
+
+    function renderTaskCard(task) {
+      const progress = Math.round(taskProgress(task) * 100);
+      return `
+        <article class="task" draggable="true" data-task-id="${escapeAttr(task.id)}" data-status="${escapeAttr(task.status)}" aria-selected="${task.id === state.selectedId}">
+          <div class="task-title">${escapeHtml(task.title)}</div>
+          <div class="chips">
+            <span class="chip">${escapeHtml(task.id)}</span>
+            <span class="chip">${escapeHtml(task.priority)}</span>
+            <span class="chip">${escapeHtml(task.area)}</span>
+          </div>
+          <div class="progress" aria-label="${progress}% complete"><span style="width: ${progress}%"></span></div>
+        </article>
+      `;
+    }
+
+    function bindBoardEvents() {
+      els.board.querySelectorAll(".task").forEach((card) => {
+        card.addEventListener("click", () => {
+          state.selectedId = card.dataset.taskId;
+          render();
+        });
+        card.addEventListener("dragstart", (event) => {
+          state.draggingId = card.dataset.taskId;
+          event.dataTransfer.setData("text/plain", state.draggingId);
+        });
+      });
+
+      els.board.querySelectorAll(".column").forEach((column) => {
+        column.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          column.classList.add("drop-target");
+        });
+        column.addEventListener("dragleave", () => column.classList.remove("drop-target"));
+        column.addEventListener("drop", async (event) => {
+          event.preventDefault();
+          column.classList.remove("drop-target");
+          const id = event.dataTransfer.getData("text/plain") || state.draggingId;
+          if (id) {
+            await patchTask(id, { status: column.dataset.column });
+          }
+        });
+      });
+    }
+
+    function renderDetail() {
+      const task = state.board.tasks.find((item) => item.id === state.selectedId);
+      if (!task) {
+        els.detail.innerHTML = `<div class="detail-empty">Select a task</div>`;
+        return;
+      }
+
+      els.detail.innerHTML = `
+        <form id="detail-form" class="detail">
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" name="title" value="${escapeAttr(task.title)}">
+          </div>
+          <div class="grid-3">
+            <div class="field">
+              <label for="priority">Priority</label>
+              <select id="priority" name="priority">
+                ${["P1", "P2", "P3"].map((value) => option(value, task.priority)).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label for="status">Status</label>
+              <select id="status" name="status">
+                ${state.board.columns.map((column) => option(column.id, task.status, column.title)).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label for="area">Area</label>
+              <input id="area" name="area" value="${escapeAttr(task.area)}">
+            </div>
+          </div>
+          <div class="field">
+            <label for="track">Track</label>
+            <input id="track" name="track" value="${escapeAttr(task.track)}">
+          </div>
+          <div class="field">
+            <label for="summary">Summary</label>
+            <textarea id="summary" name="summary">${escapeHtml(task.summary)}</textarea>
+          </div>
+          <div class="field">
+            <label>Acceptance</label>
+            <div id="acceptance" class="checklist">
+              ${task.acceptance.map(renderAcceptanceRow).join("")}
+            </div>
+            <button type="button" id="add-acceptance">+ Acceptance</button>
+          </div>
+          <div class="field">
+            <label>Refs</label>
+            <div id="refs" class="list-editor">
+              ${task.refs.map((item) => renderListRow(item)).join("")}
+            </div>
+            <button type="button" id="add-ref">+ Ref</button>
+          </div>
+          <div class="field">
+            <label>Notes</label>
+            <div id="notes" class="list-editor">
+              ${task.notes.map((item) => renderListRow(item)).join("")}
+            </div>
+            <button type="button" id="add-note">+ Note</button>
+          </div>
+          <div class="actions">
+            <button type="button" id="mark-done">Done</button>
+            <button type="submit" class="primary">Save</button>
+          </div>
+        </form>
+      `;
+
+      document.querySelector("#detail-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        await saveDetail(task.id);
+      });
+      document.querySelector("#add-acceptance").addEventListener("click", () => addAcceptanceRow(""));
+      document.querySelector("#add-ref").addEventListener("click", () => addListRow("#refs", ""));
+      document.querySelector("#add-note").addEventListener("click", () => addListRow("#notes", ""));
+      document.querySelector("#mark-done").addEventListener("click", async () => patchTask(task.id, { status: "done" }));
+      bindRemoveButtons(els.detail);
+    }
+
+    function renderAcceptanceRow(item) {
+      return `
+        <div class="check-row">
+          <input type="checkbox" ${item.done ? "checked" : ""} aria-label="Done">
+          <input type="text" value="${escapeAttr(item.text)}">
+          <button class="icon-button" type="button" data-remove aria-label="Remove">x</button>
+        </div>
+      `;
+    }
+
+    function renderListRow(item) {
+      return `
+        <div class="list-row">
+          <span></span>
+          <input type="text" value="${escapeAttr(item)}">
+          <button class="icon-button" type="button" data-remove aria-label="Remove">x</button>
+        </div>
+      `;
+    }
+
+    function addAcceptanceRow(text) {
+      const target = document.querySelector("#acceptance");
+      target.insertAdjacentHTML("beforeend", renderAcceptanceRow({ text, done: false }));
+      bindRemoveButtons(target);
+    }
+
+    function addListRow(target, text) {
+      const container = document.querySelector(target);
+      container.insertAdjacentHTML("beforeend", renderListRow(text));
+      bindRemoveButtons(container);
+    }
+
+    function bindRemoveButtons(root) {
+      root.querySelectorAll("[data-remove]").forEach((button) => {
+        if (button.dataset.bound) return;
+        button.dataset.bound = "true";
+        button.addEventListener("click", () => button.closest(".check-row, .list-row").remove());
+      });
+    }
+
+    async function saveDetail(id) {
+      const form = document.querySelector("#detail-form");
+      const fields = form.elements;
+      const acceptance = [...document.querySelectorAll("#acceptance .check-row")].map((row) => ({
+        done: row.querySelector("input[type='checkbox']").checked,
+        text: row.querySelector("input[type='text']").value.trim()
+      })).filter((item) => item.text);
+      const refs = [...document.querySelectorAll("#refs input")].map((input) => input.value.trim()).filter(Boolean);
+      const notes = [...document.querySelectorAll("#notes input")].map((input) => input.value.trim()).filter(Boolean);
+      await patchTask(id, {
+        title: fields.title.value.trim(),
+        status: fields.status.value,
+        priority: fields.priority.value,
+        area: fields.area.value.trim(),
+        track: fields.track.value.trim(),
+        summary: fields.summary.value.trim(),
+        acceptance,
+        refs,
+        notes
+      });
+    }
+
+    async function patchTask(id, patch) {
+      state.board = await api(`/api/tasks/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch)
+      });
+      state.selectedId = id;
+      render();
+    }
+
+    async function createTask() {
+      state.board = await api("/api/tasks", {
+        method: "POST",
+        body: JSON.stringify({
+          title: "New task",
+          status: "ready",
+          priority: "P2",
+          area: "general",
+          track: "Backlog",
+          summary: "",
+          acceptance: [],
+          refs: [],
+          notes: []
+        })
+      });
+      state.selectedId = state.board.tasks[state.board.tasks.length - 1].id;
+      render();
+    }
+
+    function option(value, selected, label = value) {
+      return `<option value="${escapeAttr(value)}" ${value === selected ? "selected" : ""}>${escapeHtml(label)}</option>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value);
+    }
+
+    els.search.addEventListener("input", () => {
+      state.search = els.search.value;
+      render();
+    });
+    els.areaFilter.addEventListener("change", () => {
+      state.area = els.areaFilter.value;
+      render();
+    });
+    els.newTask.addEventListener("click", createTask);
+    els.reload.addEventListener("click", loadBoard);
+
+    loadBoard().catch((error) => {
+      els.board.innerHTML = "";
+      els.detail.innerHTML = `<div class="detail-empty">${escapeHtml(error.message)}</div>`;
+    });
+  </script>
+</body>
+</html>

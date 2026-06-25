@@ -1,0 +1,18 @@
+id;title;summary;scope;quest_ids;duration_percent_delta;score_bonus;risk_penalty_delta;gold_bonus_percent;success_loot_bonus;great_success_margin_delta
+standard_contract;Standard Contract;No clever clause, no heroic accounting, no obvious lawsuit.;standard;;0;0;0;0;0;0
+rush_the_job;Rush the Job;Return faster and squeeze a little more gold out of the panic, at the cost of risk.;generic;;-30;-5;12;5;0;0
+safety_first;Safety First;Reduce risk for important attempts, but make spectacular victories harder to justify.;generic;;0;0;-10;0;0;25
+loot_priority;Loot Priority;Ask the party to check every suspicious crate. The job gets harder, but success pays in items.;generic;;0;-12;6;0;1;0
+audit_everything;Audit Everything;Take longer and weaponize paperwork for better gold on properly documented trouble.;generic;;25;0;4;20;0;0
+seal_side_tunnel;Seal the Side Tunnel;Spend time closing the suspicious route before it becomes the main route.;quest_specific;cave_minor_regrets;15;10;-8;0;0;0
+follow_worst_map;Follow the Worst Map;Trust the map everyone hates. It is faster, stranger, and occasionally full of loot.;quest_specific;forest_of_wrong_turns;-15;-4;8;0;1;0
+demand_receipts;Demand Receipts;Fight bandit bureaucracy with better bureaucracy and a very sharp stamp.;quest_specific;bandit_tax_office;20;6;4;30;0;10
+bless_the_brine;Bless the Brine;Turn swamp water into a defensive asset, or at least a less personal insult.;quest_specific;salted_swamp_chapel;10;12;-6;0;0;8
+moonless_shortcut;Moonless Shortcut;Cut through darker alleys for quicker delivery and a higher chance of regrettable extras.;quest_specific;moonlit_smuggler_run;-20;-6;10;0;1;0
+ration_the_biscuits;Ration the Biscuits;Stretch the siege supplies into morale, discipline, and several formal biscuit audits.;quest_specific;the_hungry_siege;15;12;-6;0;0;10
+bring_door_forms;Bring the Door Forms;Confront the final lock with paperwork so complete the hinges feel supervised.;quest_specific;the_last_locked_door;20;16;-4;10;0;0
+itemized_last_rites;Itemized Last Rites;Read the undead debt ledger aloud and charge a documentation fee.;quest_specific;crypt_of_unpaid_debts;25;10;4;25;0;0
+paperwork_toll_of_chaos_clause;Stamp the Border Toll;Collect and re-collect signatures before your party even leaves the gate.;quest_specific;paperwork_toll_of_chaos;18;14;-6;12;0;0
+licensed_guild_caravan_haunt_clause;Demand a Manifest;Make the caravan submit the same manifest seven times to avoid arguing with a checkpoint captain.;quest_specific;licensed_guild_caravan_haunt;-12;-8;8;0;1;0
+notary_night_patrol_clause;Read the Oath of the Night;Make every night patrol recite the same oath and keep the same route map.;quest_specific;notary_night_patrol;10;16;-4;10;0;10
+inspectorate_cove_banquet_clause;Comply With Banquet Etiquette;Serve the inspectorate in order and make the paperwork look expensive.;quest_specific;inspectorate_cove_banquet;24;12;3;18;0;8

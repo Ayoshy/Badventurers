@@ -1,12 +1,14 @@
 # Kanban
 
-Last updated: 2026-06-24
+Last updated: 2026-06-25
+
+Active tracker: implementation tasks now live in `docs/work/tasks.json` and the local visual board in `tools/task-board/`. Run `node tools/task-board/server.mjs` from the repo root, then open `http://127.0.0.1:4173`. This Markdown file is product context and historical backlog, not the daily operating board.
 
 This is the repo-local product board. It replaces the previous "almost polish" framing with a more honest one:
 
 > Badventurers has a working core loop, but it is not ready for final polish. The next goal is to make the active decision layer and the long-term idle layer strong enough that returning later feels exciting.
 
-GitHub Issues can mirror this board later, but this file is the source of truth while product direction is still moving.
+The local Workboard can mirror to GitHub later, but `docs/work/tasks.json` is the active source of truth for implementation tasks.
 
 ## North Star
 
@@ -27,14 +29,14 @@ The long-term hook is not "send mission, wait, collect." It is:
 
 - Android app builds and tests pass.
 - The core expedition loop works: choose quest, prep party, run timer, resolve result, collect loot, upgrade/recruit/equip.
-- The app has 8 playable quests, hero stats, hero specials, loot, XP/level-ups, gacha recruitment, duplicate reputation, achievements, save/load, and offline expedition completion.
+- The app has 12 playable quests, hero stats, hero specials, loot, XP/level-ups, gacha recruitment, recruitment tickets, duplicate reputation, achievements, save/load, offline expedition completion, Core Crew passive income, and passive incidents.
 - The best existing active screen is Expedition Prep, but it is still more of an optimizer than a gameplay hook.
 
 ### Main Problems
 
-- 8 quests is not enough content for a real progression spine.
+- 12 quests is not enough content for the full progression spine; Palier 3 should bring the ladder to 16.
 - Active play lacks a signature verb. The player mostly follows recommendations and waits.
-- Offline progress is too tied to one active mission. There is not yet a true passive guild economy.
+- Passive guild economy exists, but it needs more levers than gold and small incidents.
 - Hero specials are mostly formula modifiers; they need more visible result causality.
 - Achievement rewards are useful but not attractive enough yet. Recruitment tickets and rare unlocks should make them matter.
 - Facilities are defined more deeply than they are implemented.
@@ -57,7 +59,7 @@ The result screen then explains why the chosen plan and heroes mattered.
 
 ### Target B: Content Ladder
 
-Move from 8 quests to at least 16 quests, grouped into unlock paliers. Each palier unlocks new reward quality, hero pool quality, facilities, or systems.
+Move from 12 quests to at least 16 quests, grouped into unlock paliers. Each palier unlocks new reward quality, hero pool quality, facilities, or systems.
 
 ### Target C: Passive Guild Income
 
@@ -118,9 +120,9 @@ These are the next implementation priorities.
 
 - [x] Rework Offline Summary into a combined return report. 2026-06-24: Offline Summary now combines completed expedition, away time, result causes, rewards, party, charter progress, and a projected next action.
 - [x] Include active expedition completion. 2026-06-24: The return report explicitly names the completed quest and outcome.
-- [ ] Include passive guild income once Core Crew exists.
-- [ ] Include passive incidents.
-- [ ] Include achievement/ticket progress. 2026-06-24: Charter achievement progress now appears in the return report; ticket progress remains pending until ticket types exist.
+- [x] Include passive guild income once Core Crew exists. 2026-06-25: Core Crew now grants a saved passive gold report in Offline Summary.
+- [x] Include passive incidents. 2026-06-25: Offline Summary now shows saved passive guild incidents with small rewards.
+- [ ] Include clearer achievement/ticket progress in Offline Summary. 2026-06-25: Charter achievement progress and ticket inventory exist; the return report still needs better ticket-progress surfacing.
 - [x] End with one concrete next action. 2026-06-24: The report ends with the same projected next-action panel used after quest rewards.
 
 ### 4. Reward Choice / Loot Recovery Friction
@@ -139,22 +141,22 @@ These are the next implementation priorities.
 
 ## Next: Double The Quest Content
 
-Goal: expand from 8 quests to 16 quests with meaningful paliers.
+Goal: expand from 12 quests to 16 quests with meaningful paliers.
 
 ### Palier 1: Local Disasters
 
 - [x] 8 current quests playable.
-- [ ] Rebalance current unlocks after Expedition Plans exist.
+- [x] Rebalance current unlocks after Expedition Plans exist. 2026-06-25: Late Palier 1 high-risk quests now open one completion/reputation step earlier while keeping facility shortcuts meaningful, with unlock ladder coverage.
 - [x] Add plan hooks to every current quest. 2026-06-24: Every current quest now exposes a unique contract clause alongside the generic plans.
 
 ### Palier 2: Licensed Trouble
 
-- [ ] Add quests 9 to 12.
+- [x] Add quests 9 to 12. 2026-06-25: Added four Licensed Trouble quests with unlock gates, recommended heroes, plan clauses, and balance coverage.
 - [ ] Unlock Rare loot as a visible tier goal.
-- [ ] Unlock Rare hero pool improvements.
+- [x] Unlock Rare hero pool improvements. 2026-06-25: Normal gold recruitment now uses an improved Rare-or-better profile after the Licensed Trouble threshold.
 - [ ] Unlock Scout Table as a functional facility.
-- [ ] Introduce Core Crew passive income.
-- [ ] Add quest banners, localization, journal lines, and balance tests.
+- [x] Introduce Core Crew passive income. 2026-06-25: Core Crew passive income is live and persisted.
+- [ ] Add quest banners and generated journal lines. 2026-06-25: Palier 2 localization and balance coverage are in place.
 
 ### Palier 3: Regional Liability
 
@@ -163,7 +165,7 @@ Goal: expand from 8 quests to 16 quests with meaningful paliers.
 - [ ] Unlock Epic loot chance through high-risk quests or Armory/Forge.
 - [ ] Unlock Reward Choice as a regular Great Success payoff.
 - [ ] Add more hero-specific plan clauses.
-- [ ] Add quest banners, localization, journal lines, and balance tests.
+- [ ] Add quest banners and generated journal lines. 2026-06-25: Palier 2 localization and balance coverage are in place.
 
 ### Content Rules For Every New Quest
 
@@ -181,26 +183,26 @@ Goal: idle progress should come from the quality of the guild, not only from a s
 
 ### Core Crew
 
-- [ ] Add a Core Crew assignment screen or Guild Home card.
-- [ ] Start with 3 Core Crew slots.
-- [ ] Unlock a 4th slot through Bunk Room or Charter progress.
-- [ ] Let each assigned hero contribute based on stats, level, rarity, gear, and special.
-- [ ] Prevent active expedition heroes from double-counting at full passive value, or apply a clear reduced contribution rule.
+- [x] Add a Core Crew assignment screen or Guild Home card. 2026-06-25: Guild Home now has a Core Crew card with direct assignment controls.
+- [x] Start with 3 Core Crew slots. 2026-06-25: New and migrated sessions default to the starter crew assignment.
+- [x] Unlock a 4th slot through Bunk Room or Charter progress. 2026-06-25: Bunk Room level 2 unlocks the 4th Core Crew slot.
+- [x] Let each assigned hero contribute based on stats, level, rarity, gear, and special. 2026-06-25: Passive contribution now uses hero power, level, rarity, gear, and special hooks.
+- [x] Prevent active expedition heroes from double-counting at full passive value, or apply a clear reduced contribution rule. 2026-06-25: Core Crew heroes on the active expedition contribute at a reduced passive rate.
 
 ### Passive Income Model
 
-- [ ] Add passive gold per hour based on guild level, Notice Board, Accountant Office, and Core Crew.
+- [x] Add passive gold per hour based on guild level, Notice Board, Accountant Office, and Core Crew. 2026-06-25: Passive gold/hour now combines guild level, Notice Board, Core Crew, and an Accountant Office hook for the future facility.
 - [ ] Add passive supplies or "guild errands" as a future prep resource.
 - [ ] Add low-frequency passive loot finds gated by Armory/Forge and Scout Table.
 - [ ] Add offline cap upgrades through facilities.
-- [ ] Add tests for offline income caps, roster contribution, and save migration.
+- [x] Add tests for offline income caps, roster contribution, and save migration. 2026-06-25: Added domain, snapshot, and JSON tests for Core Crew and passive income.
 
 ### Passive Incidents
 
-- [ ] Add a passive incident generator for offline reports.
-- [ ] Incidents should mention Core Crew heroes, facilities, and unlocked quest regions.
-- [ ] Incidents can grant small rewards, warnings, or achievement progress.
-- [ ] Keep passive rewards useful but below active quest rewards unless the player has built heavily for passive income.
+- [x] Add a passive incident generator for offline reports. 2026-06-25: Added deterministic offline incident generation and persistence.
+- [x] Incidents should mention Core Crew heroes, facilities, and unlocked quest regions. 2026-06-25: Incident candidates now reference Core Crew, implemented facilities, and unlocked quest routes.
+- [x] Incidents can grant small rewards, warnings, or achievement progress. 2026-06-25: Incidents can grant small gold/reputation rewards.
+- [x] Keep passive rewards useful but below active quest rewards unless the player has built heavily for passive income. 2026-06-25: Incident rewards are capped to tiny gold and at most 1 reputation per incident.
 
 ## Next: Achievements And Recruitment Tickets
 
@@ -208,20 +210,20 @@ Goal: make hauts faits feel like progression milestones, not just checkboxes.
 
 ### Ticket Types
 
-- [ ] Basic Hiring Voucher: one normal recruit pull.
-- [ ] Specialist Invitation: pull from a narrowed class/tag pool.
-- [ ] Rare Contract Ticket: guaranteed Rare or better hero.
-- [ ] Epic Liability Writ: guaranteed Epic or better hero, limited to major milestones.
-- [ ] Veteran Ticket: recruit a hero at a higher starting level.
+- [x] Basic Hiring Voucher: one normal recruit pull. 2026-06-25: Implemented as a saved ticket that can be spent at the Recruitment desk.
+- [x] Specialist Invitation: pull from a narrowed class/tag pool. 2026-06-25: Implemented with a specialist class pool.
+- [x] Rare Contract Ticket: guaranteed Rare or better hero. 2026-06-25: Implemented with rarity-floor recruitment.
+- [x] Epic Liability Writ: guaranteed Epic or better hero, limited to major milestones. 2026-06-25: Ticket type and rarity-floor resolver implemented; milestone placement remains conservative.
+- [x] Veteran Ticket: recruit a hero at a higher starting level. 2026-06-25: Ticket resolver enforces a level 4 minimum.
 - [ ] Blank Contract: non-random promotion material.
 
 ### Achievement Reward Pass
 
-- [ ] Add ticket rewards to early, medium, and high-value achievements.
+- [x] Add ticket rewards to early, medium, and high-value achievements. 2026-06-25: First New Hire, Tiny HR Department, and Suspiciously Funded now award saved ticket inventory.
 - [ ] Add first-clear ticket rewards to selected Palier 2 and Palier 3 quests.
 - [ ] Make duplicate handling show both immediate reputation and future contract value.
-- [ ] Add UI copy explaining ticket odds and guaranteed rarity.
-- [ ] Test that ticket rewards are one-time, saved, and claimable only once.
+- [x] Add UI copy explaining ticket odds and guaranteed rarity. 2026-06-25: Recruitment desk now explains standard odds, specialist pools, rarity floors, and veteran level guarantees in EN/FR.
+- [x] Test that ticket rewards are one-time, saved, and claimable only once. 2026-06-25: Added domain, achievement claim, snapshot, and JSON tests for saved recruitment tickets.
 
 ## Next: Facilities With Gameplay Effects
 
@@ -275,7 +277,7 @@ These matter, but they should not distract from the hook.
 - [ ] Fix mojibake / encoding issues in French docs and strings.
 - [ ] Add Settings screen with language and audio controls.
 - [ ] Clean up Loot screen actions where "Keep" is already implied.
-- [ ] Update README and AGENTS docs so they match the current app.
+- [x] Update README, AGENTS, and docs structure so they match the current app. 2026-06-25: Active docs now live under product/engineering/design/content/data, with old planning files archived.
 - [ ] Add store listing assets.
 - [ ] Add beta analytics and crash reporting.
 - [ ] Add AdMob rewarded ads only after monetization copy and guardrails are validated.
@@ -287,9 +289,9 @@ These matter, but they should not distract from the hook.
 
 ## References
 
-- Long-term design brief: [Long-term gameplay plan](19-long-term-gameplay-plan.md)
-- Roadmap: [Roadmap](03-roadmap.md)
-- Competitive research: [Competitive research](13-competitive-research.md)
-- Progression economy: [Progression economy matrix](17-progression-economy-matrix.md)
-- Achievements: [Achievement system plan](15-achievements-system.md)
-- Promotion and duplicates: [Hero promotion and duplicate rules](18-hero-promotion-duplicate-rules.md)
+- Long-term design brief: [Long-term gameplay plan](../design/long-term-plan.md)
+- Roadmap: [Roadmap](../archive/initial-planning/03-roadmap.md)
+- Competitive research: [Competitive research](../research/competitive-research.md)
+- Progression economy: [Progression](../design/progression.md)
+- Achievements: [Achievement system plan](../design/achievements.md)
+- Promotion and duplicates: [Hero promotion and duplicate rules](../design/hero-promotion.md)

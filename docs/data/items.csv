@@ -1,0 +1,26 @@
+id;name;slot;icon
+weapon_bent_spoon;Bent Spoon;Weapon;Spoon
+weapon_fork_spear;Fork Spear;Weapon;Weapon
+weapon_moon_axe;Moon Axe;Weapon;Weapon
+weapon_nibblade;Nibblade;Weapon;Blade
+weapon_toast_mace;Toast Spoon;Weapon;Spoon
+armor_patch_hood;Patch Cloak;Armor;Hood
+armor_moss_coat;Moss Coat;Armor;Hood
+armor_winged_boots;Winged Boots;Footwear;Boots
+armor_travel_boots;Travel Boots;Footwear;Boots
+trinket_lucky_ring;Lucky Ring;Trinket;Ring
+trinket_pocket_ring;Pocket Ring;Trinket;Ring
+trinket_spare_ring;Spare Ring;Trinket;Ring
+trinket_dusty_ring;Dusty Ring;Trinket;Ring
+trinket_quiet_ring;Quiet Ring;Trinket;Ring
+armor_panic_helm;Panic Helm;Headgear;Helmet
+headgear_soup_helm;Soup Helm;Headgear;Helmet
+headgear_wobble_cap;Wobble Cap;Headgear;Hood
+headgear_paper_crown;Paper Crown;Headgear;Helmet
+headgear_lantern_hat;Lantern Hat;Headgear;Helmet
+headgear_grin_hood;Grin Hood;Headgear;Hood
+consumable_stale_potion;Stale Potion;Consumable;Potion
+consumable_brave_brew;Brave Brew;Consumable;Tankard
+consumable_tiny_flask;Tiny Flask;Consumable;Potion
+consumable_odd_elixir;Odd Elixir;Consumable;Potion
+consumable_snap_tonic;Snap Tonic;Consumable;Potion

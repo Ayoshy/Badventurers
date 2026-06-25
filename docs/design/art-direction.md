@@ -1,6 +1,6 @@
 # Art Direction
 
-Last updated: 2026-06-21
+Last updated: 2026-06-25
 
 ## Decision
 
@@ -10,7 +10,7 @@ The game should not feel like a text app with jokes. Text carries the humor, but
 
 Reference target:
 
-- `docs/art/badventurers-style-target-01.png`
+- Early style target assets are no longer active docs. Use runtime Android resources and any files under `docs/Extra Art/` as inspection references when present.
 
 ## Art Pillars
 
