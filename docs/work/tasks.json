@@ -776,7 +776,7 @@
     {
       "id": "BV-021",
       "title": "New items",
-      "status": "done",
+      "status": "blocked",
       "priority": "P2",
       "area": "loot",
       "track": "Backlog",
@@ -791,16 +791,16 @@
           "done": true
         },
         {
-          "text": "Give every loot definition a unique artwork reference and render item art from that reference.",
-          "done": true
+          "text": "Give every loot definition a unique production-quality artwork reference; placeholder geometry does not count.",
+          "done": false
         },
         {
-          "text": "Update docs/data/items.csv and the hero/item catalog to mirror rarity, art, and stat rules.",
-          "done": true
+          "text": "Update docs/data/items.csv and the hero/item catalog to mirror accepted rarity, art, and stat rules.",
+          "done": false
         },
         {
-          "text": "Add tests for fixed item rarity pools, unique artwork references, and generation/stat behavior.",
-          "done": true
+          "text": "Add tests or checks that prevent placeholder/fallback art from being accepted as final item artwork.",
+          "done": false
         }
       ],
       "refs": [
@@ -812,8 +812,184 @@
       ],
       "notes": [
         "2026-06-25: Started implementation after pushing BV-005. Scope: fixed-rarity item catalog, 8 items per non-common rarity, and one artwork reference per item while preserving legacy LootIcon snapshots.",
-        "2026-06-25: Added fixed-rarity loot definitions with 25 Common legacy items and 8 items each for Uncommon/Rare/Epic/Relic, generated one vector art resource per item, moved item rendering to LootArt, updated CSV/catalog docs, and verified targeted tests, full test, assembleDebug, and lintDebug."
+        "2026-06-25: Added fixed-rarity loot definitions with 25 Common legacy items and 8 items each for Uncommon/Rare/Epic/Relic, generated one vector art resource per item, moved item rendering to LootArt, updated CSV/catalog docs, and verified targeted tests, full test, assembleDebug, and lintDebug.",
+        "2026-06-25: User rejected the generated XML placeholder shapes as unacceptable item artwork. BV-021 is blocked/not accepted until the placeholder resources are removed or replaced by real reviewed item art."
       ]
+    },
+    {
+      "id": "BV-022",
+      "title": "Remediate placeholder loot art commit",
+      "status": "ready",
+      "priority": "P1",
+      "area": "art",
+      "track": "Loot Art Remediation",
+      "summary": "Commit cb57523 introduced generated XML placeholder shapes and marked them as item artwork. Remove or replace that unacceptable art work while preserving only useful catalog logic if it survives review.",
+      "acceptance": [
+        {
+          "text": "Audit cb57523 and separate useful fixed-rarity catalog changes from unacceptable placeholder art.",
+          "done": false
+        },
+        {
+          "text": "Remove or replace all placeholder loot_art_*.xml resources from runtime item rendering.",
+          "done": false
+        },
+        {
+          "text": "Restore docs/data/items.csv and docs/content/hero-item-catalog.md so they do not claim placeholder geometry is final art.",
+          "done": false
+        },
+        {
+          "text": "Update tests so resource existence alone is not treated as art acceptance.",
+          "done": false
+        },
+        {
+          "text": "Run test, assembleDebug, and lintDebug, then commit and push the remediation.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "cb57523",
+        "app/src/main/res-loot/drawable/",
+        "app/src/main/java/com/ayoshy/badventurers/game/Loot.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiArt.kt",
+        "docs/data/items.csv"
+      ],
+      "notes": [
+        "Created after screenshot review showed the generated item art was below any acceptable quality bar."
+      ]
+    },
+    {
+      "id": "BV-023",
+      "title": "Define real loot art quality bar and item brief template",
+      "status": "ready",
+      "priority": "P1",
+      "area": "art",
+      "track": "Loot Art Remediation",
+      "summary": "Before producing item assets, define what counts as acceptable Badventurers loot art: style, dimensions, readability, rarity treatment, review checklist, and per-item brief fields.",
+      "acceptance": [
+        {
+          "text": "Define minimum acceptable item-art format, dimensions, transparency/background rules, and in-game readability constraints.",
+          "done": false
+        },
+        {
+          "text": "Define rarity visual language for Common, Uncommon, Rare, Epic, and Relic without relying on recolored generic shapes.",
+          "done": false
+        },
+        {
+          "text": "Create a per-item brief template that includes name, slot, rarity, silhouette, material, joke/readability hook, and forbidden shortcuts.",
+          "done": false
+        },
+        {
+          "text": "Update docs/design/art-direction.md or a dedicated loot-art doc with the standard and review checklist.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "docs/design/art-direction.md",
+        "docs/content/hero-item-catalog.md",
+        "docs/data/items.csv"
+      ],
+      "notes": [
+        "This exists to prevent placeholder/vector geometry from being accepted as artwork again."
+      ]
+    },
+    {
+      "id": "BV-024",
+      "title": "Produce reviewed Common loot artwork batch",
+      "status": "ready",
+      "priority": "P2",
+      "area": "art",
+      "track": "Loot Art Production",
+      "summary": "Create or source real item artwork for the 25 existing Common loot definitions, one distinct artwork per item, following the approved loot-art quality bar.",
+      "acceptance": [
+        {
+          "text": "Create reviewed artwork for all 25 Common item ids in docs/data/items.csv.",
+          "done": false
+        },
+        {
+          "text": "Ensure each Common item has a distinct silhouette, not a recolor of the same generic template.",
+          "done": false
+        },
+        {
+          "text": "Integrate the assets into Android resources and map them from LootArt or the chosen replacement mechanism.",
+          "done": false
+        },
+        {
+          "text": "Verify in Loot and Heroes screens that Common assets render legibly at phone size.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "docs/data/items.csv",
+        "app/src/main/res-loot/",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiArt.kt"
+      ],
+      "notes": []
+    },
+    {
+      "id": "BV-025",
+      "title": "Produce reviewed Uncommon and Rare loot artwork batches",
+      "status": "ready",
+      "priority": "P2",
+      "area": "art",
+      "track": "Loot Art Production",
+      "summary": "Create or source real item artwork for the 8 Uncommon and 8 Rare loot definitions, with stronger silhouettes and rarity treatment than Common items.",
+      "acceptance": [
+        {
+          "text": "Create reviewed artwork for all 8 Uncommon item ids.",
+          "done": false
+        },
+        {
+          "text": "Create reviewed artwork for all 8 Rare item ids.",
+          "done": false
+        },
+        {
+          "text": "Ensure Uncommon and Rare assets are visually distinct by object design, not only border or palette.",
+          "done": false
+        },
+        {
+          "text": "Integrate and verify assets in the Loot and Heroes screens.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "docs/data/items.csv",
+        "app/src/main/res-loot/",
+        "app/src/main/java/com/ayoshy/badventurers/game/Loot.kt"
+      ],
+      "notes": []
+    },
+    {
+      "id": "BV-026",
+      "title": "Produce reviewed Epic and Relic loot artwork batches",
+      "status": "later",
+      "priority": "P2",
+      "area": "art",
+      "track": "Loot Art Production",
+      "summary": "Create or source real item artwork for the 8 Epic and 8 Relic loot definitions once the quality bar and lower-rarity production flow are proven.",
+      "acceptance": [
+        {
+          "text": "Create reviewed artwork for all 8 Epic item ids.",
+          "done": false
+        },
+        {
+          "text": "Create reviewed artwork for all 8 Relic item ids.",
+          "done": false
+        },
+        {
+          "text": "Ensure Epic and Relic assets look meaningfully premium without breaking mobile readability.",
+          "done": false
+        },
+        {
+          "text": "Integrate and verify assets in the Loot and Heroes screens.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "docs/data/items.csv",
+        "app/src/main/res-loot/",
+        "docs/design/art-direction.md"
+      ],
+      "notes": []
     }
   ]
 }
