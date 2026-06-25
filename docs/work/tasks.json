@@ -138,7 +138,7 @@
     {
       "id": "BV-003",
       "title": "Palier 2: unlock Rare loot as a visible tier goal",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "area": "content",
       "track": "Palier 2",
@@ -146,23 +146,23 @@
       "acceptance": [
         {
           "text": "Define the unlock gate for Rare loot visibility.",
-          "done": false
+          "done": true
         },
         {
           "text": "Expose Rare loot as a tier goal in progression or quest UI.",
-          "done": false
+          "done": true
         },
         {
           "text": "Ensure Rare loot generation is reachable after the gate and still balanced.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add EN/FR copy for the visible unlock.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add tests for the unlock gate and Rare loot chance behavior.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -172,13 +172,14 @@
         "app/src/main/res/values-fr/strings.xml"
       ],
       "notes": [
-        "Migrated from Palier 2: Licensed Trouble."
+        "Migrated from Palier 2: Licensed Trouble.",
+        "2026-06-25: Rare loot now unlocks after 8 completed quests, shows a Guild tier goal, uses a Palier 2 rarity profile, and has EN/FR copy plus unit coverage."
       ]
     },
     {
       "id": "BV-004",
       "title": "Palier 2: unlock Scout Table as a functional facility",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "area": "facilities",
       "track": "Palier 2",
@@ -186,23 +187,23 @@
       "acceptance": [
         {
           "text": "Define Scout Table unlock gate and level behavior.",
-          "done": false
+          "done": true
         },
         {
           "text": "Reveal plan warnings or unlock previews from Scout Table.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add at least one passive scouting incident hook.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add EN/FR facility and effect copy.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add tests proving Scout Table changes a real decision.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -211,7 +212,8 @@
         "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt"
       ],
       "notes": [
-        "Migrated from Palier 2 and Facilities sections."
+        "Migrated from Palier 2 and Facilities sections.",
+        "2026-06-25: Scout Table is now upgradeable after Rep 8 + Notice Board 2, reveals plan warnings, enables passive scouting incidents, persists in snapshots, and is covered by tests."
       ]
     },
     {
@@ -299,7 +301,7 @@
     {
       "id": "BV-007",
       "title": "Quest content template for every new quest",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "area": "design",
       "track": "Content Rules",
@@ -307,31 +309,31 @@
       "acceptance": [
         {
           "text": "Document required quest fields: tags, risk tier, duration, difficulty, reward focus, unlock gate.",
-          "done": false
+          "done": true
         },
         {
           "text": "Require at least two plan hooks per quest.",
-          "done": false
+          "done": true
         },
         {
           "text": "Require at least two hero spotlight interactions per quest.",
-          "done": false
+          "done": true
         },
         {
           "text": "Require one passive incident after first clear.",
-          "done": false
+          "done": true
         },
         {
           "text": "Require first-clear and repeat rewards.",
-          "done": false
+          "done": true
         },
         {
           "text": "Require localized title, summary, and tags.",
-          "done": false
+          "done": true
         },
         {
           "text": "Require banner art or a temporary art brief.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -340,7 +342,8 @@
         "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionPlans.kt"
       ],
       "notes": [
-        "Use this as the checklist for BV-006 and later content batches."
+        "Use this as the checklist for BV-006 and later content batches.",
+        "2026-06-25: Quest catalog now defines the required new-quest template and quests.csv carries reward, plan hook, hero spotlight, passive incident, localization, and banner columns."
       ]
     },
     {
@@ -669,11 +672,101 @@
     {
       "id": "BV-016",
       "title": "Loot Choice after expedition is wonky",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "general",
       "track": "Backlog",
       "summary": "Loot recap shows the first item loot and ask to Bring this back or leave the rest. So user does not know which other loots are available before making a decision, and its bugged as right now \"bring this back\" saves the loot and moves to the next, effectively allowing user to save all loot in the end.\n\nThe intended result would be a carousel (can be animation less for now) of the available loots, have the user browse and then pick one. Put a confirmation msg that the other loots will be discarded.\nMax loot in the carousel/to be saved can come from quest/hero passives/tavern upgrades/Contract Plan.",
+      "acceptance": [
+        {
+          "text": "Show all pending loot in a browseable choice surface before the player commits.",
+          "done": true
+        },
+        {
+          "text": "Let the player select up to the current recovery capacity, then confirm that unselected loot is discarded.",
+          "done": true
+        },
+        {
+          "text": "Prevent keeping every pending item through repeated Bring this back actions when capacity is lower than the drop count.",
+          "done": true
+        },
+        {
+          "text": "Keep recovery capacity sources compatible with quest, hero passive, facility, and contract-plan bonuses.",
+          "done": true
+        },
+        {
+          "text": "Add or update focused tests for grouped pending-loot selection and discard behavior.",
+          "done": true
+        }
+      ],
+      "refs": [],
+      "notes": [
+        "2026-06-25: Started implementation; treating this as a grouped pending-loot selection flow with confirmation.",
+        "2026-06-25: Reward Loot now uses a grouped browse/select/confirm flow; selected loot is committed atomically up to recovery capacity and unselected pending loot is discarded. Tests, assembleDebug, lintDebug, and diff check passed."
+      ]
+    },
+    {
+      "id": "BV-017",
+      "title": "Beautify the Gachapon pull",
+      "status": "ready",
+      "priority": "P3",
+      "area": "polish",
+      "track": "Refinement",
+      "summary": "lets make the gacha worth pulling for.",
+      "acceptance": [
+        {
+          "text": "Rework the animations : We need animation level depending on rarity tiers.",
+          "done": false
+        },
+        {
+          "text": "The before pull screen should show the list of heroes that can be pulled. The after pull screen is showing the full card art + some stats",
+          "done": false
+        }
+      ],
+      "refs": [],
+      "notes": []
+    },
+    {
+      "id": "BV-018",
+      "title": "Beautify the Guild screen",
+      "status": "ready",
+      "priority": "P2",
+      "area": "polish",
+      "track": "Backlog",
+      "summary": "Beautify the Guild screen. We have awesome art but can barely see it because of the interface/text.",
+      "acceptance": [
+        {
+          "text": "The next quest part can totally go. It can be accessed from the quest screen directly",
+          "done": false
+        },
+        {
+          "text": "The whole idea is to have the artwork clickable/interactable. Analyze each part of the artwork and assign specific clickable areas corresponding to the possible actions on the guild tab.",
+          "done": false
+        }
+      ],
+      "refs": [],
+      "notes": []
+    },
+    {
+      "id": "BV-019",
+      "title": "Beautify the Achievements.",
+      "status": "ready",
+      "priority": "P2",
+      "area": "polish",
+      "track": "Backlog",
+      "summary": "We have a strong separation between artworks included and possible actions (claim/upgrades). Letsw merge.",
+      "acceptance": [],
+      "refs": [],
+      "notes": []
+    },
+    {
+      "id": "BV-020",
+      "title": "New task",
+      "status": "ready",
+      "priority": "P2",
+      "area": "general",
+      "track": "Backlog",
+      "summary": "",
       "acceptance": [],
       "refs": [],
       "notes": []

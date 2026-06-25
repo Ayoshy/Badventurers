@@ -92,7 +92,11 @@ Open design space for this catalog:
 
 Items currently use generated rarity and generated stat bonuses. The `LootCatalog` row defines the item identity, slot, name, and icon. `LootGenerator` then rolls rarity and stats for each dropped instance.
 
-Current item rarity weights are Common `60`, Uncommon `25`, Rare `10`, Epic `4`, Relic `1`.
+Current item rarity profiles are progression-gated in `LootGenerator`:
+
+- Base profile before the Palier 2 gate: Common `75`, Uncommon `25`.
+- Palier 2 Rare loot profile after `8` completed quests: Common `65`, Uncommon `25`, Rare `10`.
+- Epic and Relic item chance remains locked for later tiers.
 
 | Rarity | Stat Slots |
 | --- | ---: |
