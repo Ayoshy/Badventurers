@@ -30,6 +30,16 @@ Keep new quest work aligned across these files:
 - Every implemented quest must have UI localization coverage in `BadventurersUiText.kt` and test coverage through `BadventurersUiLocalizationTest`.
 - Quests 1 to 8 have explicit banner mappings in `BadventurersUiArt.kt`; quests 9 to 16 currently use the fallback banner with temporary art briefs tracked in `BadventurersUiArt.kt` and `../data/quests.csv`.
 
+## First-Clear Jackpot Rewards
+
+First clear should feel like a jackpot, not a slightly larger repeat payout. Use recruitment tickets as the main one-time reward language, escalating by palier and danger:
+
+- Palier 1: starter/basic recruitment tickets or ticket progress that teaches recruitment early.
+- Palier 2: specialist invitations and Rare-or-better tickets on harder first clears.
+- Palier 3: Rare/Epic/Veteran tickets, multiple tickets, or another premium non-random recruitment payoff.
+
+Every Activity Board card should show the first-clear jackpot separately from repeat rewards. Quest Result should celebrate the jackpot and route the player toward Heroes/Recruitment when a ticket is earned.
+
 ## New Quest Checklist
 
 - Add runtime quest data in `SeedGame.kt`.

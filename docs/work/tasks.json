@@ -1014,6 +1014,152 @@
       "notes": [
         "2026-06-25: Generated, sliced, integrated, and verified 16 Epic/Relic loot PNG assets under app/src/main/res-loot/drawable-nodpi; validator/testDebugUnitTest/assembleDebug/lintDebug passed and emulator Loot/Heroes captures verified runtime rendering."
       ]
+    },
+    {
+      "id": "BV-027",
+      "title": "Quests screen: Activity Board regions and purpose-led cards",
+      "status": "ready",
+      "priority": "P1",
+      "area": "quests",
+      "track": "Quest Polish",
+      "summary": "Replace the never-ending quest scroll with an Activity Board that groups work by player intent: default Local Jobs, unlocked Dangerous Work, and Special Contracts. Cards should explain why the player would run an activity now instead of only showing bigger numbers.",
+      "acceptance": [
+        {
+          "text": "Add a tab, segmented control, or equivalent region selector for Local Jobs, Dangerous Work, and Special Contracts.",
+          "done": false
+        },
+        {
+          "text": "Keep Local Jobs unlocked by default and use it for the safe starter/default activities.",
+          "done": false
+        },
+        {
+          "text": "Gate Dangerous Work with existing quest unlock requirements and show clear locked-state requirements.",
+          "done": false
+        },
+        {
+          "text": "Make each activity card show intent badges such as Gold, XP, Loot, Reputation, Contract, First Clear, or Recommended Next.",
+          "done": false
+        },
+        {
+          "text": "Surface best-fit hero or active-special hints without crowding the card.",
+          "done": false
+        },
+        {
+          "text": "Show first-clear reward separately from repeat rewards on the card.",
+          "done": false
+        },
+        {
+          "text": "Add focused UI tests or previews/checks for grouping, locked states, and first-clear reward visibility.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/QuestsPrepScreens.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/SeedGame.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/ProgressionAdvisor.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiText.kt",
+        "docs/content/quest-catalog.md",
+        "docs/data/quests.csv"
+      ],
+      "notes": [
+        "2026-06-25: Created from user feedback that the quests screen is a boring endless scroll where quests differ mostly by required/reward numbers."
+      ]
+    },
+    {
+      "id": "BV-028",
+      "title": "Special Contracts: make contract plans a first-class activity lane",
+      "status": "ready",
+      "priority": "P1",
+      "area": "quests",
+      "track": "Quest Polish",
+      "summary": "Turn Special Contracts into a lane where the player starts from a contract plan or clause, then chooses a compatible quest. This should make plans feel like deliberate activity types, not a hidden dropdown inside prep.",
+      "acceptance": [
+        {
+          "text": "List available contract plans or plan families before listing compatible quests in the Special Contracts region.",
+          "done": false
+        },
+        {
+          "text": "Include generic plans and quest-specific clauses that already exist in ExpeditionPlans.",
+          "done": false
+        },
+        {
+          "text": "Show the tradeoff for each plan in player language: safer, faster, more loot, more gold, better recovery, or specialist payoff.",
+          "done": false
+        },
+        {
+          "text": "When a plan is selected, filter or highlight quests where that plan is especially relevant.",
+          "done": false
+        },
+        {
+          "text": "Keep Expedition Prep as the final confirmation surface and avoid duplicating launch logic.",
+          "done": false
+        },
+        {
+          "text": "Add tests or checks that quest-specific clauses remain discoverable from the Special Contracts lane.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionPlans.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/QuestsPrepScreens.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiText.kt",
+        "docs/data/expedition-plans.csv"
+      ],
+      "notes": [
+        "2026-06-25: Split from the broader Quest Activity Board idea so contracts can get their own UX pass."
+      ]
+    },
+    {
+      "id": "BV-029",
+      "title": "First-clear jackpot reward ladder",
+      "status": "ready",
+      "priority": "P1",
+      "area": "recruitment",
+      "track": "Quest Rewards",
+      "summary": "Make the first clear of each activity feel like a big milestone. First clears should grant a visible one-time jackpot, with recruitment ticket quantity and rarity escalating by palier and quest danger.",
+      "acceptance": [
+        {
+          "text": "Define a first-clear reward table for every current quest in docs/data/quests.csv.",
+          "done": false
+        },
+        {
+          "text": "Use recruitment tickets as the main jackpot: starter/basic tickets early, specialist or rare tickets in Palier 2, and rare/epic/veteran tickets or multiple tickets in Palier 3.",
+          "done": false
+        },
+        {
+          "text": "Persist cleared quest ids or reuse the existing cleared-state mechanism so first-clear rewards are claimable exactly once.",
+          "done": false
+        },
+        {
+          "text": "Show first-clear jackpot rewards on Activity Board cards before launch.",
+          "done": false
+        },
+        {
+          "text": "Celebrate granted first-clear rewards on Quest Result and route the player toward recruitment when a ticket is earned.",
+          "done": false
+        },
+        {
+          "text": "Add EN/FR copy for first-clear reward labels and ticket-rarity payoff text.",
+          "done": false
+        },
+        {
+          "text": "Add tests for first-clear reward uniqueness, save/load, and ticket inventory changes.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/RecruitmentTickets.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/SeedGame.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/QuestsPrepScreens.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/ResultsScreens.kt",
+        "docs/content/quest-catalog.md",
+        "docs/data/quests.csv"
+      ],
+      "notes": [
+        "2026-06-25: Created from user direction that first clear should give a big reward, probably recruitment tickets that become rarer or more numerous over time.",
+        "This narrows the first-clear portion of BV-009 into an explicit reward-ladder slice."
+      ]
     }
   ]
 }
