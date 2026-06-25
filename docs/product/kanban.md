@@ -192,9 +192,9 @@ Goal: idle progress should come from the quality of the guild, not only from a s
 ### Passive Income Model
 
 - [x] Add passive gold per hour based on guild level, Notice Board, Accountant Office, and Core Crew. 2026-06-25: Passive gold/hour now combines guild level, Notice Board, Core Crew, and an Accountant Office hook for the future facility.
-- [ ] Add passive supplies or "guild errands" as a future prep resource.
-- [ ] Add low-frequency passive loot finds gated by Armory/Forge and Scout Table.
-- [ ] Add offline cap upgrades through facilities.
+- [x] Add passive supplies or "guild errands" as a future prep resource. 2026-06-25: Supplies are now persisted and generated from Core Crew/facility passive income as a future prep resource.
+- [x] Add low-frequency passive loot finds gated by Armory/Forge and Scout Table. 2026-06-25: Armory/Forge plus Scout Table can add at most one passive loot find to the offline recovery pile.
+- [x] Add offline cap upgrades through facilities. 2026-06-25: Bunk Room and Tavern/Kitchen levels extend the passive income cap while keeping reward credit one-shot.
 - [x] Add tests for offline income caps, roster contribution, and save migration. 2026-06-25: Added domain, snapshot, and JSON tests for Core Crew and passive income.
 
 ### Passive Incidents

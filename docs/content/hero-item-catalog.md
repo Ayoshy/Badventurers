@@ -96,19 +96,19 @@ Current item rarity profiles are progression-gated in `LootGenerator`:
 
 - Base profile before the Palier 2 gate: Common `75`, Uncommon `25`.
 - Palier 2 Rare loot profile after `8` completed quests: Common `65`, Uncommon `25`, Rare `10`.
-- Epic and Relic item definitions exist for later unlock profiles, but current runtime profiles do not roll them yet.
+- Epic item definitions can now roll from the Palier 3 profile after 13 completed quests; Relic definitions remain authored for later unlock profiles.
 
 | Rarity | Catalog Count | Stat Slots | Art Status |
 | --- | ---: | ---: | --- |
 | Common | 25 | 1 | Accepted BV-024 PNG art in app resources. |
-| Uncommon | 8 | 2 | Needs reviewed production art in BV-025. |
-| Rare | 8 | 3 | Needs reviewed production art in BV-025. |
-| Epic | 8 | 4 | Needs reviewed production art in BV-026. |
-| Relic | 8 | 5 | Needs reviewed production art in BV-026. |
+| Uncommon | 8 | 2 | Accepted BV-025 PNG art in app resources. |
+| Rare | 8 | 3 | Accepted BV-025 PNG art in app resources. |
+| Epic | 8 | 4 | Accepted BV-026 PNG art in app resources. |
+| Relic | 8 | 5 | Accepted BV-026 PNG art in app resources. |
 
 Each stat slot chooses a unique stat type and a weighted value from `1` to `10`. Item stat values are flat bonuses; items do not level up yet.
 
-The rejected generated XML placeholder batch is not accepted item artwork. Common items now render through accepted item-specific PNGs under `app/src/main/res-loot/drawable-nodpi`; Uncommon and higher items still render through the older `LootIcon` family fallback until their production art tickets are complete. Resource existence alone must not be treated as art acceptance.
+The rejected generated XML placeholder batch is not accepted item artwork. Common, Uncommon, Rare, Epic, and Relic items now render through accepted item-specific PNGs under `app/src/main/res-loot/drawable-nodpi`; the older `LootIcon` family remains fallback coverage only for future unaccepted items. Resource existence alone must not be treated as art acceptance.
 
 ## Items
 
@@ -139,38 +139,38 @@ The rejected generated XML placeholder batch is not accepted item artwork. Commo
 | consumable_tiny_flask | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_tiny_flask.png` | Consumable | Tiny Flask | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Potion` remains fallback coverage. |
 | consumable_odd_elixir | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_odd_elixir.png` | Consumable | Odd Elixir | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Potion` remains fallback coverage. |
 | consumable_snap_tonic | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_snap_tonic.png` | Consumable | Snap Tonic | Common | 1 generated unique stat(s) | Runtime renders accepted BV-024 Common item art; legacy `Potion` remains fallback coverage. |
-| weapon_receipt_cutter | Needs reviewed art; legacy fallback `Blade` | Weapon | Receipt Cutter | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_mop_halberd | Needs reviewed art; legacy fallback `Weapon` | Weapon | Mop Halberd | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| armor_buttoned_barrel | Needs reviewed art; legacy fallback `Hood` | Armor | Buttoned Barrel | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| footwear_squeaky_greaves | Needs reviewed art; legacy fallback `Boots` | Footwear | Squeaky Greaves | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_queue_token | Needs reviewed art; legacy fallback `Ring` | Trinket | Queue Token | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| headgear_bucket_visor | Needs reviewed art; legacy fallback `Helmet` | Headgear | Bucket Visor | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_warmish_tea | Needs reviewed art; legacy fallback `Tankard` | Consumable | Warmish Tea | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_pickle_potion | Needs reviewed art; legacy fallback `Potion` | Consumable | Pickle Potion | Uncommon | 2 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_fine_print_rapier | Needs reviewed art; legacy fallback `Blade` | Weapon | Fine Print Rapier | Rare | 3 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_taxman_gavel | Needs reviewed art; legacy fallback `Weapon` | Weapon | Taxman Gavel | Rare | 3 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| armor_invoice_mail | Needs reviewed art; legacy fallback `Hood` | Armor | Invoice Mail | Rare | 3 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| footwear_witness_slippers | Needs reviewed art; legacy fallback `Boots` | Footwear | Witness Slippers | Rare | 3 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_overtime_hourglass | Needs reviewed art; legacy fallback `Ring` | Trinket | Overtime Hourglass | Rare | 3 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| headgear_notary_wig | Needs reviewed art; legacy fallback `Hood` | Headgear | Notary Wig | Rare | 3 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_bottled_courage | Needs reviewed art; legacy fallback `Potion` | Consumable | Bottled Courage | Rare | 3 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_minor_oracle_receipt | Needs reviewed art; legacy fallback `Ring` | Trinket | Minor Oracle Receipt | Rare | 3 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_auditors_halberd | Needs reviewed art; legacy fallback `Weapon` | Weapon | Auditors Halberd | Epic | 4 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_dragon_stamp | Needs reviewed art; legacy fallback `Weapon` | Weapon | Dragon Stamp | Epic | 4 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| armor_misfiled_aegis | Needs reviewed art; legacy fallback `Hood` | Armor | Misfiled Aegis | Epic | 4 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| footwear_plausible_denial_boots | Needs reviewed art; legacy fallback `Boots` | Footwear | Boots of Plausible Denial | Epic | 4 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_bell_of_last_call | Needs reviewed art; legacy fallback `Ring` | Trinket | Bell of Last Call | Epic | 4 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| headgear_emergency_minutes_crown | Needs reviewed art; legacy fallback `Helmet` | Headgear | Crown of Emergency Minutes | Epic | 4 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_second_chance_soup | Needs reviewed art; legacy fallback `Tankard` | Consumable | Soup of Second Chances | Epic | 4 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_contract_knot | Needs reviewed art; legacy fallback `Ring` | Trinket | Contract Knot | Epic | 4 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_spoon_final_notice | Needs reviewed art; legacy fallback `Spoon` | Weapon | Spoon of Final Notice | Relic | 5 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| weapon_moonlit_receipt_cleaver | Needs reviewed art; legacy fallback `Blade` | Weapon | Moonlit Receipt Cleaver | Relic | 5 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| armor_many_signatures_cloak | Needs reviewed art; legacy fallback `Hood` | Armor | Cloak of Many Signatures | Relic | 5 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| footwear_inevitable_return_sandals | Needs reviewed art; legacy fallback `Boots` | Footwear | Sandals of Inevitable Return | Relic | 5 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_perpetual_queue_ring | Needs reviewed art; legacy fallback `Ring` | Trinket | Ring of Perpetual Queue | Relic | 5 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| headgear_halo_compliance | Needs reviewed art; legacy fallback `Helmet` | Headgear | Halo of Compliance | Relic | 5 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| consumable_absolute_maybe_elixir | Needs reviewed art; legacy fallback `Potion` | Consumable | Elixir of Absolute Maybe | Relic | 5 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
-| trinket_unpaid_charter_seal | Needs reviewed art; legacy fallback `Ring` | Trinket | Unpaid Charter Seal | Relic | 5 generated unique stat(s) | Runtime uses legacy icon family until the relevant loot-art production ticket accepts real art. |
+| weapon_receipt_cutter | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_receipt_cutter.png` | Weapon | Receipt Cutter | Uncommon | 2 generated unique stat(s) | Runtime renders accepted BV-025 Uncommon item art; legacy `Blade` remains fallback coverage. |
+| weapon_mop_halberd | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_mop_halberd.png` | Weapon | Mop Halberd | Uncommon | 2 generated unique stat(s) | Runtime renders accepted BV-025 Uncommon item art; legacy `Weapon` remains fallback coverage. |
+| armor_buttoned_barrel | `app/src/main/res-loot/drawable-nodpi/loot_art_armor_buttoned_barrel.png` | Armor | Buttoned Barrel | Uncommon | 2 generated unique stat(s) | Runtime renders accepted BV-025 Uncommon item art; legacy `Hood` remains fallback coverage. |
+| footwear_squeaky_greaves | `app/src/main/res-loot/drawable-nodpi/loot_art_footwear_squeaky_greaves.png` | Footwear | Squeaky Greaves | Uncommon | 2 generated unique stat(s) | Runtime renders accepted BV-025 Uncommon item art; legacy `Boots` remains fallback coverage. |
+| trinket_queue_token | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_queue_token.png` | Trinket | Queue Token | Uncommon | 2 generated unique stat(s) | Runtime renders accepted BV-025 Uncommon item art; legacy `Ring` remains fallback coverage. |
+| headgear_bucket_visor | `app/src/main/res-loot/drawable-nodpi/loot_art_headgear_bucket_visor.png` | Headgear | Bucket Visor | Uncommon | 2 generated unique stat(s) | Runtime renders accepted BV-025 Uncommon item art; legacy `Helmet` remains fallback coverage. |
+| consumable_warmish_tea | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_warmish_tea.png` | Consumable | Warmish Tea | Uncommon | 2 generated unique stat(s) | Runtime renders accepted BV-025 Uncommon item art; legacy `Tankard` remains fallback coverage. |
+| consumable_pickle_potion | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_pickle_potion.png` | Consumable | Pickle Potion | Uncommon | 2 generated unique stat(s) | Runtime renders accepted BV-025 Uncommon item art; legacy `Potion` remains fallback coverage. |
+| weapon_fine_print_rapier | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_fine_print_rapier.png` | Weapon | Fine Print Rapier | Rare | 3 generated unique stat(s) | Runtime renders accepted BV-025 Rare item art; legacy `Blade` remains fallback coverage. |
+| weapon_taxman_gavel | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_taxman_gavel.png` | Weapon | Taxman Gavel | Rare | 3 generated unique stat(s) | Runtime renders accepted BV-025 Rare item art; legacy `Weapon` remains fallback coverage. |
+| armor_invoice_mail | `app/src/main/res-loot/drawable-nodpi/loot_art_armor_invoice_mail.png` | Armor | Invoice Mail | Rare | 3 generated unique stat(s) | Runtime renders accepted BV-025 Rare item art; legacy `Hood` remains fallback coverage. |
+| footwear_witness_slippers | `app/src/main/res-loot/drawable-nodpi/loot_art_footwear_witness_slippers.png` | Footwear | Witness Slippers | Rare | 3 generated unique stat(s) | Runtime renders accepted BV-025 Rare item art; legacy `Boots` remains fallback coverage. |
+| trinket_overtime_hourglass | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_overtime_hourglass.png` | Trinket | Overtime Hourglass | Rare | 3 generated unique stat(s) | Runtime renders accepted BV-025 Rare item art; legacy `Ring` remains fallback coverage. |
+| headgear_notary_wig | `app/src/main/res-loot/drawable-nodpi/loot_art_headgear_notary_wig.png` | Headgear | Notary Wig | Rare | 3 generated unique stat(s) | Runtime renders accepted BV-025 Rare item art; legacy `Hood` remains fallback coverage. |
+| consumable_bottled_courage | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_bottled_courage.png` | Consumable | Bottled Courage | Rare | 3 generated unique stat(s) | Runtime renders accepted BV-025 Rare item art; legacy `Potion` remains fallback coverage. |
+| trinket_minor_oracle_receipt | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_minor_oracle_receipt.png` | Trinket | Minor Oracle Receipt | Rare | 3 generated unique stat(s) | Runtime renders accepted BV-025 Rare item art; legacy `Ring` remains fallback coverage. |
+| weapon_auditors_halberd | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_auditors_halberd.png` | Weapon | Auditors Halberd | Epic | 4 generated unique stat(s) | Runtime renders accepted BV-026 Epic item art; legacy `Weapon` remains fallback coverage. |
+| weapon_dragon_stamp | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_dragon_stamp.png` | Weapon | Dragon Stamp | Epic | 4 generated unique stat(s) | Runtime renders accepted BV-026 Epic item art; legacy `Weapon` remains fallback coverage. |
+| armor_misfiled_aegis | `app/src/main/res-loot/drawable-nodpi/loot_art_armor_misfiled_aegis.png` | Armor | Misfiled Aegis | Epic | 4 generated unique stat(s) | Runtime renders accepted BV-026 Epic item art; legacy `Hood` remains fallback coverage. |
+| footwear_plausible_denial_boots | `app/src/main/res-loot/drawable-nodpi/loot_art_footwear_plausible_denial_boots.png` | Footwear | Boots of Plausible Denial | Epic | 4 generated unique stat(s) | Runtime renders accepted BV-026 Epic item art; legacy `Boots` remains fallback coverage. |
+| trinket_bell_of_last_call | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_bell_of_last_call.png` | Trinket | Bell of Last Call | Epic | 4 generated unique stat(s) | Runtime renders accepted BV-026 Epic item art; legacy `Ring` remains fallback coverage. |
+| headgear_emergency_minutes_crown | `app/src/main/res-loot/drawable-nodpi/loot_art_headgear_emergency_minutes_crown.png` | Headgear | Crown of Emergency Minutes | Epic | 4 generated unique stat(s) | Runtime renders accepted BV-026 Epic item art; legacy `Helmet` remains fallback coverage. |
+| consumable_second_chance_soup | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_second_chance_soup.png` | Consumable | Soup of Second Chances | Epic | 4 generated unique stat(s) | Runtime renders accepted BV-026 Epic item art; legacy `Tankard` remains fallback coverage. |
+| trinket_contract_knot | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_contract_knot.png` | Trinket | Contract Knot | Epic | 4 generated unique stat(s) | Runtime renders accepted BV-026 Epic item art; legacy `Ring` remains fallback coverage. |
+| weapon_spoon_final_notice | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_spoon_final_notice.png` | Weapon | Spoon of Final Notice | Relic | 5 generated unique stat(s) | Runtime renders accepted BV-026 Relic item art; legacy `Spoon` remains fallback coverage. |
+| weapon_moonlit_receipt_cleaver | `app/src/main/res-loot/drawable-nodpi/loot_art_weapon_moonlit_receipt_cleaver.png` | Weapon | Moonlit Receipt Cleaver | Relic | 5 generated unique stat(s) | Runtime renders accepted BV-026 Relic item art; legacy `Blade` remains fallback coverage. |
+| armor_many_signatures_cloak | `app/src/main/res-loot/drawable-nodpi/loot_art_armor_many_signatures_cloak.png` | Armor | Cloak of Many Signatures | Relic | 5 generated unique stat(s) | Runtime renders accepted BV-026 Relic item art; legacy `Hood` remains fallback coverage. |
+| footwear_inevitable_return_sandals | `app/src/main/res-loot/drawable-nodpi/loot_art_footwear_inevitable_return_sandals.png` | Footwear | Sandals of Inevitable Return | Relic | 5 generated unique stat(s) | Runtime renders accepted BV-026 Relic item art; legacy `Boots` remains fallback coverage. |
+| trinket_perpetual_queue_ring | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_perpetual_queue_ring.png` | Trinket | Ring of Perpetual Queue | Relic | 5 generated unique stat(s) | Runtime renders accepted BV-026 Relic item art; legacy `Ring` remains fallback coverage. |
+| headgear_halo_compliance | `app/src/main/res-loot/drawable-nodpi/loot_art_headgear_halo_compliance.png` | Headgear | Halo of Compliance | Relic | 5 generated unique stat(s) | Runtime renders accepted BV-026 Relic item art; legacy `Helmet` remains fallback coverage. |
+| consumable_absolute_maybe_elixir | `app/src/main/res-loot/drawable-nodpi/loot_art_consumable_absolute_maybe_elixir.png` | Consumable | Elixir of Absolute Maybe | Relic | 5 generated unique stat(s) | Runtime renders accepted BV-026 Relic item art; legacy `Potion` remains fallback coverage. |
+| trinket_unpaid_charter_seal | `app/src/main/res-loot/drawable-nodpi/loot_art_trinket_unpaid_charter_seal.png` | Trinket | Unpaid Charter Seal | Relic | 5 generated unique stat(s) | Runtime renders accepted BV-026 Relic item art; legacy `Ring` remains fallback coverage. |
 
 Runtime loot/UI art note:
 
@@ -182,7 +182,7 @@ Runtime loot/UI art note:
 
 Open design space for item progression:
 
-- Unlock Epic and Relic rarity profiles through Palier 3+ quests, Armory/Forge upgrades, or achievements.
+- Unlock Relic rarity profiles through post-Palier 3 quests, Armory/Forge upgrades, or achievements.
 - Upgrade tiers that add a stat slot, increase values, or unlock a special rule.
 - Reroll or reforging system owned by the Armory/Forge.
 - Consumables that are actually spent for one expedition instead of equipped as flat-stat loot.

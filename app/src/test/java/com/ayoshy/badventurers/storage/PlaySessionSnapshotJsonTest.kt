@@ -25,11 +25,16 @@ class PlaySessionSnapshotJsonTest {
         val state = PlaySessionState.initial().copy(
             gold = 1_250,
             reputation = 11,
+            supplies = 12,
             guildLevel = 4,
             completedQuestCount = 9,
+            clearedQuestIds = setOf("cave_minor_regrets", "the_tower_built_sideways"),
             noticeBoardLevel = 3,
             trainingYardLevel = 4,
             bunkRoomLevel = 2,
+            scoutTableLevel = 1,
+            armoryForgeLevel = 2,
+            tavernKitchenLevel = 1,
             lootRolls = 6,
         )
         val snapshot = PlaySessionSnapshot.fromState(state)
@@ -43,15 +48,21 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(3, restored?.noticeBoardLevel)
         assertEquals(4, restored?.trainingYardLevel)
         assertEquals(2, restored?.bunkRoomLevel)
+        assertEquals(1, restored?.scoutTableLevel)
+        assertEquals(2, restored?.armoryForgeLevel)
+        assertEquals(1, restored?.tavernKitchenLevel)
         assertEquals(state.gold, restored?.gold)
         assertEquals(state.reputation, restored?.reputation)
+        assertEquals(state.supplies, restored?.supplies)
         assertEquals(state.guildLevel, restored?.guildLevel)
         assertEquals(state.completedQuestCount, restored?.completedQuestCount)
+        assertEquals(state.clearedQuestIds, restored?.clearedQuestIds)
     }
 
     @Test
     fun codecRoundTripsCoreCrewAndOfflineIncomeReport() {
         val crewIds = HeroCatalog.starterHeroes.take(2).map { it.id }
+        val lootFinds = LootGenerator.generate(1, seed = 41)
         val report = PassiveIncomeReport(
             sinceMillis = 1_000L,
             untilMillis = 61_000L,
@@ -63,6 +74,10 @@ class PlaySessionSnapshotJsonTest {
             goldPerHour = 130,
             activeGoldPerHour = 90,
             coreCrewHeroIds = crewIds,
+            supplies = 1,
+            suppliesPerHour = 7,
+            activeSuppliesPerHour = 4,
+            lootFinds = lootFinds,
         )
         val incidents = listOf(
             PassiveIncident(
@@ -72,6 +87,7 @@ class PlaySessionSnapshotJsonTest {
             ),
         )
         val state = PlaySessionState.initial().copy(
+            supplies = 9,
             coreCrewHeroIds = crewIds,
             lastOfflinePassiveIncome = report,
             lastOfflinePassiveIncidents = incidents,
@@ -81,8 +97,10 @@ class PlaySessionSnapshotJsonTest {
             PlaySessionSnapshotJson.encode(PlaySessionSnapshot.fromState(state)),
         )?.toState()
 
+        assertEquals(9, restored?.supplies)
         assertEquals(crewIds, restored?.normalizedCoreCrewHeroIds())
         assertEquals(report, restored?.lastOfflinePassiveIncome)
+        assertEquals(lootFinds, restored?.lastOfflinePassiveIncome?.lootFinds)
         assertEquals(incidents, restored?.lastOfflinePassiveIncidents)
     }
 
@@ -104,9 +122,12 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(3, restored?.reputation)
         assertEquals(2, restored?.guildLevel)
         assertEquals(5, restored?.completedQuestCount)
+        assertEquals(0, restored?.supplies)
         assertEquals(1, restored?.noticeBoardLevel)
         assertEquals(1, restored?.trainingYardLevel)
         assertEquals(1, restored?.bunkRoomLevel)
+        assertEquals(0, restored?.armoryForgeLevel)
+        assertEquals(0, restored?.tavernKitchenLevel)
         assertEquals(listOf(HeroCatalog.starterHeroes.first().id), restored?.normalizedCoreCrewHeroIds())
     }
 
@@ -121,6 +142,8 @@ class PlaySessionSnapshotJsonTest {
             .put("noticeBoardLevel", 0)
             .put("trainingYardLevel", 99)
             .put("bunkRoomLevel", 99)
+            .put("armoryForgeLevel", 99)
+            .put("tavernKitchenLevel", 99)
             .put("lootRolls", 0)
             .put("heroIds", JSONArray())
             .toString()
@@ -135,6 +158,14 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(
             GuildFacilityCatalog.definition(GuildFacility.BunkRoom).maxLevel,
             restored?.bunkRoomLevel,
+        )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.ArmoryForge).maxLevel,
+            restored?.armoryForgeLevel,
+        )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.TavernKitchen).maxLevel,
+            restored?.tavernKitchenLevel,
         )
     }
 

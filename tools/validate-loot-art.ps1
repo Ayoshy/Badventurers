@@ -79,37 +79,43 @@ if (-not (Test-Path -LiteralPath $resourceFullPath -PathType Container)) {
     Add-Failure $failures "Missing resource directory: $ResourceDir"
 }
 
+$expectedFiles = @()
+
 if ($failures.Count -eq 0) {
     Add-Type -AssemblyName System.Drawing
 
     $items = @(Import-Csv -LiteralPath $csvFullPath -Delimiter ';')
-    $commonRows = @($items | Where-Object { $_.rarity -eq "Common" })
+    $acceptedRows = @($items | Where-Object { $_.art_status -match '\(accepted BV-[0-9]+\)' })
 
-    if ($commonRows.Count -ne 25) {
-        Add-Failure $failures "Expected exactly 25 Common rows in $CsvPath, found $($commonRows.Count)."
+    if ($acceptedRows.Count -eq 0) {
+        Add-Failure $failures "No accepted loot art rows found in $CsvPath."
     }
 
-    $duplicates = @($commonRows | Group-Object -Property id | Where-Object { $_.Count -gt 1 })
+    $duplicates = @($acceptedRows | Group-Object -Property id | Where-Object { $_.Count -gt 1 })
     foreach ($duplicate in $duplicates) {
-        Add-Failure $failures "Duplicate Common item id in ${CsvPath}: $($duplicate.Name)"
+        Add-Failure $failures "Duplicate accepted item id in ${CsvPath}: $($duplicate.Name)"
     }
 
-    $expectedFiles = @()
-    foreach ($row in $commonRows) {
+    foreach ($row in $acceptedRows) {
         if ([string]::IsNullOrWhiteSpace($row.id)) {
-            Add-Failure $failures "Common item row has an empty id."
+            Add-Failure $failures "Accepted item row has an empty id."
             continue
         }
 
         if ($row.id -notmatch '^[a-z0-9_]+$') {
-            Add-Failure $failures "Common item id '$($row.id)' is not Android resource-safe lowercase snake case."
+            Add-Failure $failures "Accepted item id '$($row.id)' is not Android resource-safe lowercase snake case."
             continue
         }
 
-        $expectedFiles += "loot_art_$($row.id).png"
+        $fileName = "loot_art_$($row.id).png"
+        $expectedPath = "$ResourceDir/$fileName"
+        if ($row.art_status -notlike "*$expectedPath*") {
+            Add-Failure $failures "$($row.id): accepted art_status must reference $expectedPath."
+        }
+        $expectedFiles += $fileName
     }
 
-    Write-Host "Expected Common loot art files ($($expectedFiles.Count)):"
+    Write-Host "Expected accepted loot art files ($($expectedFiles.Count)):"
     foreach ($fileName in $expectedFiles) {
         Write-Host "  $fileName"
     }
@@ -122,14 +128,14 @@ if ($failures.Count -eq 0) {
     $actualLootArtFiles = @(Get-ChildItem -LiteralPath $resourceFullPath -File -Filter "loot_art_*.png" | Select-Object -ExpandProperty Name)
     foreach ($actualFile in $actualLootArtFiles) {
         if (-not $expectedSet.Contains($actualFile)) {
-            [void] $warnings.Add("Unexpected loot_art PNG not part of the Common BV-024 set: $actualFile")
+            [void] $warnings.Add("Unexpected loot_art PNG not marked accepted in ${CsvPath}: $actualFile")
         }
     }
 
     foreach ($fileName in $expectedFiles) {
         $assetPath = Join-Path -Path $resourceFullPath -ChildPath $fileName
         if (-not (Test-Path -LiteralPath $assetPath -PathType Leaf)) {
-            Add-Failure $failures "Missing Common loot art file: $ResourceDir/$fileName"
+            Add-Failure $failures "Missing accepted loot art file: $ResourceDir/$fileName"
             continue
         }
 
@@ -151,4 +157,4 @@ if ($failures.Count -gt 0) {
 }
 
 Write-Host ""
-Write-Host "Loot art validation passed: checked $($expectedFiles.Count) Common PNG assets."
+Write-Host "Loot art validation passed: checked $($expectedFiles.Count) accepted PNG assets."

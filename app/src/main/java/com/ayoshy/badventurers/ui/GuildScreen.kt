@@ -492,6 +492,8 @@ internal fun AchievementLedgerPanel(session: PlaySessionState, onOpen: () -> Uni
 internal fun GuildFacilitiesPanel(session: PlaySessionState, selectedQuest: Quest) {
     val scoutState = session.facilityUpgradeState(GuildFacility.ScoutTable)
     val scoutBehavior = ScoutTableIntel.behavior(session.scoutTableLevel)
+    val armoryState = session.facilityUpgradeState(GuildFacility.ArmoryForge)
+    val tavernState = session.facilityUpgradeState(GuildFacility.TavernKitchen)
     PaperPanel(
         title = stringResource(R.string.guild_facilities_title),
         body = stringResource(R.string.guild_facilities_summary),
@@ -530,6 +532,28 @@ internal fun GuildFacilitiesPanel(session: PlaySessionState, selectedQuest: Ques
                     stringResource(R.string.guild_facility_scout_effect, scoutBehavior.revealedPlanWarnings)
                 } else {
                     stringResource(R.string.guild_facility_scout_locked_effect)
+                },
+            ),
+        )
+        FacilityLine(
+            label = stringResource(R.string.guild_facility_armory_forge),
+            value = facilityLevelEffect(
+                state = armoryState,
+                effect = if (armoryState.unlocked || armoryState.level > 0) {
+                    stringResource(R.string.guild_facility_armory_effect, session.passiveLootFindChancePercent())
+                } else {
+                    stringResource(R.string.guild_facility_armory_locked_effect)
+                },
+            ),
+        )
+        FacilityLine(
+            label = stringResource(R.string.guild_facility_tavern_kitchen),
+            value = facilityLevelEffect(
+                state = tavernState,
+                effect = if (tavernState.unlocked || tavernState.level > 0) {
+                    stringResource(R.string.guild_facility_tavern_effect, (session.passiveIncomeCapBonusSeconds() / 60L).toInt())
+                } else {
+                    stringResource(R.string.guild_facility_tavern_locked_effect)
                 },
             ),
         )

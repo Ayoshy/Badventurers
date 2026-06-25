@@ -10,32 +10,46 @@ import org.junit.Test
 
 class BadventurersUiArtTest {
     @Test
-    fun commonLootArtResourcesCoverCommonCatalog() {
-        val expectedIds = LootCatalog.byRarity.getValue(LootRarity.Common)
+    fun acceptedLootArtResourcesCoverWholeCatalog() {
+        val expectedIds = LootRarity.values()
+            .flatMap { LootCatalog.byRarity.getValue(it) }
             .map { it.id }
             .toSet()
 
-        assertEquals(expectedIds, commonLootArtResourceIds.keys)
-        commonLootArtResourceIds.forEach { (id, resourceId) ->
+        assertEquals(expectedIds, acceptedLootArtResourceIds.keys)
+        acceptedLootArtResourceIds.forEach { (id, resourceId) ->
             assertNotEquals("$id should resolve to a packaged loot art resource.", 0, resourceId)
         }
     }
 
     @Test
-    fun commonLootUsesItemSpecificArt() {
-        val definition = LootCatalog.byId.getValue("weapon_bent_spoon")
-        val item = definition.toTestItem()
+    fun acceptedLootUsesItemSpecificArt() {
+        val examples = listOf(
+            "weapon_bent_spoon" to R.drawable.loot_art_weapon_bent_spoon,
+            "weapon_receipt_cutter" to R.drawable.loot_art_weapon_receipt_cutter,
+            "weapon_fine_print_rapier" to R.drawable.loot_art_weapon_fine_print_rapier,
+            "weapon_auditors_halberd" to R.drawable.loot_art_weapon_auditors_halberd,
+            "weapon_spoon_final_notice" to R.drawable.loot_art_weapon_spoon_final_notice,
+        )
 
-        assertEquals(R.drawable.loot_art_weapon_bent_spoon, lootArtResource(item))
-        assertNotEquals(lootIconResource(item.icon), lootArtResource(item))
+        examples.forEach { (id, expectedResource) ->
+            val definition = LootCatalog.byId.getValue(id)
+            val item = definition.toTestItem()
+
+            assertEquals(expectedResource, lootArtResource(item))
+            assertNotEquals(lootIconResource(item.icon), lootArtResource(item))
+        }
     }
 
     @Test
-    fun nonCommonLootFallsBackToLegacyIcon() {
-        val definition = LootCatalog.byRarity.getValue(LootRarity.Uncommon).first()
-        val item = definition.toTestItem()
+    fun acceptedLootDoesNotFallBackToLegacyIcons() {
+        LootRarity.values()
+            .flatMap { LootCatalog.byRarity.getValue(it) }
+            .forEach { definition ->
+                val item = definition.toTestItem()
 
-        assertEquals(lootIconResource(definition.icon), lootArtResource(item))
+                assertNotEquals(definition.id, lootIconResource(definition.icon), lootArtResource(item))
+            }
     }
 }
 

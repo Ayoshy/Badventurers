@@ -23,11 +23,12 @@ Keep new quest work aligned across these files:
 
 ## Current State
 
-- 12 quests are implemented.
+- 16 quests are implemented.
 - Palier 1: Local Disasters, 8 quests.
 - Palier 2: Licensed Trouble, quests 9 to 12.
+- Palier 3: Regional Liability, quests 13 to 16.
 - Every implemented quest must have UI localization coverage in `BadventurersUiText.kt` and test coverage through `BadventurersUiLocalizationTest`.
-- Quests 1 to 8 have explicit banner mappings in `BadventurersUiArt.kt`; quests 9 to 12 currently use the fallback banner with temporary art briefs tracked in `BadventurersUiArt.kt` and `../data/quests.csv`.
+- Quests 1 to 8 have explicit banner mappings in `BadventurersUiArt.kt`; quests 9 to 16 currently use the fallback banner with temporary art briefs tracked in `BadventurersUiArt.kt` and `../data/quests.csv`.
 
 ## New Quest Checklist
 
@@ -70,6 +71,17 @@ Until dedicated Palier 2 banner files exist, quests 9 to 12 intentionally resolv
 | `licensed_guild_caravan_haunt` | Licensed caravan at dusk with spectral cargo straps, official seals, and triplicate manifests. |
 | `notary_night_patrol` | Lantern-lit notary patrol in identical robes, oath scrolls, and suspiciously legal shadows. |
 | `inspectorate_cove_banquet` | Coastal banquet table with inspector seals, emergency audit papers, and anxious serving covers. |
+
+## Palier 3 Temporary Banner Briefs
+
+Until dedicated Palier 3 banner files exist, quests 13 to 16 intentionally resolve to `quest_banner_03` with these briefs:
+
+| Quest | Temporary Brief |
+| --- | --- |
+| `wedding_with_too_many_oaths` | Overbooked ceremonial hall with vow ledgers, witness stamps, and emergency seating charts. |
+| `the_sunken_toll_booth` | Half-submerged toll booth with floating coins, soaked ledgers, and a queue line disappearing into swamp water. |
+| `the_crowns_missing_receipt` | Royal archive desk with missing receipt notices, crown seal wax, and guards pretending not to panic. |
+| `the_tower_built_sideways` | Impossible tower leaning sideways with braced stairs, panic permits, and ancient stones arguing about gravity. |
 
 ## CSV Mirror Fields
 

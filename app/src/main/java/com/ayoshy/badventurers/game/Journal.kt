@@ -107,6 +107,10 @@ object JournalGenerator {
             "licensed_guild_caravan_haunt" -> "The caravan's ghost accepted the manifest, then haunted the duplicate."
             "notary_night_patrol" -> "The night patrol swore the same oath until the lanterns looked supervised."
             "inspectorate_cove_banquet" -> "The banquet served soup, subpoenas, and one extremely audited dessert."
+            "wedding_with_too_many_oaths" -> "The wedding vows were cross-examined and found emotionally binding."
+            "the_sunken_toll_booth" -> "The toll booth bubbled up, charged exact change, and sank again."
+            "the_crowns_missing_receipt" -> "The crown found the receipt under a very official sandwich."
+            "the_tower_built_sideways" -> "The sideways tower leaned into compliance and became mostly vertical."
             else -> "${quest.title} left a suspiciously specific note."
         }
 

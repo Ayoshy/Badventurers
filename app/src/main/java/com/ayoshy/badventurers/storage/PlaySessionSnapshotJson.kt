@@ -34,12 +34,16 @@ internal object PlaySessionSnapshotJson {
         .put("version", snapshot.version)
         .put("gold", snapshot.gold)
         .put("reputation", snapshot.reputation)
+        .put("supplies", snapshot.supplies)
         .put("guildLevel", snapshot.guildLevel)
         .put("completedQuestCount", snapshot.completedQuestCount)
+        .put("clearedQuestIds", JSONArray().also { array -> snapshot.clearedQuestIds.forEach { array.put(it) } })
         .put("noticeBoardLevel", snapshot.noticeBoardLevel)
         .put("trainingYardLevel", snapshot.trainingYardLevel)
         .put("bunkRoomLevel", snapshot.bunkRoomLevel)
         .put("scoutTableLevel", snapshot.scoutTableLevel)
+        .put("armoryForgeLevel", snapshot.armoryForgeLevel)
+        .put("tavernKitchenLevel", snapshot.tavernKitchenLevel)
         .put("lootRolls", snapshot.lootRolls)
         .put("heroIds", JSONArray().also { array -> snapshot.heroIds.forEach { array.put(it) } })
         .put("heroProgress", JSONArray().also { array -> snapshot.heroProgress.forEach { array.put(encodeHeroProgress(it)) } })
@@ -66,12 +70,16 @@ internal object PlaySessionSnapshotJson {
             version = json.optInt("version", 1),
             gold = json.optInt("gold", initial.gold),
             reputation = json.optInt("reputation", initial.reputation),
+            supplies = json.optInt("supplies", initial.supplies),
             guildLevel = json.optInt("guildLevel", initial.guildLevel),
             completedQuestCount = json.optInt("completedQuestCount", initial.completedQuestCount),
+            clearedQuestIds = decodeStringArray(json.optJSONArray("clearedQuestIds")).toSet(),
             noticeBoardLevel = json.optInt("noticeBoardLevel", initial.noticeBoardLevel),
             trainingYardLevel = json.optInt("trainingYardLevel", initial.trainingYardLevel),
             bunkRoomLevel = json.optInt("bunkRoomLevel", initial.bunkRoomLevel),
             scoutTableLevel = json.optInt("scoutTableLevel", initial.scoutTableLevel),
+            armoryForgeLevel = json.optInt("armoryForgeLevel", initial.armoryForgeLevel),
+            tavernKitchenLevel = json.optInt("tavernKitchenLevel", initial.tavernKitchenLevel),
             lootRolls = json.optInt("lootRolls", initial.lootRolls),
             heroIds = decodeStringArray(json.optJSONArray("heroIds")).ifEmpty { HeroCatalog.starterHeroes.map { it.id } },
             heroProgress = decodeObjectArray(json.optJSONArray("heroProgress"), ::decodeHeroProgress),
@@ -149,6 +157,12 @@ internal object PlaySessionSnapshotJson {
         .put("goldPerHour", report.goldPerHour)
         .put("activeGoldPerHour", report.activeGoldPerHour)
         .put("coreCrewHeroIds", JSONArray().also { array -> report.coreCrewHeroIds.forEach { array.put(it) } })
+        .put("supplies", report.supplies)
+        .put("suppliesPerHour", report.suppliesPerHour)
+        .put("activeSuppliesPerHour", report.activeSuppliesPerHour)
+        .put("lootFinds", JSONArray().also { array ->
+            report.lootFinds.forEach { item -> array.put(encodeLootItem(LootItemSnapshot.fromItem(item))) }
+        })
 
     private fun decodePassiveIncomeReport(json: JSONObject): PassiveIncomeReport = PassiveIncomeReport(
         sinceMillis = json.optLong("sinceMillis"),
@@ -161,6 +175,10 @@ internal object PlaySessionSnapshotJson {
         goldPerHour = json.optInt("goldPerHour"),
         activeGoldPerHour = json.optInt("activeGoldPerHour"),
         coreCrewHeroIds = decodeStringArray(json.optJSONArray("coreCrewHeroIds")),
+        supplies = json.optInt("supplies"),
+        suppliesPerHour = json.optInt("suppliesPerHour"),
+        activeSuppliesPerHour = json.optInt("activeSuppliesPerHour"),
+        lootFinds = decodeObjectArray(json.optJSONArray("lootFinds"), ::decodeLootItem).map { it.toItem() },
     )
 
     private fun decodeAchievementProgress(json: JSONObject): AchievementProgress? {

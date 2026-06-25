@@ -15,11 +15,15 @@ class PlaySessionSnapshotTest {
         val state = PlaySessionState.initial().copy(
             gold = 2_000,
             reputation = 29,
+            supplies = 13,
             guildLevel = 4,
             completedQuestCount = 5,
+            clearedQuestIds = setOf("cave_minor_regrets", "the_tower_built_sideways"),
             noticeBoardLevel = 3,
             trainingYardLevel = 2,
             bunkRoomLevel = 3,
+            armoryForgeLevel = 2,
+            tavernKitchenLevel = 1,
             heroes = HeroCatalog.starterHeroes + extraHero,
             coreCrewHeroIds = (HeroCatalog.starterHeroes.take(2) + extraHero).map { it.id },
             lootRolls = 7,
@@ -40,6 +44,10 @@ class PlaySessionSnapshotTest {
                 goldPerHour = 120,
                 activeGoldPerHour = 80,
                 coreCrewHeroIds = (HeroCatalog.starterHeroes.take(2) + extraHero).map { it.id },
+                supplies = 2,
+                suppliesPerHour = 8,
+                activeSuppliesPerHour = 5,
+                lootFinds = generatedLoot.take(1),
             ),
             lastOfflinePassiveIncidents = listOf(
                 PassiveIncident(
@@ -139,6 +147,8 @@ class PlaySessionSnapshotTest {
             trainingYardLevel = 99,
             bunkRoomLevel = 99,
             scoutTableLevel = 99,
+            armoryForgeLevel = 99,
+            tavernKitchenLevel = 99,
         )
 
         val restored = snapshot.toState()
@@ -156,7 +166,17 @@ class PlaySessionSnapshotTest {
             GuildFacilityCatalog.definition(GuildFacility.ScoutTable).maxLevel,
             restored.scoutTableLevel,
         )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.ArmoryForge).maxLevel,
+            restored.armoryForgeLevel,
+        )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.TavernKitchen).maxLevel,
+            restored.tavernKitchenLevel,
+        )
         assertEquals(0, snapshot.copy(scoutTableLevel = -1).toState().scoutTableLevel)
+        assertEquals(0, snapshot.copy(armoryForgeLevel = -1).toState().armoryForgeLevel)
+        assertEquals(0, snapshot.copy(tavernKitchenLevel = -1).toState().tavernKitchenLevel)
     }
 
     @Test

@@ -207,6 +207,7 @@ data class Quest(
     val tags: List<QuestTag> = emptyList(),
     val recommendedHeroIds: List<String> = emptyList(),
     val unlockRequirement: QuestUnlockRequirement = QuestUnlockRequirement(),
+    val firstClearTicketRewards: Map<String, Int> = emptyMap(),
 ) {
     val difficultyTier: QuestDifficultyTier
         get() = when {

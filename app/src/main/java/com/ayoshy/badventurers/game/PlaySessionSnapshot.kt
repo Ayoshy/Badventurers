@@ -4,12 +4,16 @@ data class PlaySessionSnapshot(
     val version: Int,
     val gold: Int,
     val reputation: Int,
+    val supplies: Int = 0,
     val guildLevel: Int,
     val completedQuestCount: Int,
+    val clearedQuestIds: Set<String> = emptySet(),
     val noticeBoardLevel: Int,
     val trainingYardLevel: Int,
     val bunkRoomLevel: Int,
     val scoutTableLevel: Int = 0,
+    val armoryForgeLevel: Int = 0,
+    val tavernKitchenLevel: Int = 0,
     val lootRolls: Int,
     val heroIds: List<String> = HeroCatalog.starterHeroes.map { it.id },
     val heroProgress: List<HeroProgressSnapshot> = emptyList(),
@@ -41,6 +45,8 @@ data class PlaySessionSnapshot(
         val migratedTrainingYardLevel = migratedFacilityLevel(GuildFacility.TrainingYard, trainingYardLevel)
         val migratedBunkRoomLevel = migratedFacilityLevel(GuildFacility.BunkRoom, bunkRoomLevel)
         val migratedScoutTableLevel = migratedOptionalFacilityLevel(GuildFacility.ScoutTable, scoutTableLevel)
+        val migratedArmoryForgeLevel = migratedOptionalFacilityLevel(GuildFacility.ArmoryForge, armoryForgeLevel)
+        val migratedTavernKitchenLevel = migratedOptionalFacilityLevel(GuildFacility.TavernKitchen, tavernKitchenLevel)
         val restoredPendingLootItems = pendingLootItems.map { it.toItem() }
         val restoredPendingLootKeepLimit = if (restoredPendingLootItems.isEmpty()) {
             0
@@ -56,12 +62,16 @@ data class PlaySessionSnapshot(
         val restoredState = PlaySessionState(
             gold = gold,
             reputation = reputation,
+            supplies = supplies,
             guildLevel = guildLevel,
             completedQuestCount = completedQuestCount,
+            clearedQuestIds = clearedQuestIds.filter { it in SeedGame.questById }.toSet(),
             noticeBoardLevel = migratedNoticeBoardLevel,
             trainingYardLevel = migratedTrainingYardLevel,
             bunkRoomLevel = migratedBunkRoomLevel,
             scoutTableLevel = migratedScoutTableLevel,
+            armoryForgeLevel = migratedArmoryForgeLevel,
+            tavernKitchenLevel = migratedTavernKitchenLevel,
             heroes = restoredHeroes,
             coreCrewHeroIds = coreCrewHeroIds,
             lootRolls = lootRolls,
@@ -82,7 +92,7 @@ data class PlaySessionSnapshot(
     }
 
     companion object {
-        const val CURRENT_VERSION = 17
+        const val CURRENT_VERSION = 18
 
         fun initial(): PlaySessionSnapshot {
             return fromState(PlaySessionState.initial())
@@ -93,12 +103,16 @@ data class PlaySessionSnapshot(
                 version = CURRENT_VERSION,
                 gold = state.gold,
                 reputation = state.reputation,
+                supplies = state.supplies,
                 guildLevel = state.guildLevel,
                 completedQuestCount = state.completedQuestCount,
+                clearedQuestIds = state.clearedQuestIds,
                 noticeBoardLevel = state.noticeBoardLevel,
                 trainingYardLevel = state.trainingYardLevel,
                 bunkRoomLevel = state.bunkRoomLevel,
                 scoutTableLevel = state.scoutTableLevel,
+                armoryForgeLevel = state.armoryForgeLevel,
+                tavernKitchenLevel = state.tavernKitchenLevel,
                 lootRolls = state.lootRolls,
                 heroIds = state.heroes.map { it.id },
                 heroProgress = state.heroes.map { HeroProgressSnapshot.fromHero(it) },

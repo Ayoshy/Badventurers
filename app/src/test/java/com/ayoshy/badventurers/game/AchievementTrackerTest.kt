@@ -126,6 +126,20 @@ class AchievementTrackerTest {
         assertEquals(withAll, claimed.claimAllAchievements(nowMillis = 10_000L).recruitmentTickets)
     }
 
+    @Test
+    fun regionalLiabilityAchievementGrantsEpicTicketOnlyOnce() {
+        val state = PlaySessionState.initial().copy(
+            achievementProgress = completedProgress("regional_liability"),
+        )
+        val claimed = state.claimAchievement("regional_liability", nowMillis = 5_000L)
+        val expected = RecruitmentTicketCatalog.normalizedInventory(
+            mapOf(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1),
+        )
+
+        assertEquals(expected, claimed.recruitmentTickets)
+        assertEquals(expected, claimed.claimAchievement("regional_liability", nowMillis = 6_000L).recruitmentTickets)
+    }
+
     private fun PlaySessionState.isCompleted(achievementId: String): Boolean {
         val definition = AchievementCatalog.byId.getValue(achievementId)
         return achievementProgressFor(definition).isCompleted(definition)

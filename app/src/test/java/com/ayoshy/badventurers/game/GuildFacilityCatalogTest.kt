@@ -16,6 +16,8 @@ class GuildFacilityCatalogTest {
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.TrainingYard).implemented)
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.BunkRoom).implemented)
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.ScoutTable).implemented)
+        assertTrue(GuildFacilityCatalog.definition(GuildFacility.ArmoryForge).implemented)
+        assertTrue(GuildFacilityCatalog.definition(GuildFacility.TavernKitchen).implemented)
     }
 
     @Test
@@ -91,19 +93,31 @@ class GuildFacilityCatalogTest {
     }
 
     @Test
-    fun futureFacilitiesUseUnlockRequirementsBeforeTheyCanUpgrade() {
+    fun passiveEconomyFacilitiesUseUnlockRequirementsBeforeTheyCanUpgrade() {
         val locked = PlaySessionState.initial().copy(
             reputation = 0,
             completedQuestCount = 0,
             noticeBoardLevel = 1,
+            trainingYardLevel = 1,
+            gold = 10_000,
         )
-        val unlocked = locked.copy(
+        val armoryReady = locked.copy(
             completedQuestCount = 3,
             noticeBoardLevel = 2,
         )
+        val tavernReady = locked.copy(
+            completedQuestCount = 3,
+            trainingYardLevel = 2,
+        )
 
         assertFalse(locked.facilityUpgradeState(GuildFacility.ArmoryForge).unlocked)
-        assertTrue(unlocked.facilityUpgradeState(GuildFacility.ArmoryForge).unlocked)
-        assertFalse(unlocked.canUpgradeFacility(GuildFacility.ArmoryForge))
+        assertTrue(armoryReady.facilityUpgradeState(GuildFacility.ArmoryForge).unlocked)
+        assertTrue(armoryReady.canUpgradeFacility(GuildFacility.ArmoryForge))
+        assertEquals(1, armoryReady.upgradeArmoryForge().armoryForgeLevel)
+
+        assertFalse(locked.facilityUpgradeState(GuildFacility.TavernKitchen).unlocked)
+        assertTrue(tavernReady.facilityUpgradeState(GuildFacility.TavernKitchen).unlocked)
+        assertTrue(tavernReady.canUpgradeFacility(GuildFacility.TavernKitchen))
+        assertEquals(1, tavernReady.upgradeTavernKitchen().tavernKitchenLevel)
     }
 }

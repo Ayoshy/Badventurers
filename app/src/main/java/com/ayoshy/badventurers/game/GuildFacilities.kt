@@ -165,6 +165,7 @@ object GuildFacilityCatalog {
                 requiredFacilityLevels = mapOf(GuildFacility.NoticeBoard to 2),
             ),
             effects = listOf(GuildFacilityEffect.LootQuality),
+            implemented = true,
         ),
         GuildFacilityDefinition(
             facility = GuildFacility.Infirmary,
@@ -201,6 +202,7 @@ object GuildFacilityCatalog {
                 requiredFacilityLevels = mapOf(GuildFacility.TrainingYard to 2),
             ),
             effects = listOf(GuildFacilityEffect.HeroXpGain, GuildFacilityEffect.OfflineCap),
+            implemented = true,
         ),
         GuildFacilityDefinition(
             facility = GuildFacility.AccountantOffice,

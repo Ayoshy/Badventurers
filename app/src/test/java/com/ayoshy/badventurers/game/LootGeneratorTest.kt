@@ -101,16 +101,24 @@ class LootGeneratorTest {
     }
 
     @Test
-    fun lootProfilesGateRareLootAtPalier2Threshold() {
+    fun lootProfilesGateRareAndEpicLootAtPalierThresholds() {
         assertEquals(100, LootGenerator.baseLootProfile.totalWeight)
         assertEquals(100, LootGenerator.palier2RareLootProfile.totalWeight)
+        assertEquals(100, LootGenerator.palier3EpicLootProfile.totalWeight)
         assertEquals(0, LootGenerator.baseLootProfile.rareOrBetterWeight)
         assertEquals(10, LootGenerator.palier2RareLootProfile.rareWeight)
         assertEquals(10, LootGenerator.palier2RareLootProfile.rareOrBetterWeight)
+        assertEquals(15, LootGenerator.palier3EpicLootProfile.rareWeight)
+        assertEquals(5, LootGenerator.palier3EpicLootProfile.epicWeight)
+        assertEquals(20, LootGenerator.palier3EpicLootProfile.rareOrBetterWeight)
         assertEquals(LootGenerator.baseLootProfile, LootGenerator.lootProfileForProgress(7))
         assertEquals(LootGenerator.palier2RareLootProfile, LootGenerator.lootProfileForProgress(8))
+        assertEquals(LootGenerator.palier2RareLootProfile, LootGenerator.lootProfileForProgress(12))
+        assertEquals(LootGenerator.palier3EpicLootProfile, LootGenerator.lootProfileForProgress(13))
         assertEquals(false, LootGenerator.isRareLootUnlocked(7))
         assertEquals(true, LootGenerator.isRareLootUnlocked(8))
+        assertEquals(false, LootGenerator.isEpicLootUnlocked(12))
+        assertEquals(true, LootGenerator.isEpicLootUnlocked(13))
     }
 
     @Test
@@ -136,6 +144,19 @@ class LootGeneratorTest {
 
         assertTrue("Rare count should stay near the 10% Palier 2 weight, got $rareCount.", rareCount in 70..130)
         assertEquals(0, items.count { it.rarity == LootRarity.Epic || it.rarity == LootRarity.Relic })
+    }
+
+    @Test
+    fun palier3GenerationRollsBalancedEpicChanceWithoutRelic() {
+        val items = LootGenerator.generate(
+            rolls = 2_000,
+            seed = 13,
+            lootProfile = LootGenerator.lootProfileForProgress(13),
+        )
+        val epicCount = items.count { it.rarity == LootRarity.Epic }
+
+        assertTrue("Epic count should stay near the 5% Palier 3 weight, got $epicCount.", epicCount in 70..130)
+        assertEquals(0, items.count { it.rarity == LootRarity.Relic })
     }
 
     @Test

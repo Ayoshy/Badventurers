@@ -237,11 +237,116 @@ object SeedGame {
                 ),
             ),
         ),
+        Quest(
+            id = "wedding_with_too_many_oaths",
+            title = "Wedding With Too Many Oaths",
+            summary = "330 s. High risk. Every vow has witnesses, clauses, and emergency seating.",
+            durationSeconds = 330,
+            difficulty = 344,
+            risk = QuestRisk.High,
+            baseGold = 1260,
+            pityGold = 145,
+            partySlots = 5,
+            tags = listOf(QuestTag.Contract, QuestTag.Holy, QuestTag.Guard, QuestTag.Escort, QuestTag.Paperwork, QuestTag.Urban),
+            recommendedHeroIds = listOf("pax", "quill", "comptable", "darrik", "paladin", "ledger", "pippa"),
+            unlockRequirement = QuestUnlockRequirement(
+                conditions = listOf(
+                    QuestUnlockCondition(
+                        minCompletedQuestCount = 12,
+                        minReputation = 48,
+                        minNoticeBoardLevel = 3,
+                        minTrainingYardLevel = 3,
+                        minBunkRoomLevel = 2,
+                    ),
+                ),
+            ),
+            firstClearTicketRewards = mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+        ),
+        Quest(
+            id = "the_sunken_toll_booth",
+            title = "The Sunken Toll Booth",
+            summary = "360 s. High risk. The booth sank years ago, but the fee schedule learned to swim.",
+            durationSeconds = 360,
+            difficulty = 356,
+            risk = QuestRisk.High,
+            baseGold = 1340,
+            pityGold = 155,
+            partySlots = 5,
+            tags = listOf(QuestTag.Swamp, QuestTag.Debt, QuestTag.Contract, QuestTag.Trap, QuestTag.Heist, QuestTag.Urban),
+            recommendedHeroIds = listOf("elementaire_de_sel", "jardinier", "nell", "vex", "quill", "comptable", "brugg"),
+            unlockRequirement = QuestUnlockRequirement(
+                conditions = listOf(
+                    QuestUnlockCondition(
+                        minCompletedQuestCount = 13,
+                        minReputation = 52,
+                        minNoticeBoardLevel = 3,
+                        minTrainingYardLevel = 3,
+                        minBunkRoomLevel = 2,
+                    ),
+                ),
+            ),
+        ),
+        Quest(
+            id = "the_crowns_missing_receipt",
+            title = "The Crown's Missing Receipt",
+            summary = "390 s. High risk. The throne paid for something heroic and misplaced the proof.",
+            durationSeconds = 390,
+            difficulty = 370,
+            risk = QuestRisk.High,
+            baseGold = 1460,
+            pityGold = 165,
+            partySlots = 5,
+            tags = listOf(QuestTag.Paperwork, QuestTag.Contract, QuestTag.Guard, QuestTag.Stealth, QuestTag.Debt, QuestTag.Urban),
+            recommendedHeroIds = listOf("ledger", "comptable", "quill", "sable", "nell", "vex", "darrik"),
+            unlockRequirement = QuestUnlockRequirement(
+                conditions = listOf(
+                    QuestUnlockCondition(
+                        minCompletedQuestCount = 14,
+                        minReputation = 56,
+                        minNoticeBoardLevel = 4,
+                        minTrainingYardLevel = 3,
+                        minBunkRoomLevel = 3,
+                    ),
+                ),
+            ),
+            firstClearTicketRewards = mapOf(RecruitmentTicketCatalog.VETERAN_TICKET_ID to 1),
+        ),
+        Quest(
+            id = "the_tower_built_sideways",
+            title = "The Tower Built Sideways",
+            summary = "420 s. High risk. The stairs go left, the roof goes down, and the lease is terrified.",
+            durationSeconds = 420,
+            difficulty = 390,
+            risk = QuestRisk.High,
+            baseGold = 1600,
+            pityGold = 180,
+            partySlots = 5,
+            tags = listOf(QuestTag.Magic, QuestTag.Ancient, QuestTag.Wall, QuestTag.Obstacle, QuestTag.Collapse, QuestTag.Breach, QuestTag.Paperwork),
+            recommendedHeroIds = listOf("mira", "pippa", "expert_en_demolition", "brugg", "troll_stupide", "orla", "quill"),
+            unlockRequirement = QuestUnlockRequirement(
+                conditions = listOf(
+                    QuestUnlockCondition(
+                        minCompletedQuestCount = 15,
+                        minReputation = 60,
+                        minNoticeBoardLevel = 4,
+                        minTrainingYardLevel = 4,
+                        minBunkRoomLevel = 3,
+                    ),
+                ),
+            ),
+            firstClearTicketRewards = mapOf(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1),
+        ),
     )
 
     val questById = quests.associateBy { it.id }
 
     init {
         require(quests.size == questById.size) { "Quest ids must be unique." }
+        require(quests.all { quest -> quest.firstClearTicketRewards.keys.all { it in RecruitmentTicketCatalog.byId } }) {
+            "Quest first-clear ticket rewards must reference known tickets."
+        }
+        require(quests.all { quest -> quest.firstClearTicketRewards.values.all { it > 0 } }) {
+            "Quest first-clear ticket rewards must be positive."
+        }
     }
 }

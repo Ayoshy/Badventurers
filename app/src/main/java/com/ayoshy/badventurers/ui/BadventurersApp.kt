@@ -372,6 +372,8 @@ fun BadventurersApp(
                             onBuyTrainingYard = { updateSession(session.upgradeTrainingYard()) },
                             onBuyBunkRoom = { updateSession(session.upgradeBunkRoom()) },
                             onBuyScoutTable = { updateSession(session.upgradeScoutTable()) },
+                            onBuyArmoryForge = { updateSession(session.upgradeArmoryForge()) },
+                            onBuyTavernKitchen = { updateSession(session.upgradeTavernKitchen()) },
                         )
                         GameTab.Achievements -> AchievementsScreen(
                             session = session,

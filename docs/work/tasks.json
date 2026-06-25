@@ -256,7 +256,7 @@
     {
       "id": "BV-006",
       "title": "Palier 3: add Regional Liability quests 13 to 16",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "area": "content",
       "track": "Palier 3",
@@ -264,40 +264,50 @@
       "acceptance": [
         {
           "text": "Add quests 13 to 16 with tags, risk tier, duration, difficulty, reward focus, and unlock gates.",
-          "done": false
+          "done": true
         },
         {
           "text": "Unlock Epic hero ticket rewards from achievements and first clears.",
-          "done": false
+          "done": true
         },
         {
           "text": "Unlock Epic loot chance through high-risk quests or Armory/Forge.",
-          "done": false
+          "done": true
         },
         {
           "text": "Unlock Reward Choice as a regular Great Success payoff.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add more hero-specific plan clauses.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add banners or explicit temporary art briefs and journal lines.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add balance and unlock ladder tests.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
         "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionPlans.kt",
         "app/src/main/java/com/ayoshy/badventurers/game/RecruitmentTickets.kt",
-        "app/src/test/java/com/ayoshy/badventurers/game/QuestCatalogueBalanceTest.kt"
+        "app/src/test/java/com/ayoshy/badventurers/game/QuestCatalogueBalanceTest.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/SeedGame.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/Loot.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/Achievements.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiArt.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiText.kt",
+        "docs/content/quest-catalog.md",
+        "docs/data/quests.csv",
+        "docs/data/expedition-plans.csv"
       ],
       "notes": [
-        "Migrated from Palier 3: Regional Liability."
+        "Migrated from Palier 3: Regional Liability.",
+        "2026-06-25: Added Regional Liability quests 13-16 with unlock gates, first-clear ticket rewards, Epic loot profile after 13 clears, quest-specific clauses, journal/localization/art briefs, persistence for cleared quest ids, and focused balance/snapshot tests."
       ]
     },
     {
@@ -351,7 +361,7 @@
     {
       "id": "BV-008",
       "title": "Passive guild economy: supplies, errands, loot finds, and caps",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "passive",
       "track": "Passive Guild Income",
@@ -359,23 +369,23 @@
       "acceptance": [
         {
           "text": "Add passive supplies or guild errands as a future prep resource.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add low-frequency passive loot finds gated by Armory/Forge and Scout Table.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add offline cap upgrades through facilities.",
-          "done": false
+          "done": true
         },
         {
           "text": "Keep passive rewards below active quest rewards unless the guild is heavily built for passive income.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add domain, snapshot, and JSON tests for any new passive resource.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -384,7 +394,8 @@
         "app/src/main/java/com/ayoshy/badventurers/storage/PlaySessionSnapshotJson.kt"
       ],
       "notes": [
-        "Migrated from Passive Income Model."
+        "Migrated from Passive Income Model.",
+        "2026-06-25: Added persisted supplies, facility-based offline cap bonuses, Armory/Forge + Scout Table passive loot finds, Offline Summary surfacing, and domain/snapshot/JSON coverage."
       ]
     },
     {
@@ -776,7 +787,7 @@
     {
       "id": "BV-021",
       "title": "New items",
-      "status": "blocked",
+      "status": "done",
       "priority": "P2",
       "area": "loot",
       "track": "Backlog",
@@ -792,15 +803,15 @@
         },
         {
           "text": "Give every loot definition a unique production-quality artwork reference; placeholder geometry does not count.",
-          "done": false
+          "done": true
         },
         {
           "text": "Update docs/data/items.csv and the hero/item catalog to mirror accepted rarity, art, and stat rules.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add tests or checks that prevent placeholder/fallback art from being accepted as final item artwork.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -815,7 +826,9 @@
         "2026-06-25: Added fixed-rarity loot definitions with 25 Common legacy items and 8 items each for Uncommon/Rare/Epic/Relic, generated one vector art resource per item, moved item rendering to LootArt, updated CSV/catalog docs, and verified targeted tests, full test, assembleDebug, and lintDebug.",
         "2026-06-25: User rejected the generated XML placeholder shapes as unacceptable item artwork. BV-021 is blocked/not accepted until the placeholder resources are removed or replaced by real reviewed item art.",
         "2026-06-25: BV-022/BV-023 remediation completed and documented; BV-021 remains blocked until BV-024/BV-025/BV-026 deliver accepted production item art.",
-        "2026-06-25: BV-024 Common artwork is now accepted and integrated; BV-021 remains blocked until BV-025 and BV-026 provide accepted production art for Uncommon/Rare/Epic/Relic items."
+        "2026-06-25: BV-024 Common artwork is now accepted and integrated; BV-021 remains blocked until BV-025 and BV-026 provide accepted production art for Uncommon/Rare/Epic/Relic items.",
+        "2026-06-25: BV-025 Uncommon/Rare artwork is now accepted and integrated; BV-021 remains blocked until BV-026 provides accepted production art for Epic/Relic items.",
+        "2026-06-25: BV-026 Epic/Relic artwork completed the production-art pass for all 57 current loot definitions; BV-021 is now accepted with docs/data/tests/validator aligned."
       ]
     },
     {
@@ -935,7 +948,7 @@
     {
       "id": "BV-025",
       "title": "Produce reviewed Uncommon and Rare loot artwork batches",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "art",
       "track": "Loot Art Production",
@@ -943,19 +956,19 @@
       "acceptance": [
         {
           "text": "Create reviewed artwork for all 8 Uncommon item ids.",
-          "done": false
+          "done": true
         },
         {
           "text": "Create reviewed artwork for all 8 Rare item ids.",
-          "done": false
+          "done": true
         },
         {
           "text": "Ensure Uncommon and Rare assets are visually distinct by object design, not only border or palette.",
-          "done": false
+          "done": true
         },
         {
           "text": "Integrate and verify assets in the Loot and Heroes screens.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -963,12 +976,14 @@
         "app/src/main/res-loot/",
         "app/src/main/java/com/ayoshy/badventurers/game/Loot.kt"
       ],
-      "notes": []
+      "notes": [
+        "2026-06-25: Generated and integrated 16 Uncommon/Rare loot PNG assets under app/src/main/res-loot/drawable-nodpi, wired them through acceptedLootArtResourceIds, updated docs/data, generated the BV-025 contact sheet, and verified validator/test/assembleDebug/lintDebug plus emulator Loot/Heroes captures."
+      ]
     },
     {
       "id": "BV-026",
       "title": "Produce reviewed Epic and Relic loot artwork batches",
-      "status": "later",
+      "status": "done",
       "priority": "P2",
       "area": "art",
       "track": "Loot Art Production",
@@ -976,19 +991,19 @@
       "acceptance": [
         {
           "text": "Create reviewed artwork for all 8 Epic item ids.",
-          "done": false
+          "done": true
         },
         {
           "text": "Create reviewed artwork for all 8 Relic item ids.",
-          "done": false
+          "done": true
         },
         {
           "text": "Ensure Epic and Relic assets look meaningfully premium without breaking mobile readability.",
-          "done": false
+          "done": true
         },
         {
           "text": "Integrate and verify assets in the Loot and Heroes screens.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -996,7 +1011,9 @@
         "app/src/main/res-loot/",
         "docs/design/art-direction.md"
       ],
-      "notes": []
+      "notes": [
+        "2026-06-25: Generated, sliced, integrated, and verified 16 Epic/Relic loot PNG assets under app/src/main/res-loot/drawable-nodpi; validator/testDebugUnitTest/assembleDebug/lintDebug passed and emulator Loot/Heroes captures verified runtime rendering."
+      ]
     }
   ]
 }

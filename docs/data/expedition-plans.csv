@@ -16,3 +16,7 @@ paperwork_toll_of_chaos_clause;Stamp the Border Toll;Collect and re-collect sign
 licensed_guild_caravan_haunt_clause;Demand a Manifest;Make the caravan submit the same manifest seven times to avoid arguing with a checkpoint captain.;quest_specific;licensed_guild_caravan_haunt;-12;-8;8;0;1;0
 notary_night_patrol_clause;Read the Oath of the Night;Make every night patrol recite the same oath and keep the same route map.;quest_specific;notary_night_patrol;10;16;-4;10;0;10
 inspectorate_cove_banquet_clause;Comply With Banquet Etiquette;Serve the inspectorate in order and make the paperwork look expensive.;quest_specific;inspectorate_cove_banquet;24;12;3;18;0;8
+wedding_oath_ledger;Audit the Vows;Count every promise as a liability before the cake can testify.;quest_specific;wedding_with_too_many_oaths;18;16;-4;10;0;8
+sunken_toll_dredge;Dredge the Lost Drawer;Search below the booth for fees, receipts, and whatever is still jingling.;quest_specific;the_sunken_toll_booth;20;-4;4;12;1;0
+crown_receipt_subpoena;Subpoena the Crown;Turn royal embarrassment into a signed route through the archives.;quest_specific;the_crowns_missing_receipt;15;10;-2;25;0;6
+sideways_tower_brace;Brace the Sideways Stairs;Make the tower admit which direction is up before anyone signs the climb.;quest_specific;the_tower_built_sideways;25;22;-8;0;0;12

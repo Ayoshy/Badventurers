@@ -405,6 +405,22 @@ internal fun questBannerArtReference(quest: Quest): QuestBannerArtReference =
             resourceId = R.drawable.quest_banner_03,
             temporaryBrief = "Coastal banquet table with inspector seals, emergency audit papers, and anxious serving covers.",
         )
+        "wedding_with_too_many_oaths" -> QuestBannerArtReference(
+            resourceId = R.drawable.quest_banner_03,
+            temporaryBrief = "Crowded guild wedding hall with oath scrolls, witness benches, brass seals, and a cake under legal review.",
+        )
+        "the_sunken_toll_booth" -> QuestBannerArtReference(
+            resourceId = R.drawable.quest_banner_03,
+            temporaryBrief = "Half-submerged toll booth in swamp water with floating coins, stamped driftwood, and a glowing fee schedule.",
+        )
+        "the_crowns_missing_receipt" -> QuestBannerArtReference(
+            resourceId = R.drawable.quest_banner_03,
+            temporaryBrief = "Royal archive desk buried in ribbons, crowns, missing receipts, and worried guards checking drawers.",
+        )
+        "the_tower_built_sideways" -> QuestBannerArtReference(
+            resourceId = R.drawable.quest_banner_03,
+            temporaryBrief = "Impossible tower leaning sideways with braces, cracked stairs, magic survey lines, and tiny adventurers climbing left.",
+        )
         else -> QuestBannerArtReference(R.drawable.quest_banner_03)
     }
 
@@ -457,9 +473,9 @@ internal fun LootIconPanel(item: LootItem, contentDescription: String) {
 }
 
 internal fun lootArtResource(item: LootItem): Int =
-    commonLootArtResourceIds[item.id] ?: lootIconResource(item.icon)
+    acceptedLootArtResourceIds[item.id] ?: lootIconResource(item.icon)
 
-internal val commonLootArtResourceIds: Map<String, Int> = mapOf(
+internal val acceptedLootArtResourceIds: Map<String, Int> = mapOf(
     "weapon_bent_spoon" to R.drawable.loot_art_weapon_bent_spoon,
     "weapon_fork_spear" to R.drawable.loot_art_weapon_fork_spear,
     "weapon_moon_axe" to R.drawable.loot_art_weapon_moon_axe,
@@ -485,6 +501,38 @@ internal val commonLootArtResourceIds: Map<String, Int> = mapOf(
     "consumable_tiny_flask" to R.drawable.loot_art_consumable_tiny_flask,
     "consumable_odd_elixir" to R.drawable.loot_art_consumable_odd_elixir,
     "consumable_snap_tonic" to R.drawable.loot_art_consumable_snap_tonic,
+    "weapon_receipt_cutter" to R.drawable.loot_art_weapon_receipt_cutter,
+    "weapon_mop_halberd" to R.drawable.loot_art_weapon_mop_halberd,
+    "armor_buttoned_barrel" to R.drawable.loot_art_armor_buttoned_barrel,
+    "footwear_squeaky_greaves" to R.drawable.loot_art_footwear_squeaky_greaves,
+    "trinket_queue_token" to R.drawable.loot_art_trinket_queue_token,
+    "headgear_bucket_visor" to R.drawable.loot_art_headgear_bucket_visor,
+    "consumable_warmish_tea" to R.drawable.loot_art_consumable_warmish_tea,
+    "consumable_pickle_potion" to R.drawable.loot_art_consumable_pickle_potion,
+    "weapon_fine_print_rapier" to R.drawable.loot_art_weapon_fine_print_rapier,
+    "weapon_taxman_gavel" to R.drawable.loot_art_weapon_taxman_gavel,
+    "armor_invoice_mail" to R.drawable.loot_art_armor_invoice_mail,
+    "footwear_witness_slippers" to R.drawable.loot_art_footwear_witness_slippers,
+    "trinket_overtime_hourglass" to R.drawable.loot_art_trinket_overtime_hourglass,
+    "headgear_notary_wig" to R.drawable.loot_art_headgear_notary_wig,
+    "consumable_bottled_courage" to R.drawable.loot_art_consumable_bottled_courage,
+    "trinket_minor_oracle_receipt" to R.drawable.loot_art_trinket_minor_oracle_receipt,
+    "weapon_auditors_halberd" to R.drawable.loot_art_weapon_auditors_halberd,
+    "weapon_dragon_stamp" to R.drawable.loot_art_weapon_dragon_stamp,
+    "armor_misfiled_aegis" to R.drawable.loot_art_armor_misfiled_aegis,
+    "footwear_plausible_denial_boots" to R.drawable.loot_art_footwear_plausible_denial_boots,
+    "trinket_bell_of_last_call" to R.drawable.loot_art_trinket_bell_of_last_call,
+    "headgear_emergency_minutes_crown" to R.drawable.loot_art_headgear_emergency_minutes_crown,
+    "consumable_second_chance_soup" to R.drawable.loot_art_consumable_second_chance_soup,
+    "trinket_contract_knot" to R.drawable.loot_art_trinket_contract_knot,
+    "weapon_spoon_final_notice" to R.drawable.loot_art_weapon_spoon_final_notice,
+    "weapon_moonlit_receipt_cleaver" to R.drawable.loot_art_weapon_moonlit_receipt_cleaver,
+    "armor_many_signatures_cloak" to R.drawable.loot_art_armor_many_signatures_cloak,
+    "footwear_inevitable_return_sandals" to R.drawable.loot_art_footwear_inevitable_return_sandals,
+    "trinket_perpetual_queue_ring" to R.drawable.loot_art_trinket_perpetual_queue_ring,
+    "headgear_halo_compliance" to R.drawable.loot_art_headgear_halo_compliance,
+    "consumable_absolute_maybe_elixir" to R.drawable.loot_art_consumable_absolute_maybe_elixir,
+    "trinket_unpaid_charter_seal" to R.drawable.loot_art_trinket_unpaid_charter_seal,
 )
 
 internal fun lootIconResource(icon: LootIcon): Int =

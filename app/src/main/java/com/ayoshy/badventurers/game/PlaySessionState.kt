@@ -1,14 +1,20 @@
 package com.ayoshy.badventurers.game
 
+import kotlin.random.Random
+
 data class PlaySessionState(
     val gold: Int = 0,
     val reputation: Int = 0,
+    val supplies: Int = 0,
     val guildLevel: Int = 1,
     val completedQuestCount: Int = 0,
+    val clearedQuestIds: Set<String> = emptySet(),
     val noticeBoardLevel: Int = 1,
     val trainingYardLevel: Int = 1,
     val bunkRoomLevel: Int = 1,
     val scoutTableLevel: Int = 0,
+    val armoryForgeLevel: Int = 0,
+    val tavernKitchenLevel: Int = 0,
     val heroes: List<Hero> = HeroCatalog.starterHeroes,
     val coreCrewHeroIds: List<String> = defaultCoreCrewHeroIds(),
     val lootRolls: Int = 0,
@@ -118,6 +124,12 @@ data class PlaySessionState(
         val run = expedition ?: return this
         val result = run.result ?: return this
         val baseGold = collectableRewardGold(result)
+        val firstClearTicketRewards = if (result.isFirstClearSuccess() && run.quest.id !in clearedQuestIds) {
+            run.quest.firstClearTicketRewards
+        } else {
+            emptyMap()
+        }
+        val nextClearedQuestIds = if (result.isFirstClearSuccess()) clearedQuestIds + run.quest.id else clearedQuestIds
         val extraGold = fakeRewardedAdReward?.extraGold ?: 0
         val extraLootRolls = fakeRewardedAdReward?.extraLootRolls ?: 0
         val totalLootRolls = collectableLootRolls(result) + extraLootRolls
@@ -136,7 +148,9 @@ data class PlaySessionState(
             gold = gold + baseGold + extraGold,
             lootRolls = lootRolls + totalLootRolls,
             completedQuestCount = completedQuestCount + 1,
+            clearedQuestIds = nextClearedQuestIds,
             heroes = advancedHeroes,
+            recruitmentTickets = RecruitmentTicketCatalog.addToInventory(recruitmentTickets, firstClearTicketRewards),
             journalEntries = (journalEntries + generatedJournal).takeLast(12),
             expedition = null,
             lastOfflinePassiveIncome = null,
@@ -170,12 +184,14 @@ data class PlaySessionState(
         val incidentGold = incidents.sumOf { it.reward.gold }
         val incidentReputation = incidents.sumOf { it.reward.reputation }
 
-        return tracked.copy(
+        val credited = tracked.copy(
             gold = tracked.gold + passiveReport.gold + incidentGold,
             reputation = (tracked.reputation + incidentReputation).coerceAtLeast(0),
+            supplies = tracked.supplies + passiveReport.supplies,
             lastOfflinePassiveIncome = passiveReport,
             lastOfflinePassiveIncidents = incidents,
         )
+        return credited.appendPendingLoot(passiveReport.lootFinds, passiveLootCarryBreakdown(passiveReport.lootFinds.size))
     }
 
     fun isQuestUnlocked(quest: Quest): Boolean {
@@ -293,7 +309,7 @@ data class PlaySessionState(
 
     fun offlineReportHighlights(postCollectSession: PlaySessionState = collectResult()): OfflineReportHighlights =
         OfflineReportHighlights(
-            ticketInventory = normalizedRecruitmentTickets(),
+            ticketInventory = postCollectSession.normalizedRecruitmentTickets(),
             completedAchievementDelta = (postCollectSession.completedAchievementCount() - completedAchievementCount()).coerceAtLeast(0),
             claimableAchievementDelta = (postCollectSession.claimableAchievementCount() - claimableAchievementCount()).coerceAtLeast(0),
             claimableSealDelta = (postCollectSession.claimableAchievementSeals() - claimableAchievementSeals()).coerceAtLeast(0),
@@ -408,6 +424,26 @@ data class PlaySessionState(
             crewGold
     }
 
+    fun passiveSuppliesPerHour(activeExpeditionHeroIds: Collection<String> = emptyList()): Int {
+        val crew = coreCrew()
+        if (crew.isEmpty()) return 0
+
+        val activeIds = activeExpeditionHeroIds.toSet()
+        val crewSupplies = crew.sumOf { hero -> coreCrewContribution(hero, activeIds).suppliesPerHour }
+        return PASSIVE_BASE_SUPPLIES_PER_HOUR +
+            scoutTablePassiveSuppliesPerHour() +
+            tavernKitchenPassiveSuppliesPerHour() +
+            crewSupplies
+    }
+
+    fun passiveLootFindChancePercent(): Int {
+        val armoryLevel = facilityLevel(GuildFacility.ArmoryForge)
+        val scoutLevel = facilityLevel(GuildFacility.ScoutTable)
+        if (armoryLevel <= 0 || scoutLevel <= 0) return 0
+        return (5 + armoryLevel * PASSIVE_ARMORY_LOOT_CHANCE_PERCENT_PER_LEVEL +
+            scoutLevel * PASSIVE_SCOUT_LOOT_CHANCE_PERCENT_PER_LEVEL).coerceAtMost(PASSIVE_LOOT_CHANCE_PERCENT_CAP)
+    }
+
     fun coreCrewContribution(
         hero: Hero,
         activeExpeditionHeroIds: Collection<String> = emptyList(),
@@ -419,13 +455,20 @@ data class PlaySessionState(
             hero.level * PASSIVE_HERO_LEVEL_GOLD_PER_HOUR +
             rarityBonus +
             passiveSpecialGoldPerHour(hero.special)
+        val fullSuppliesPerHour = PASSIVE_HERO_BASE_SUPPLIES_PER_HOUR +
+            hero.level / 2 +
+            passiveRaritySuppliesBonus(hero.rarity) +
+            passiveSpecialSuppliesPerHour(hero.special)
         val activePenaltyPercent = if (hero.id in activeExpeditionHeroIds) ACTIVE_EXPEDITION_CORE_CREW_PENALTY_PERCENT else 0
         val adjustedGoldPerHour = fullGoldPerHour * (100 - activePenaltyPercent) / 100
+        val adjustedSuppliesPerHour = fullSuppliesPerHour * (100 - activePenaltyPercent) / 100
         return CoreCrewContribution(
             heroId = hero.id,
             heroName = hero.name,
             fullGoldPerHour = fullGoldPerHour,
             goldPerHour = adjustedGoldPerHour,
+            fullSuppliesPerHour = fullSuppliesPerHour,
+            suppliesPerHour = adjustedSuppliesPerHour,
             activeExpeditionPenaltyPercent = activePenaltyPercent,
         )
     }
@@ -450,6 +493,15 @@ data class PlaySessionState(
         } else {
             0
         }
+        val activeSuppliesPerHour = passiveSuppliesPerHour(activeExpeditionHeroIds)
+        val idleSuppliesPerHour = passiveSuppliesPerHour()
+        val rawSupplies = proratedSupplies(activeSuppliesPerHour, activeSeconds) + proratedSupplies(idleSuppliesPerHour, idleSeconds)
+        val supplies = if (cappedSeconds > 0L && maxOf(activeSuppliesPerHour, idleSuppliesPerHour) > 0) {
+            rawSupplies.coerceAtLeast(1)
+        } else {
+            0
+        }
+        val random = Random(passiveIncomeSeed(sinceMillis, untilMillis))
 
         return PassiveIncomeReport(
             sinceMillis = sinceMillis,
@@ -462,10 +514,16 @@ data class PlaySessionState(
             goldPerHour = idleGoldPerHour,
             activeGoldPerHour = activeGoldPerHour,
             coreCrewHeroIds = normalizedCoreCrewHeroIds(),
+            supplies = supplies,
+            suppliesPerHour = idleSuppliesPerHour,
+            activeSuppliesPerHour = activeSuppliesPerHour,
+            lootFinds = passiveLootFinds(cappedSeconds, random),
         )
     }
 
-    fun passiveIncomeCapSeconds(): Long = PASSIVE_INCOME_CAP_SECONDS
+    fun passiveIncomeCapSeconds(): Long = PASSIVE_INCOME_CAP_SECONDS + passiveIncomeCapBonusSeconds()
+
+    fun passiveIncomeCapBonusSeconds(): Long = bunkRoomOfflineCapBonusSeconds() + tavernKitchenOfflineCapBonusSeconds()
 
     fun adjustGold(delta: Int): PlaySessionState =
         copy(gold = (gold + delta).coerceAtLeast(0))
@@ -478,11 +536,15 @@ data class PlaySessionState(
 
     fun resetProgressForTesting(): PlaySessionState =
         copy(
+            supplies = 0,
             completedQuestCount = 0,
+            clearedQuestIds = emptySet(),
             noticeBoardLevel = 1,
             trainingYardLevel = 1,
             bunkRoomLevel = 1,
             scoutTableLevel = 0,
+            armoryForgeLevel = 0,
+            tavernKitchenLevel = 0,
             heroes = HeroCatalog.starterHeroes,
             coreCrewHeroIds = defaultCoreCrewHeroIds(),
             lootRolls = 0,
@@ -508,9 +570,9 @@ data class PlaySessionState(
             GuildFacility.TrainingYard -> trainingYardLevel
             GuildFacility.BunkRoom -> bunkRoomLevel
             GuildFacility.ScoutTable -> scoutTableLevel
-            GuildFacility.ArmoryForge,
+            GuildFacility.ArmoryForge -> armoryForgeLevel
+            GuildFacility.TavernKitchen -> tavernKitchenLevel
             GuildFacility.Infirmary,
-            GuildFacility.TavernKitchen,
             GuildFacility.AccountantOffice -> 0
         }
 
@@ -533,6 +595,10 @@ data class PlaySessionState(
 
     fun scoutTableUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.ScoutTable)
 
+    fun armoryForgeUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.ArmoryForge)
+
+    fun tavernKitchenUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.TavernKitchen)
+
     fun upgradeNoticeBoard(): PlaySessionState = upgradeFacility(GuildFacility.NoticeBoard)
 
     fun upgradeTrainingYard(): PlaySessionState = upgradeFacility(GuildFacility.TrainingYard)
@@ -540,6 +606,10 @@ data class PlaySessionState(
     fun upgradeBunkRoom(): PlaySessionState = upgradeFacility(GuildFacility.BunkRoom)
 
     fun upgradeScoutTable(): PlaySessionState = upgradeFacility(GuildFacility.ScoutTable)
+
+    fun upgradeArmoryForge(): PlaySessionState = upgradeFacility(GuildFacility.ArmoryForge)
+
+    fun upgradeTavernKitchen(): PlaySessionState = upgradeFacility(GuildFacility.TavernKitchen)
 
     fun upgradeFacility(facility: GuildFacility): PlaySessionState {
         if (!canUpgradeFacility(facility)) return this
@@ -551,9 +621,9 @@ data class PlaySessionState(
             GuildFacility.TrainingYard -> copy(gold = gold - cost, trainingYardLevel = nextLevel)
             GuildFacility.BunkRoom -> copy(gold = gold - cost, bunkRoomLevel = nextLevel)
             GuildFacility.ScoutTable -> copy(gold = gold - cost, scoutTableLevel = nextLevel)
-            GuildFacility.ArmoryForge,
+            GuildFacility.ArmoryForge -> copy(gold = gold - cost, armoryForgeLevel = nextLevel)
+            GuildFacility.TavernKitchen -> copy(gold = gold - cost, tavernKitchenLevel = nextLevel)
             GuildFacility.Infirmary,
-            GuildFacility.TavernKitchen,
             GuildFacility.AccountantOffice -> return this
         }
         return AchievementTracker.applyEvent(
@@ -762,6 +832,17 @@ data class PlaySessionState(
         private const val PASSIVE_ACCOUNTANT_GOLD_PER_HOUR_PER_LEVEL = 14
         private const val PASSIVE_HERO_BASE_GOLD_PER_HOUR = 6
         private const val PASSIVE_HERO_LEVEL_GOLD_PER_HOUR = 3
+        private const val PASSIVE_BASE_SUPPLIES_PER_HOUR = 1
+        private const val PASSIVE_HERO_BASE_SUPPLIES_PER_HOUR = 1
+        private const val PASSIVE_SCOUT_TABLE_SUPPLIES_PER_HOUR_PER_LEVEL = 1
+        private const val PASSIVE_TAVERN_SUPPLIES_PER_HOUR_PER_LEVEL = 2
+        private const val PASSIVE_BUNK_ROOM_CAP_BONUS_SECONDS_PER_LEVEL = 30 * 60L
+        private const val PASSIVE_TAVERN_CAP_BONUS_SECONDS_PER_LEVEL = 45 * 60L
+        private const val PASSIVE_ARMORY_LOOT_CHANCE_PERCENT_PER_LEVEL = 7
+        private const val PASSIVE_SCOUT_LOOT_CHANCE_PERCENT_PER_LEVEL = 5
+        private const val PASSIVE_LOOT_CHANCE_PERCENT_CAP = 45
+        private const val PASSIVE_LOOT_MIN_SECONDS = 2 * 60 * 60L
+        private const val PASSIVE_LOOT_GUARANTEED_SECONDS = 3 * 60 * 60L
         private const val ACTIVE_EXPEDITION_CORE_CREW_PENALTY_PERCENT = 50
 
         fun initial(): PlaySessionState = PlaySessionState()
@@ -803,6 +884,18 @@ data class PlaySessionState(
     private fun accountantOfficePassiveGoldPerHour(): Int =
         facilityLevel(GuildFacility.AccountantOffice) * PASSIVE_ACCOUNTANT_GOLD_PER_HOUR_PER_LEVEL
 
+    private fun scoutTablePassiveSuppliesPerHour(): Int =
+        facilityLevel(GuildFacility.ScoutTable) * PASSIVE_SCOUT_TABLE_SUPPLIES_PER_HOUR_PER_LEVEL
+
+    private fun tavernKitchenPassiveSuppliesPerHour(): Int =
+        facilityLevel(GuildFacility.TavernKitchen) * PASSIVE_TAVERN_SUPPLIES_PER_HOUR_PER_LEVEL
+
+    private fun bunkRoomOfflineCapBonusSeconds(): Long =
+        (bunkRoomLevel - 1).coerceAtLeast(0) * PASSIVE_BUNK_ROOM_CAP_BONUS_SECONDS_PER_LEVEL
+
+    private fun tavernKitchenOfflineCapBonusSeconds(): Long =
+        facilityLevel(GuildFacility.TavernKitchen) * PASSIVE_TAVERN_CAP_BONUS_SECONDS_PER_LEVEL
+
     private fun passiveRarityBonusPercent(rarity: HeroRarity): Int = when (rarity) {
         HeroRarity.Common -> 0
         HeroRarity.Uncommon -> 8
@@ -823,8 +916,60 @@ data class PlaySessionState(
         else -> 3
     }
 
+    private fun passiveRaritySuppliesBonus(rarity: HeroRarity): Int = when (rarity) {
+        HeroRarity.Common -> 0
+        HeroRarity.Uncommon -> 1
+        HeroRarity.Rare -> 2
+        HeroRarity.Epic -> 3
+        HeroRarity.Legendary -> 4
+    }
+
+    private fun passiveSpecialSuppliesPerHour(special: HeroSpecial): Int = when (special) {
+        HeroSpecial.MoraleRations,
+        HeroSpecial.GreenThumb,
+        HeroSpecial.PreservationSalt -> 2
+        HeroSpecial.FreshTrail,
+        HeroSpecial.LightFingers,
+        HeroSpecial.DirtyJackpot -> 1
+        else -> 0
+    }
+
+    private fun passiveLootFinds(cappedSeconds: Long, random: Random): List<LootItem> {
+        val chance = passiveLootFindChancePercent()
+        if (cappedSeconds < PASSIVE_LOOT_MIN_SECONDS || chance <= 0) return emptyList()
+
+        val heavilyBuiltForPassiveLoot = armoryForgeLevel >= 3 && scoutTableLevel >= 2 && cappedSeconds >= PASSIVE_LOOT_GUARANTEED_SECONDS
+        val finds = if (heavilyBuiltForPassiveLoot || random.nextInt(100) < chance) 1 else 0
+        return LootGenerator.generate(
+            rolls = finds,
+            random = random,
+            lootProfile = LootGenerator.lootProfileForProgress(completedQuestCount),
+        )
+    }
+
+    private fun passiveLootCarryBreakdown(findCount: Int): LootCarryBreakdown =
+        if (findCount <= 0) LootCarryBreakdown() else LootCarryBreakdown(base = 1)
+
+    private fun passiveIncomeSeed(sinceMillis: Long, untilMillis: Long): Int {
+        var seed = mixedLongToInt(sinceMillis)
+        seed = seed * 31 + mixedLongToInt(untilMillis)
+        seed = seed * 31 + completedQuestCount
+        seed = seed * 31 + gold
+        seed = seed * 31 + supplies
+        seed = seed * 31 + scoutTableLevel
+        seed = seed * 31 + armoryForgeLevel
+        seed = seed * 31 + tavernKitchenLevel
+        seed = seed * 31 + normalizedCoreCrewHeroIds().hashCode()
+        return seed
+    }
+
     private fun proratedGold(goldPerHour: Int, seconds: Long): Int =
         (goldPerHour.toLong() * seconds / 3600L).toInt()
+
+    private fun proratedSupplies(suppliesPerHour: Int, seconds: Long): Int =
+        (suppliesPerHour.toLong() * seconds / 3600L).toInt()
+
+    private fun mixedLongToInt(value: Long): Int = (value xor (value ushr 32)).toInt()
 
     private fun achievementAdjustedRewardGold(result: ExpeditionResult): Int {
         val pityBonusPercent = if (
@@ -931,6 +1076,8 @@ data class CoreCrewContribution(
     val heroName: String,
     val fullGoldPerHour: Int,
     val goldPerHour: Int,
+    val fullSuppliesPerHour: Int = 0,
+    val suppliesPerHour: Int = 0,
     val activeExpeditionPenaltyPercent: Int = 0,
 )
 
@@ -945,6 +1092,10 @@ data class PassiveIncomeReport(
     val goldPerHour: Int,
     val activeGoldPerHour: Int,
     val coreCrewHeroIds: List<String>,
+    val supplies: Int = 0,
+    val suppliesPerHour: Int = 0,
+    val activeSuppliesPerHour: Int = 0,
+    val lootFinds: List<LootItem> = emptyList(),
 )
 
 data class ExpeditionRun(
@@ -969,6 +1120,9 @@ sealed interface PlayPhase {
     data object Running : PlayPhase
     data object ResultReady : PlayPhase
 }
+
+private fun ExpeditionResult.isFirstClearSuccess(): Boolean =
+    outcome == ExpeditionOutcome.GreatSuccess || outcome == ExpeditionOutcome.Success
 
 private fun recruitmentTicketRewards(reward: AchievementReward): Map<String, Int> = when (reward) {
     is AchievementReward.Tickets -> reward.tickets

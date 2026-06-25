@@ -137,12 +137,18 @@ internal fun UpgradesScreen(
     onBuyTrainingYard: () -> Unit,
     onBuyBunkRoom: () -> Unit,
     onBuyScoutTable: () -> Unit,
+    onBuyArmoryForge: () -> Unit,
+    onBuyTavernKitchen: () -> Unit,
 ) {
     val noticeBoardCost = session.noticeBoardUpgradeCost()
     val trainingYardCost = session.trainingYardUpgradeCost()
     val bunkRoomCost = session.bunkRoomUpgradeCost()
     val scoutTableState = session.facilityUpgradeState(GuildFacility.ScoutTable)
     val scoutTableCost = session.scoutTableUpgradeCost()
+    val armoryForgeState = session.facilityUpgradeState(GuildFacility.ArmoryForge)
+    val armoryForgeCost = session.armoryForgeUpgradeCost()
+    val tavernKitchenState = session.facilityUpgradeState(GuildFacility.TavernKitchen)
+    val tavernKitchenCost = session.tavernKitchenUpgradeCost()
 
     ScreenScaffold(title = stringResource(R.string.upgrades_title), status = stringResource(R.string.guild_upgrade_status)) {
         InfoRow(
@@ -196,8 +202,28 @@ internal fun UpgradesScreen(
             cost = scoutTableCost,
             currentGold = session.gold,
             enabled = session.canUpgradeFacility(GuildFacility.ScoutTable),
-            disabledLabel = scoutTableDisabledLabel(scoutTableState),
+            disabledLabel = facilityDisabledLabel(scoutTableState),
             onBuy = onBuyScoutTable,
+        )
+        UpgradeRow(
+            title = stringResource(R.string.armory_forge_upgrade_title, session.armoryForgeLevel),
+            detail = stringResource(R.string.armory_forge_upgrade_detail),
+            preview = armoryForgeUpgradePreviewText(session),
+            cost = armoryForgeCost,
+            currentGold = session.gold,
+            enabled = session.canUpgradeFacility(GuildFacility.ArmoryForge),
+            disabledLabel = facilityDisabledLabel(armoryForgeState),
+            onBuy = onBuyArmoryForge,
+        )
+        UpgradeRow(
+            title = stringResource(R.string.tavern_kitchen_upgrade_title, session.tavernKitchenLevel),
+            detail = stringResource(R.string.tavern_kitchen_upgrade_detail),
+            preview = tavernKitchenUpgradePreviewText(session),
+            cost = tavernKitchenCost,
+            currentGold = session.gold,
+            enabled = session.canUpgradeFacility(GuildFacility.TavernKitchen),
+            disabledLabel = facilityDisabledLabel(tavernKitchenState),
+            onBuy = onBuyTavernKitchen,
         )
         DarkPanel(title = stringResource(R.string.next_unlock_title), body = stringResource(R.string.next_unlock_summary))
         AchievementLedgerPanel(session = session, onOpen = onAchievements)
@@ -515,7 +541,7 @@ internal fun UpgradeRow(
 }
 
 @Composable
-internal fun scoutTableDisabledLabel(state: GuildFacilityUpgradeState): String? = when {
+internal fun facilityDisabledLabel(state: GuildFacilityUpgradeState): String? = when {
     !state.unlocked -> stringResource(R.string.upgrade_locked_action)
     state.maxed -> stringResource(R.string.upgrade_maxed_action)
     else -> null
@@ -530,6 +556,32 @@ internal fun scoutTableUpgradePreviewText(session: PlaySessionState): String {
         stringResource(R.string.scout_table_upgrade_maxed, current.revealedPlanWarnings)
     } else {
         stringResource(R.string.scout_table_upgrade_preview, current.revealedPlanWarnings, next.revealedPlanWarnings)
+    }
+}
+
+@Composable
+internal fun armoryForgeUpgradePreviewText(session: PlaySessionState): String {
+    val state = session.facilityUpgradeState(GuildFacility.ArmoryForge)
+    val nextLevel = (session.armoryForgeLevel + 1).coerceAtMost(state.definition.maxLevel)
+    val currentChance = session.passiveLootFindChancePercent()
+    val nextChance = session.copy(armoryForgeLevel = nextLevel).passiveLootFindChancePercent()
+    return if (state.maxed) {
+        stringResource(R.string.armory_forge_upgrade_maxed, currentChance)
+    } else {
+        stringResource(R.string.armory_forge_upgrade_preview, currentChance, nextChance)
+    }
+}
+
+@Composable
+internal fun tavernKitchenUpgradePreviewText(session: PlaySessionState): String {
+    val state = session.facilityUpgradeState(GuildFacility.TavernKitchen)
+    val nextLevel = (session.tavernKitchenLevel + 1).coerceAtMost(state.definition.maxLevel)
+    val currentBonusMinutes = (session.passiveIncomeCapBonusSeconds() / 60L).toInt()
+    val nextBonusMinutes = (session.copy(tavernKitchenLevel = nextLevel).passiveIncomeCapBonusSeconds() / 60L).toInt()
+    return if (state.maxed) {
+        stringResource(R.string.tavern_kitchen_upgrade_maxed, currentBonusMinutes)
+    } else {
+        stringResource(R.string.tavern_kitchen_upgrade_preview, currentBonusMinutes, nextBonusMinutes)
     }
 }
 

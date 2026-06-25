@@ -154,6 +154,9 @@ object LootGenerator {
         val rareWeight: Int
             get() = rarityWeights.firstOrNull { (rarity, _) -> rarity == LootRarity.Rare }?.second ?: 0
 
+        val epicWeight: Int
+            get() = rarityWeights.firstOrNull { (rarity, _) -> rarity == LootRarity.Epic }?.second ?: 0
+
         val rareOrBetterWeight: Int
             get() = rarityWeights
                 .filter { (rarity, _) -> rarity >= LootRarity.Rare }
@@ -168,6 +171,7 @@ object LootGenerator {
 
     const val MAX_STAT_VALUE = 10
     const val RARE_LOOT_COMPLETED_QUEST_THRESHOLD = 8
+    const val EPIC_LOOT_COMPLETED_QUEST_THRESHOLD = 13
 
     val baseLootProfile = LootRarityProfile(
         listOf(
@@ -184,14 +188,26 @@ object LootGenerator {
         ),
     )
 
+    val palier3EpicLootProfile = LootRarityProfile(
+        listOf(
+            LootRarity.Common to 55,
+            LootRarity.Uncommon to 25,
+            LootRarity.Rare to 15,
+            LootRarity.Epic to 5,
+        ),
+    )
+
     fun isRareLootUnlocked(completedQuestCount: Int): Boolean =
         completedQuestCount >= RARE_LOOT_COMPLETED_QUEST_THRESHOLD
 
+    fun isEpicLootUnlocked(completedQuestCount: Int): Boolean =
+        completedQuestCount >= EPIC_LOOT_COMPLETED_QUEST_THRESHOLD
+
     fun lootProfileForProgress(completedQuestCount: Int): LootRarityProfile =
-        if (isRareLootUnlocked(completedQuestCount)) {
-            palier2RareLootProfile
-        } else {
-            baseLootProfile
+        when {
+            isEpicLootUnlocked(completedQuestCount) -> palier3EpicLootProfile
+            isRareLootUnlocked(completedQuestCount) -> palier2RareLootProfile
+            else -> baseLootProfile
         }
 
     private val statValueWeights = listOf(

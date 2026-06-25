@@ -391,6 +391,14 @@ internal fun journalQuestText(id: String): String? =
         "the_hungry_siege" -> stringResource(R.string.journal_quest_the_hungry_siege)
         "the_last_locked_door" -> stringResource(R.string.journal_quest_the_last_locked_door)
         "crypt_of_unpaid_debts" -> stringResource(R.string.journal_quest_crypt_of_unpaid_debts)
+        "paperwork_toll_of_chaos" -> stringResource(R.string.journal_quest_paperwork_toll_of_chaos)
+        "licensed_guild_caravan_haunt" -> stringResource(R.string.journal_quest_licensed_guild_caravan_haunt)
+        "notary_night_patrol" -> stringResource(R.string.journal_quest_notary_night_patrol)
+        "inspectorate_cove_banquet" -> stringResource(R.string.journal_quest_inspectorate_cove_banquet)
+        "wedding_with_too_many_oaths" -> stringResource(R.string.journal_quest_wedding_with_too_many_oaths)
+        "the_sunken_toll_booth" -> stringResource(R.string.journal_quest_the_sunken_toll_booth)
+        "the_crowns_missing_receipt" -> stringResource(R.string.journal_quest_the_crowns_missing_receipt)
+        "the_tower_built_sideways" -> stringResource(R.string.journal_quest_the_tower_built_sideways)
         else -> null
     }
 
@@ -713,6 +721,10 @@ internal val localizedExpeditionPlanTextIds = setOf(
     ExpeditionPlanCatalog.caravanManifestId,
     ExpeditionPlanCatalog.notaryNightPatrolId,
     ExpeditionPlanCatalog.inspectorateBanquetId,
+    ExpeditionPlanCatalog.weddingOathLedgerId,
+    ExpeditionPlanCatalog.sunkenTollDredgeId,
+    ExpeditionPlanCatalog.crownReceiptSubpoenaId,
+    ExpeditionPlanCatalog.sidewaysTowerBraceId,
 )
 @Composable
 internal fun expeditionPlanTitle(plan: ExpeditionPlan): String =
@@ -733,6 +745,10 @@ internal fun expeditionPlanTitle(plan: ExpeditionPlan): String =
         ExpeditionPlanCatalog.caravanManifestId -> stringResource(R.string.plan_title_demand_manifest)
         ExpeditionPlanCatalog.notaryNightPatrolId -> stringResource(R.string.plan_title_oath_night)
         ExpeditionPlanCatalog.inspectorateBanquetId -> stringResource(R.string.plan_title_banquet_etiquette)
+        ExpeditionPlanCatalog.weddingOathLedgerId -> stringResource(R.string.plan_title_audit_the_vows)
+        ExpeditionPlanCatalog.sunkenTollDredgeId -> stringResource(R.string.plan_title_dredge_lost_drawer)
+        ExpeditionPlanCatalog.crownReceiptSubpoenaId -> stringResource(R.string.plan_title_subpoena_crown)
+        ExpeditionPlanCatalog.sidewaysTowerBraceId -> stringResource(R.string.plan_title_brace_sideways_stairs)
         ExpeditionPlanCatalog.defaultPlanId -> stringResource(R.string.plan_title_standard_contract)
         else -> plan.title
     }
@@ -756,6 +772,10 @@ internal fun expeditionPlanSummary(plan: ExpeditionPlan): String =
         ExpeditionPlanCatalog.caravanManifestId -> stringResource(R.string.plan_summary_demand_manifest)
         ExpeditionPlanCatalog.notaryNightPatrolId -> stringResource(R.string.plan_summary_oath_night)
         ExpeditionPlanCatalog.inspectorateBanquetId -> stringResource(R.string.plan_summary_banquet_etiquette)
+        ExpeditionPlanCatalog.weddingOathLedgerId -> stringResource(R.string.plan_summary_audit_the_vows)
+        ExpeditionPlanCatalog.sunkenTollDredgeId -> stringResource(R.string.plan_summary_dredge_lost_drawer)
+        ExpeditionPlanCatalog.crownReceiptSubpoenaId -> stringResource(R.string.plan_summary_subpoena_crown)
+        ExpeditionPlanCatalog.sidewaysTowerBraceId -> stringResource(R.string.plan_summary_brace_sideways_stairs)
         ExpeditionPlanCatalog.defaultPlanId -> stringResource(R.string.plan_summary_standard_contract)
         else -> plan.summary
     }
@@ -800,6 +820,10 @@ internal val localizedQuestTextIds = setOf(
     "licensed_guild_caravan_haunt",
     "notary_night_patrol",
     "inspectorate_cove_banquet",
+    "wedding_with_too_many_oaths",
+    "the_sunken_toll_booth",
+    "the_crowns_missing_receipt",
+    "the_tower_built_sideways",
 )
 @Composable
 internal fun questTitle(quest: Quest): String =
@@ -816,6 +840,10 @@ internal fun questTitle(quest: Quest): String =
         "licensed_guild_caravan_haunt" -> stringResource(R.string.quest_title_licensed_guild_caravan_haunt)
         "notary_night_patrol" -> stringResource(R.string.quest_title_notary_night_patrol)
         "inspectorate_cove_banquet" -> stringResource(R.string.quest_title_inspectorate_cove_banquet)
+        "wedding_with_too_many_oaths" -> stringResource(R.string.quest_title_wedding_with_too_many_oaths)
+        "the_sunken_toll_booth" -> stringResource(R.string.quest_title_the_sunken_toll_booth)
+        "the_crowns_missing_receipt" -> stringResource(R.string.quest_title_the_crowns_missing_receipt)
+        "the_tower_built_sideways" -> stringResource(R.string.quest_title_the_tower_built_sideways)
         else -> quest.title
     }
 
@@ -834,6 +862,10 @@ internal fun questSummary(quest: Quest): String =
         "licensed_guild_caravan_haunt" -> stringResource(R.string.quest_summary_licensed_guild_caravan_haunt)
         "notary_night_patrol" -> stringResource(R.string.quest_summary_notary_night_patrol)
         "inspectorate_cove_banquet" -> stringResource(R.string.quest_summary_inspectorate_cove_banquet)
+        "wedding_with_too_many_oaths" -> stringResource(R.string.quest_summary_wedding_with_too_many_oaths)
+        "the_sunken_toll_booth" -> stringResource(R.string.quest_summary_the_sunken_toll_booth)
+        "the_crowns_missing_receipt" -> stringResource(R.string.quest_summary_the_crowns_missing_receipt)
+        "the_tower_built_sideways" -> stringResource(R.string.quest_summary_the_tower_built_sideways)
         else -> quest.summary
     }
 

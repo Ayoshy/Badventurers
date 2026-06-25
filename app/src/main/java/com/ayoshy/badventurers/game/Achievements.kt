@@ -126,6 +126,17 @@ object AchievementCatalog {
             reward = AchievementReward.Currency(reputation = 2),
         ),
         AchievementDefinition(
+            id = "regional_liability",
+            category = AchievementCategory.Quest,
+            title = "Regional Liability",
+            summary = "Complete 16 expeditions. The wider map is now legally afraid.",
+            target = 16,
+            sealReward = 3,
+            reward = AchievementReward.Tickets(
+                tickets = mapOf(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1),
+            ),
+        ),
+        AchievementDefinition(
             id = "tour_of_bad_ideas",
             category = AchievementCategory.Quest,
             title = "Tour Of Bad Ideas",
@@ -412,6 +423,7 @@ object AchievementTracker {
         setProgress("first_expedition", state.completedQuestCount)
         setProgress("professional_regret_i", state.completedQuestCount)
         setProgress("professional_regret_ii", state.completedQuestCount)
+        setProgress("regional_liability", state.completedQuestCount)
         setProgress("tour_of_bad_ideas", state.completedQuestCount)
         setProgress("payroll_problem", state.gold)
         setProgress("noticeable_board", state.noticeBoardLevel)

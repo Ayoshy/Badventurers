@@ -39,6 +39,10 @@ object ExpeditionPlanCatalog {
     const val caravanManifestId: String = "licensed_guild_caravan_haunt_clause"
     const val notaryNightPatrolId: String = "notary_night_patrol_clause"
     const val inspectorateBanquetId: String = "inspectorate_cove_banquet_clause"
+    const val weddingOathLedgerId: String = "wedding_oath_ledger"
+    const val sunkenTollDredgeId: String = "sunken_toll_dredge"
+    const val crownReceiptSubpoenaId: String = "crown_receipt_subpoena"
+    const val sidewaysTowerBraceId: String = "sideways_tower_brace"
 
     private val standard = ExpeditionPlan(
         id = defaultPlanId,
@@ -248,6 +252,61 @@ object ExpeditionPlanCatalog {
         ),
     )
 
+    private val weddingOathLedger = ExpeditionPlan(
+        id = weddingOathLedgerId,
+        title = "Audit the Vows",
+        summary = "Count every promise as a liability before the cake can testify.",
+        questIds = setOf("wedding_with_too_many_oaths"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 18,
+            scoreBonus = 16,
+            riskPenaltyDelta = -4,
+            goldBonusPercent = 10,
+            greatSuccessMarginDelta = 8,
+        ),
+    )
+
+    private val sunkenTollDredge = ExpeditionPlan(
+        id = sunkenTollDredgeId,
+        title = "Dredge the Lost Drawer",
+        summary = "Search below the booth for fees, receipts, and whatever is still jingling.",
+        questIds = setOf("the_sunken_toll_booth"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 20,
+            scoreBonus = -4,
+            riskPenaltyDelta = 4,
+            goldBonusPercent = 12,
+            successLootBonus = 1,
+        ),
+    )
+
+    private val crownReceiptSubpoena = ExpeditionPlan(
+        id = crownReceiptSubpoenaId,
+        title = "Subpoena the Crown",
+        summary = "Turn royal embarrassment into a signed route through the archives.",
+        questIds = setOf("the_crowns_missing_receipt"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 15,
+            scoreBonus = 10,
+            riskPenaltyDelta = -2,
+            goldBonusPercent = 25,
+            greatSuccessMarginDelta = 6,
+        ),
+    )
+
+    private val sidewaysTowerBrace = ExpeditionPlan(
+        id = sidewaysTowerBraceId,
+        title = "Brace the Sideways Stairs",
+        summary = "Make the tower admit which direction is up before anyone signs the climb.",
+        questIds = setOf("the_tower_built_sideways"),
+        modifiers = ExpeditionPlanModifiers(
+            durationPercentDelta = 25,
+            scoreBonus = 22,
+            riskPenaltyDelta = -8,
+            greatSuccessMarginDelta = 12,
+        ),
+    )
+
     private val genericPlans = listOf(rushTheJob, safetyFirst, lootPriority, auditEverything)
     private val questSpecificPlans = listOf(
         sealSideTunnel,
@@ -262,6 +321,10 @@ object ExpeditionPlanCatalog {
         caravanManifest,
         notaryNightPatrol,
         inspectorateBanquet,
+        weddingOathLedger,
+        sunkenTollDredge,
+        crownReceiptSubpoena,
+        sidewaysTowerBrace,
     )
     private val visiblePlans = genericPlans + questSpecificPlans
     val all: List<ExpeditionPlan> = listOf(standard) + visiblePlans

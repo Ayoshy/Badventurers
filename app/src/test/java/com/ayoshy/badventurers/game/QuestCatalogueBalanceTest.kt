@@ -19,6 +19,10 @@ class QuestCatalogueBalanceTest {
         assertInRange(chances.getValue("the_hungry_siege"), 45, 70)
         assertInRange(chances.getValue("the_last_locked_door"), 35, 60)
         assertTrue(chances.getValue("crypt_of_unpaid_debts") <= 20)
+        assertTrue(chances.getValue("wedding_with_too_many_oaths") <= 20)
+        assertTrue(chances.getValue("the_sunken_toll_booth") <= 20)
+        assertTrue(chances.getValue("the_crowns_missing_receipt") <= 20)
+        assertTrue(chances.getValue("the_tower_built_sideways") <= 20)
     }
 
     @Test
@@ -184,7 +188,7 @@ class QuestCatalogueBalanceTest {
             "notary_night_patrol",
             "inspectorate_cove_banquet",
         )
-        assertEquals(12, SeedGame.quests.size)
+        assertEquals(16, SeedGame.quests.size)
 
         val questById = SeedGame.questById
         val licensedTroubleQuests = licensedTroubleQuestIds.associateWith { questById.getValue(it) }
@@ -227,6 +231,68 @@ class QuestCatalogueBalanceTest {
                 unlock.minBunkRoomLevel >= facilityCheck.minBunkRoomLevel,
             )
 
+            assertTrue(
+                "${quest.id} should have at least one quest-specific plan",
+                ExpeditionPlanCatalog.availableFor(quest).any { plan -> quest.id in plan.questIds },
+            )
+        }
+    }
+
+    @Test
+    fun regionalLiabilityQuestsAddedToCatalogueWithUnlockRewardsAndPlanCoverage() {
+        val regionalLiabilityQuestIds = listOf(
+            "wedding_with_too_many_oaths",
+            "the_sunken_toll_booth",
+            "the_crowns_missing_receipt",
+            "the_tower_built_sideways",
+        )
+        assertEquals(16, SeedGame.quests.size)
+
+        val questById = SeedGame.questById
+        val regionalLiabilityQuests = regionalLiabilityQuestIds.associateWith { questById.getValue(it) }
+
+        assertEquals(
+            listOf(48, 52, 56, 60),
+            regionalLiabilityQuestIds.map { quest ->
+                regionalLiabilityQuests.getValue(quest).unlockRequirement.conditions.single().minReputation
+            },
+        )
+        assertEquals(
+            listOf(12, 13, 14, 15),
+            regionalLiabilityQuestIds.map { quest ->
+                regionalLiabilityQuests.getValue(quest).unlockRequirement.conditions.single().minCompletedQuestCount
+            },
+        )
+        assertEquals(
+            listOf(330, 360, 390, 420),
+            regionalLiabilityQuestIds.map { quest -> regionalLiabilityQuests.getValue(quest).durationSeconds },
+        )
+
+        assertEquals(
+            mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+            regionalLiabilityQuests.getValue("wedding_with_too_many_oaths").firstClearTicketRewards,
+        )
+        assertEquals(
+            emptyMap<String, Int>(),
+            regionalLiabilityQuests.getValue("the_sunken_toll_booth").firstClearTicketRewards,
+        )
+        assertEquals(
+            mapOf(RecruitmentTicketCatalog.VETERAN_TICKET_ID to 1),
+            regionalLiabilityQuests.getValue("the_crowns_missing_receipt").firstClearTicketRewards,
+        )
+        assertEquals(
+            mapOf(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1),
+            regionalLiabilityQuests.getValue("the_tower_built_sideways").firstClearTicketRewards,
+        )
+
+        regionalLiabilityQuestIds.forEach { questId ->
+            val quest = regionalLiabilityQuests.getValue(questId)
+
+            assertEquals(QuestRisk.High, quest.risk)
+            assertTrue(quest.recommendedHeroIds.isNotEmpty())
+            quest.recommendedHeroIds.forEach { heroId ->
+                assertTrue("${quest.id} recommends unknown hero $heroId", heroId in HeroCatalog.byId)
+            }
             assertTrue(
                 "${quest.id} should have at least one quest-specific plan",
                 ExpeditionPlanCatalog.availableFor(quest).any { plan -> quest.id in plan.questIds },

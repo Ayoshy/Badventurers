@@ -533,8 +533,18 @@ internal fun PassiveIncomeInfoRow(report: PassiveIncomeReport) {
     InfoRow(
         title = stringResource(R.string.offline_passive_income_title),
         detail = detail,
-        value = stringResource(R.string.offline_passive_income_value, report.gold),
+        value = passiveIncomeValueText(report),
     )
+}
+
+@Composable
+internal fun passiveIncomeValueText(report: PassiveIncomeReport): String {
+    val parts = buildList {
+        add(stringResource(R.string.offline_passive_income_value, report.gold))
+        if (report.supplies > 0) add(stringResource(R.string.offline_passive_income_value_supplies, report.supplies))
+        if (report.lootFinds.isNotEmpty()) add(stringResource(R.string.offline_passive_income_value_loot, report.lootFinds.size))
+    }
+    return parts.joinToString(" / ")
 }
 
 @Composable

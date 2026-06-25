@@ -38,7 +38,7 @@ class BadventurersUiLocalizationTest {
     }
 
     @Test
-    fun licensedTroubleFallbackBannersHaveTemporaryBriefs() {
+    fun licensedTroubleAndRegionalLiabilityFallbackBannersHaveTemporaryBriefs() {
         val questsWithBriefs = SeedGame.quests
             .filter { questBannerArtReference(it).temporaryBrief != null }
             .map { it.id }
@@ -50,6 +50,10 @@ class BadventurersUiLocalizationTest {
                 "licensed_guild_caravan_haunt",
                 "notary_night_patrol",
                 "inspectorate_cove_banquet",
+                "wedding_with_too_many_oaths",
+                "the_sunken_toll_booth",
+                "the_crowns_missing_receipt",
+                "the_tower_built_sideways",
             ),
             questsWithBriefs,
         )

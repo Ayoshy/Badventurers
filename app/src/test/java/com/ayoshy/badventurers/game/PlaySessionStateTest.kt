@@ -357,6 +357,45 @@ class PlaySessionStateTest {
     }
 
     @Test
+    fun collectResultGrantsFirstClearTicketsOnlyAfterSuccessfulClear() {
+        val quest = SeedGame.questById.getValue("the_tower_built_sideways")
+
+        fun ready(
+            outcome: ExpeditionOutcome,
+            clearedQuestIds: Set<String> = emptySet(),
+            tickets: Map<String, Int> = RecruitmentTicketCatalog.normalizedInventory(),
+        ): PlaySessionState = PlaySessionState.initial().copy(
+            completedQuestCount = 15,
+            clearedQuestIds = clearedQuestIds,
+            recruitmentTickets = tickets,
+            expedition = ExpeditionRun(
+                quest = quest,
+                startedAtMillis = 1_000L,
+                endsAtMillis = 2_000L,
+                result = ExpeditionResult(
+                    outcome = outcome,
+                    reward = Reward(gold = 0, xp = 0, lootRolls = 0),
+                    scoreMargin = if (outcome == ExpeditionOutcome.Success) 10 else -10,
+                ),
+            ),
+        )
+
+        val failed = ready(ExpeditionOutcome.Failure).collectResult()
+        val firstClear = ready(ExpeditionOutcome.Success).collectResult()
+        val duplicateClear = ready(
+            outcome = ExpeditionOutcome.Success,
+            clearedQuestIds = setOf(quest.id),
+            tickets = firstClear.recruitmentTickets,
+        ).collectResult()
+
+        assertEquals(false, quest.id in failed.clearedQuestIds)
+        assertEquals(0, failed.recruitmentTicketCount(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID))
+        assertTrue(quest.id in firstClear.clearedQuestIds)
+        assertEquals(1, firstClear.recruitmentTicketCount(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID))
+        assertEquals(1, duplicateClear.recruitmentTicketCount(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID))
+    }
+
+    @Test
     fun finishQuestNowProducesResultBeforeEnd() {
         val startedAt = 1_000L
         val state = PlaySessionState.initial().startQuest(startedAt, SeedGame.firstQuest)
@@ -800,6 +839,64 @@ class PlaySessionStateTest {
     }
 
     @Test
+    fun passiveIncomeAddsSuppliesAndFacilityCapBonuses() {
+        val base = PlaySessionState.initial()
+        val upgraded = base.copy(bunkRoomLevel = 3, tavernKitchenLevel = 2, scoutTableLevel = 1)
+
+        val baseReport = base.passiveIncomeReport(
+            sinceMillis = 0L,
+            untilMillis = 8 * 3_600_000L,
+        )
+        val upgradedReport = upgraded.passiveIncomeReport(
+            sinceMillis = 0L,
+            untilMillis = 8 * 3_600_000L,
+        )
+
+        assertTrue(base.passiveSuppliesPerHour() > 0)
+        assertTrue(upgraded.passiveSuppliesPerHour() > base.passiveSuppliesPerHour())
+        assertTrue(upgraded.passiveIncomeCapSeconds() > base.passiveIncomeCapSeconds())
+        assertEquals(base.passiveIncomeCapSeconds(), baseReport.cappedSeconds)
+        assertEquals(upgraded.passiveIncomeCapSeconds(), upgradedReport.cappedSeconds)
+        assertTrue(upgradedReport.supplies > baseReport.supplies)
+    }
+
+    @Test
+    fun passiveLootFindsRequireScoutTableAndArmoryForgeAndCreditOnce() {
+        val ready = PlaySessionState.initial()
+            .startQuest(0L, SeedGame.firstQuest)
+            .finishQuestNow(engine, party, roll = 100)
+
+        val onlyScout = ready.copy(scoutTableLevel = 2).passiveIncomeReport(0L, 4 * 3_600_000L)
+        val onlyArmory = ready.copy(armoryForgeLevel = 3).passiveIncomeReport(0L, 4 * 3_600_000L)
+        val built = ready.copy(
+            completedQuestCount = LootGenerator.RARE_LOOT_COMPLETED_QUEST_THRESHOLD,
+            scoutTableLevel = 2,
+            armoryForgeLevel = 3,
+        )
+        val report = built.passiveIncomeReport(
+            sinceMillis = 0L,
+            untilMillis = 4 * 3_600_000L,
+            activeExpeditionHeroIds = built.expedition?.partyHeroIds.orEmpty(),
+            activeUntilMillis = built.expedition?.endsAtMillis ?: 0L,
+        )
+        val marked = built.markOfflineReportCollected(4 * 3_600_000L)
+
+        assertEquals(0, ready.passiveLootFindChancePercent())
+        assertEquals(emptyList<LootItem>(), onlyScout.lootFinds)
+        assertEquals(emptyList<LootItem>(), onlyArmory.lootFinds)
+        assertTrue(built.passiveLootFindChancePercent() > 0)
+        assertEquals(1, report.lootFinds.size)
+        assertEquals(report.supplies, marked.supplies - built.supplies)
+        assertEquals(report.lootFinds, marked.lastOfflinePassiveIncome?.lootFinds)
+        assertEquals(report.lootFinds, marked.pendingLootItems)
+        assertEquals(1, marked.pendingLootEffectiveKeepLimit())
+
+        val markedAgain = marked.markOfflineReportCollected(8 * 3_600_000L)
+        assertEquals(marked.supplies, markedAgain.supplies)
+        assertEquals(marked.pendingLootItems, markedAgain.pendingLootItems)
+    }
+
+    @Test
     fun offlineReportCreditsPassiveIncomeAndIncidentsOnce() {
         val ready = PlaySessionState.initial()
             .startQuest(0L, SeedGame.firstQuest)
@@ -935,12 +1032,16 @@ class PlaySessionStateTest {
             .copy(
                 gold = 1_234,
                 reputation = 9,
+                supplies = 14,
                 guildLevel = 4,
                 completedQuestCount = 12,
+                clearedQuestIds = setOf("cave_minor_regrets"),
                 noticeBoardLevel = 3,
                 trainingYardLevel = 2,
                 bunkRoomLevel = 3,
                 scoutTableLevel = 2,
+                armoryForgeLevel = 2,
+                tavernKitchenLevel = 1,
                 heroes = emptyList(),
                 coreCrewHeroIds = listOf("brugg"),
                 recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
@@ -961,11 +1062,15 @@ class PlaySessionStateTest {
         assertEquals(1_234, reset.gold)
         assertEquals(9, reset.reputation)
         assertEquals(4, reset.guildLevel)
+        assertEquals(0, reset.supplies)
         assertEquals(0, reset.completedQuestCount)
+        assertEquals(emptySet<String>(), reset.clearedQuestIds)
         assertEquals(1, reset.noticeBoardLevel)
         assertEquals(1, reset.trainingYardLevel)
         assertEquals(1, reset.bunkRoomLevel)
         assertEquals(0, reset.scoutTableLevel)
+        assertEquals(0, reset.armoryForgeLevel)
+        assertEquals(0, reset.tavernKitchenLevel)
         assertEquals(HeroCatalog.starterHeroes, reset.heroes)
         assertEquals(HeroCatalog.starterHeroes.map { it.id }, reset.normalizedCoreCrewHeroIds())
         assertEquals(RecruitmentTicketCatalog.normalizedInventory(), reset.recruitmentTickets)
