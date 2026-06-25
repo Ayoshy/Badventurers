@@ -9,6 +9,7 @@ data class PlaySessionSnapshot(
     val noticeBoardLevel: Int,
     val trainingYardLevel: Int,
     val bunkRoomLevel: Int,
+    val scoutTableLevel: Int = 0,
     val lootRolls: Int,
     val heroIds: List<String> = HeroCatalog.starterHeroes.map { it.id },
     val heroProgress: List<HeroProgressSnapshot> = emptyList(),
@@ -39,6 +40,7 @@ data class PlaySessionSnapshot(
         val migratedNoticeBoardLevel = migratedFacilityLevel(GuildFacility.NoticeBoard, noticeBoardLevel)
         val migratedTrainingYardLevel = migratedFacilityLevel(GuildFacility.TrainingYard, trainingYardLevel)
         val migratedBunkRoomLevel = migratedFacilityLevel(GuildFacility.BunkRoom, bunkRoomLevel)
+        val migratedScoutTableLevel = migratedOptionalFacilityLevel(GuildFacility.ScoutTable, scoutTableLevel)
         val restoredPendingLootItems = pendingLootItems.map { it.toItem() }
         val restoredPendingLootKeepLimit = if (restoredPendingLootItems.isEmpty()) {
             0
@@ -59,6 +61,7 @@ data class PlaySessionSnapshot(
             noticeBoardLevel = migratedNoticeBoardLevel,
             trainingYardLevel = migratedTrainingYardLevel,
             bunkRoomLevel = migratedBunkRoomLevel,
+            scoutTableLevel = migratedScoutTableLevel,
             heroes = restoredHeroes,
             coreCrewHeroIds = coreCrewHeroIds,
             lootRolls = lootRolls,
@@ -79,7 +82,7 @@ data class PlaySessionSnapshot(
     }
 
     companion object {
-        const val CURRENT_VERSION = 16
+        const val CURRENT_VERSION = 17
 
         fun initial(): PlaySessionSnapshot {
             return fromState(PlaySessionState.initial())
@@ -95,6 +98,7 @@ data class PlaySessionSnapshot(
                 noticeBoardLevel = state.noticeBoardLevel,
                 trainingYardLevel = state.trainingYardLevel,
                 bunkRoomLevel = state.bunkRoomLevel,
+                scoutTableLevel = state.scoutTableLevel,
                 lootRolls = state.lootRolls,
                 heroIds = state.heroes.map { it.id },
                 heroProgress = state.heroes.map { HeroProgressSnapshot.fromHero(it) },
@@ -117,6 +121,11 @@ data class PlaySessionSnapshot(
         private fun migratedFacilityLevel(facility: GuildFacility, level: Int): Int {
             val definition = GuildFacilityCatalog.definition(facility)
             return level.coerceIn(1, definition.maxLevel)
+        }
+
+        private fun migratedOptionalFacilityLevel(facility: GuildFacility, level: Int): Int {
+            val definition = GuildFacilityCatalog.definition(facility)
+            return level.coerceIn(0, definition.maxLevel)
         }
     }
 }

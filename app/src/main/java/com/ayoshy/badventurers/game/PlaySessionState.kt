@@ -8,6 +8,7 @@ data class PlaySessionState(
     val noticeBoardLevel: Int = 1,
     val trainingYardLevel: Int = 1,
     val bunkRoomLevel: Int = 1,
+    val scoutTableLevel: Int = 0,
     val heroes: List<Hero> = HeroCatalog.starterHeroes,
     val coreCrewHeroIds: List<String> = defaultCoreCrewHeroIds(),
     val lootRolls: Int = 0,
@@ -121,7 +122,11 @@ data class PlaySessionState(
         val extraLootRolls = fakeRewardedAdReward?.extraLootRolls ?: 0
         val totalLootRolls = collectableLootRolls(result) + extraLootRolls
         val participatingParty = partyForRun(run, party)
-        val generatedLoot = LootGenerator.generate(totalLootRolls, seed = lootSeed(result) + extraLootRolls * 17)
+        val generatedLoot = LootGenerator.generate(
+            totalLootRolls,
+            seed = lootSeed(result) + extraLootRolls * 17,
+            lootProfile = LootGenerator.lootProfileForProgress(completedQuestCount),
+        )
         val generatedJournal = JournalGenerator.generate(result, participatingParty, run.quest)
         val advancedHeroes = heroesWithQuestXp(participatingParty, collectableHeroXp(result))
         val advancedParty = participatingParty.map { hero ->
@@ -477,6 +482,7 @@ data class PlaySessionState(
             noticeBoardLevel = 1,
             trainingYardLevel = 1,
             bunkRoomLevel = 1,
+            scoutTableLevel = 0,
             heroes = HeroCatalog.starterHeroes,
             coreCrewHeroIds = defaultCoreCrewHeroIds(),
             lootRolls = 0,
@@ -501,9 +507,9 @@ data class PlaySessionState(
             GuildFacility.NoticeBoard -> noticeBoardLevel
             GuildFacility.TrainingYard -> trainingYardLevel
             GuildFacility.BunkRoom -> bunkRoomLevel
+            GuildFacility.ScoutTable -> scoutTableLevel
             GuildFacility.ArmoryForge,
             GuildFacility.Infirmary,
-            GuildFacility.ScoutTable,
             GuildFacility.TavernKitchen,
             GuildFacility.AccountantOffice -> 0
         }
@@ -525,11 +531,15 @@ data class PlaySessionState(
 
     fun bunkRoomUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.BunkRoom)
 
+    fun scoutTableUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.ScoutTable)
+
     fun upgradeNoticeBoard(): PlaySessionState = upgradeFacility(GuildFacility.NoticeBoard)
 
     fun upgradeTrainingYard(): PlaySessionState = upgradeFacility(GuildFacility.TrainingYard)
 
     fun upgradeBunkRoom(): PlaySessionState = upgradeFacility(GuildFacility.BunkRoom)
+
+    fun upgradeScoutTable(): PlaySessionState = upgradeFacility(GuildFacility.ScoutTable)
 
     fun upgradeFacility(facility: GuildFacility): PlaySessionState {
         if (!canUpgradeFacility(facility)) return this
@@ -540,9 +550,9 @@ data class PlaySessionState(
             GuildFacility.NoticeBoard -> copy(gold = gold - cost, noticeBoardLevel = nextLevel)
             GuildFacility.TrainingYard -> copy(gold = gold - cost, trainingYardLevel = nextLevel)
             GuildFacility.BunkRoom -> copy(gold = gold - cost, bunkRoomLevel = nextLevel)
+            GuildFacility.ScoutTable -> copy(gold = gold - cost, scoutTableLevel = nextLevel)
             GuildFacility.ArmoryForge,
             GuildFacility.Infirmary,
-            GuildFacility.ScoutTable,
             GuildFacility.TavernKitchen,
             GuildFacility.AccountantOffice -> return this
         }
@@ -605,6 +615,36 @@ data class PlaySessionState(
         )
     }
 
+    fun keepPendingLootSelection(items: List<LootItem>): PlaySessionState {
+        if (pendingLootItems.isEmpty()) return this
+        val keepLimit = pendingLootEffectiveKeepLimit()
+        if (keepLimit <= 0) return discardPendingLoot()
+
+        val remainingPending = pendingLootItems.toMutableList()
+        val keptItems = mutableListOf<LootItem>()
+        for (item in items) {
+            if (keptItems.size >= keepLimit) break
+            val itemIndex = remainingPending.indexOf(item)
+            if (itemIndex >= 0) {
+                keptItems += remainingPending.removeAt(itemIndex)
+            }
+        }
+        if (keptItems.isEmpty()) return discardPendingLoot()
+
+        val selected = copy(
+            pendingLootItems = emptyList(),
+            pendingLootKeepLimit = 0,
+            pendingLootKeptCount = 0,
+            pendingLootCarryBreakdown = LootCarryBreakdown(),
+            lootItems = lootItems + keptItems,
+        )
+        return keptItems.fold(selected) { state, item ->
+            AchievementTracker.applyEvent(
+                state = state,
+                event = AchievementEvent.LootKept(item),
+            )
+        }
+    }
     fun discardPendingLoot(item: LootItem? = null): PlaySessionState {
         if (item != null && item !in pendingLootItems) return this
         if (pendingLootItems.isEmpty()) return this
@@ -830,6 +870,7 @@ data class PlaySessionState(
             val generatedLoot = LootGenerator.generate(
                 reward.lootRolls,
                 seed = achievementRewardSeed(achievementId),
+                lootProfile = LootGenerator.lootProfileForProgress(completedQuestCount),
             )
             copy(
                 gold = gold + reward.gold,

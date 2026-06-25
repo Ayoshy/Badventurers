@@ -694,20 +694,25 @@ internal fun OfflineAchievementProgressPanel(
 @Composable
 internal fun RewardLootScreen(
     session: PlaySessionState,
-    onKeep: (LootItem) -> Unit,
+    onKeepSelection: (List<LootItem>) -> Unit,
     onDiscardRest: () -> Unit,
     onDone: () -> Unit,
 ) {
     val pendingRewards = session.pendingLootItems.asReversed()
-    val remainingChoices = minOf(session.pendingLootRemainingChoices(), pendingRewards.size)
     val keepLimit = session.pendingLootEffectiveKeepLimit()
+    val keepCapacity = minOf(keepLimit, pendingRewards.size)
     val carryBreakdown = session.pendingLootRecoveryBreakdown()
     var selectedIndex by remember(pendingRewards.size) { mutableStateOf(0) }
+    var selectedIndexes by remember(pendingRewards.size, keepCapacity) { mutableStateOf(emptySet<Int>()) }
+    var confirmingSelection by remember(pendingRewards.size, keepCapacity) { mutableStateOf(false) }
     val selectedItem = pendingRewards.getOrNull(selectedIndex)
+    val selectedItems = selectedIndexes.sorted().mapNotNull { index -> pendingRewards.getOrNull(index) }
+    val selectedCount = selectedItems.size
+    val remainingChoices = (keepCapacity - selectedCount).coerceAtLeast(0)
 
     ScreenScaffold(
         title = stringResource(R.string.loot_reward_title),
-        status = stringResource(R.string.loot_reward_status, pendingRewards.size, remainingChoices),
+        status = stringResource(R.string.loot_reward_status, pendingRewards.size, keepCapacity),
     ) {
         if (selectedItem == null) {
             DarkPanel(title = stringResource(R.string.loot_rewards_done_title), body = stringResource(R.string.loot_rewards_done_summary)) {
@@ -717,11 +722,11 @@ internal fun RewardLootScreen(
                         .fillMaxWidth()
                         .padding(top = 10.dp),
                     colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2F695C),
-                    contentColor = Color(0xFFF8F1D8),
-                    disabledContainerColor = Color(0xFF6B5E3C),
-                    disabledContentColor = Color(0xFFFFF1C0),
-                ),
+                        containerColor = Color(0xFF2F695C),
+                        contentColor = Color(0xFFF8F1D8),
+                        disabledContainerColor = Color(0xFF6B5E3C),
+                        disabledContentColor = Color(0xFFFFF1C0),
+                    ),
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(stringResource(R.string.guild_home_title), fontWeight = FontWeight.Black)
@@ -740,13 +745,20 @@ internal fun RewardLootScreen(
                 formatSignedCount(it.gain),
             )
         } ?: stringResource(R.string.reward_equip_target_missing)
-        val nextAdviceSession = session.keepPendingLoot(selectedItem)
-        val nextAdvice = ProgressionAdvisor.recommend(nextAdviceSession)
+        val projectedSession = if (selectedItems.isEmpty()) session else session.keepPendingLootSelection(selectedItems)
+        val nextAdvice = ProgressionAdvisor.recommend(projectedSession)
+        val itemIsSelected = selectedIndex in selectedIndexes
+
         LootIconPanel(item = selectedItem, contentDescription = selectedItemName)
         InfoRow(
             title = stringResource(R.string.loot_carry_title),
-            detail = stringResource(R.string.loot_carry_detail, session.pendingLootSelectedCount(), keepLimit),
+            detail = stringResource(R.string.loot_carry_detail, selectedCount, keepLimit),
             value = stringResource(R.string.loot_carry_value, remainingChoices),
+        )
+        InfoRow(
+            title = stringResource(R.string.loot_selection_title),
+            detail = stringResource(R.string.loot_selection_detail, selectedCount, keepCapacity),
+            value = stringResource(R.string.loot_selection_value, remainingChoices),
         )
         LootCarryBreakdownPanel(carryBreakdown)
         InfoRow(
@@ -759,13 +771,42 @@ internal fun RewardLootScreen(
             body = lootRewardChoiceSummary(selectedItem, pendingRewards.size, remainingChoices),
         ) {
             ActionRow(
-                primaryLabel = stringResource(R.string.loot_choose_action),
-                secondaryLabel = stringResource(R.string.loot_discard_rest_action),
-                onPrimary = { onKeep(selectedItem) },
-                onSecondary = onDiscardRest,
+                primaryLabel = if (itemIsSelected) stringResource(R.string.loot_unselect_action) else stringResource(R.string.loot_select_action),
+                secondaryLabel = if (selectedCount > 0) stringResource(R.string.loot_confirm_selection_action) else stringResource(R.string.loot_discard_rest_action),
+                onPrimary = {
+                    selectedIndexes = if (itemIsSelected) {
+                        selectedIndexes - selectedIndex
+                    } else {
+                        selectedIndexes + selectedIndex
+                    }
+                    confirmingSelection = false
+                },
+                onSecondary = {
+                    if (selectedCount > 0) {
+                        confirmingSelection = true
+                    } else {
+                        onDiscardRest()
+                    }
+                },
+                primaryEnabled = itemIsSelected || selectedCount < keepCapacity,
             )
         }
-        RewardNextActionPanel(session = nextAdviceSession, advice = nextAdvice)
+        if (confirmingSelection && selectedItems.isNotEmpty()) {
+            DarkPanel(
+                title = stringResource(R.string.loot_confirm_title),
+                body = stringResource(R.string.loot_confirm_summary, selectedCount, pendingRewards.size - selectedCount),
+            ) {
+                ActionRow(
+                    primaryLabel = stringResource(R.string.loot_keep_selected_action),
+                    secondaryLabel = stringResource(R.string.loot_review_action),
+                    onPrimary = { onKeepSelection(selectedItems) },
+                    onSecondary = { confirmingSelection = false },
+                )
+            }
+        }
+        if (selectedItems.isNotEmpty()) {
+            RewardNextActionPanel(session = projectedSession, advice = nextAdvice)
+        }
 
         Text(
             text = stringResource(R.string.loot_reward_candidates_title),
@@ -777,13 +818,15 @@ internal fun RewardLootScreen(
         pendingRewards.forEachIndexed { index, item ->
             LootInventoryRow(
                 item = item,
-                selected = index == selectedIndex,
-                onClick = { selectedIndex = index },
+                selected = index == selectedIndex || index in selectedIndexes,
+                onClick = {
+                    selectedIndex = index
+                    confirmingSelection = false
+                },
             )
         }
     }
 }
-
 @Composable
 internal fun LootCarryBreakdownPanel(breakdown: LootCarryBreakdown) {
     DarkPanel(

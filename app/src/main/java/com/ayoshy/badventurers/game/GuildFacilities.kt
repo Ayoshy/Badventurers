@@ -18,6 +18,9 @@ enum class GuildFacilityEffect {
     HeroXpGain,
     RiskMitigation,
     ExpeditionDuration,
+    PlanWarnings,
+    UnlockPreviews,
+    PassiveScouting,
     LootQuality,
     OfflineCap,
     RecruitPoolQuality,
@@ -62,6 +65,66 @@ data class GuildFacilityUpgradeState(
     val missingGold: Int,
     val unmetRequirement: GuildFacilityUnlockRequirement?,
 )
+
+enum class ScoutPlanWarningType {
+    HigherRisk,
+    LowerPower,
+    LongerDuration,
+    HarderGreatSuccess,
+    LowerGold,
+}
+
+data class ScoutPlanWarning(
+    val type: ScoutPlanWarningType,
+    val amount: Int,
+)
+
+data class ScoutTableLevelBehavior(
+    val revealedPlanWarnings: Int,
+    val revealsUnlockPreviews: Boolean,
+    val enablesPassiveScoutingIncidents: Boolean,
+)
+
+object ScoutTableIntel {
+    fun behavior(level: Int): ScoutTableLevelBehavior {
+        val safeLevel = level.coerceAtLeast(0)
+        return ScoutTableLevelBehavior(
+            revealedPlanWarnings = when {
+                safeLevel <= 0 -> 0
+                safeLevel == 1 -> 1
+                safeLevel == 2 -> 2
+                else -> 3
+            },
+            revealsUnlockPreviews = safeLevel >= 2,
+            enablesPassiveScoutingIncidents = safeLevel > 0,
+        )
+    }
+
+    fun planWarningsFor(level: Int, plan: ExpeditionPlan, quest: Quest): List<ScoutPlanWarning> {
+        val behavior = behavior(level)
+        if (behavior.revealedPlanWarnings == 0) return emptyList()
+
+        val modifiers = ExpeditionPlanCatalog.modifiersFor(plan.id, quest)
+        val warnings = buildList {
+            if (modifiers.riskPenaltyDelta > 0) {
+                add(ScoutPlanWarning(ScoutPlanWarningType.HigherRisk, modifiers.riskPenaltyDelta))
+            }
+            if (modifiers.scoreBonus < 0) {
+                add(ScoutPlanWarning(ScoutPlanWarningType.LowerPower, -modifiers.scoreBonus))
+            }
+            if (modifiers.durationPercentDelta > 0) {
+                add(ScoutPlanWarning(ScoutPlanWarningType.LongerDuration, modifiers.durationPercentDelta))
+            }
+            if (modifiers.greatSuccessMarginDelta > 0) {
+                add(ScoutPlanWarning(ScoutPlanWarningType.HarderGreatSuccess, modifiers.greatSuccessMarginDelta))
+            }
+            if (modifiers.goldBonusPercent < 0) {
+                add(ScoutPlanWarning(ScoutPlanWarningType.LowerGold, -modifiers.goldBonusPercent))
+            }
+        }
+        return warnings.take(behavior.revealedPlanWarnings)
+    }
+}
 
 object GuildFacilityCatalog {
     val definitions: List<GuildFacilityDefinition> = listOf(
@@ -120,7 +183,13 @@ object GuildFacilityCatalog {
                 minReputation = 8,
                 requiredFacilityLevels = mapOf(GuildFacility.NoticeBoard to 2),
             ),
-            effects = listOf(GuildFacilityEffect.QuestUnlocks, GuildFacilityEffect.ExpeditionDuration),
+            effects = listOf(
+                GuildFacilityEffect.ExpeditionDuration,
+                GuildFacilityEffect.PlanWarnings,
+                GuildFacilityEffect.UnlockPreviews,
+                GuildFacilityEffect.PassiveScouting,
+            ),
+            implemented = true,
         ),
         GuildFacilityDefinition(
             facility = GuildFacility.TavernKitchen,

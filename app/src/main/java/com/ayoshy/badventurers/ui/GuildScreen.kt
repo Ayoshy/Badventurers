@@ -80,6 +80,7 @@ import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.ExpeditionResult
 import com.ayoshy.badventurers.game.FakeRewardedAdService
 import com.ayoshy.badventurers.game.GuildFacility
+import com.ayoshy.badventurers.game.ScoutTableIntel
 import com.ayoshy.badventurers.game.Hero
 import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroClass
@@ -97,6 +98,7 @@ import com.ayoshy.badventurers.game.HeroRecruitmentResult
 import com.ayoshy.badventurers.game.JournalEntry
 import com.ayoshy.badventurers.game.LootCarryBreakdown
 import com.ayoshy.badventurers.game.LootEconomy
+import com.ayoshy.badventurers.game.LootGenerator
 import com.ayoshy.badventurers.game.LootIcon
 import com.ayoshy.badventurers.game.LootItem
 import com.ayoshy.badventurers.game.LootRarity
@@ -196,6 +198,7 @@ internal fun GuildScreen(
         }
         CoreCrewPanel(session = session, onToggleCoreCrew = onToggleCoreCrew)
         GuildFacilitiesPanel(session, selectedQuest)
+        TierGoalPanel(session = session)
         AchievementLedgerPanel(session = session, onOpen = onAchievements)
         ProgressionAdvicePanel(session = session, selectedQuest = selectedQuest)
         if (booleanResource(R.bool.debug_tools_enabled)) {
@@ -429,6 +432,25 @@ internal fun questNameForAdvice(advice: ProgressionAdvice): String =
     advice.questId?.let { questId -> SeedGame.questById[questId]?.title } ?: SeedGame.firstQuest.title
 
 @Composable
+internal fun TierGoalPanel(session: PlaySessionState) {
+    val threshold = LootGenerator.RARE_LOOT_COMPLETED_QUEST_THRESHOLD
+    val completed = session.completedQuestCount.coerceAtMost(threshold)
+    val unlocked = LootGenerator.isRareLootUnlocked(session.completedQuestCount)
+    val body = if (unlocked) {
+        stringResource(R.string.tier_goal_rare_loot_unlocked, LootGenerator.palier2RareLootProfile.rareWeight)
+    } else {
+        stringResource(R.string.tier_goal_rare_loot_locked, completed, threshold)
+    }
+
+    PaperPanel(
+        title = stringResource(R.string.tier_goal_rare_loot_title),
+        body = body,
+    ) {
+        ProgressBar(progress = completed.toFloat() / threshold.toFloat())
+    }
+}
+
+@Composable
 internal fun AchievementLedgerPanel(session: PlaySessionState, onOpen: () -> Unit) {
     val claimableCount = session.claimableAchievementCount()
     val nextMilestone = session.nextAchievementMilestone()
@@ -468,6 +490,8 @@ internal fun AchievementLedgerPanel(session: PlaySessionState, onOpen: () -> Uni
 }
 @Composable
 internal fun GuildFacilitiesPanel(session: PlaySessionState, selectedQuest: Quest) {
+    val scoutState = session.facilityUpgradeState(GuildFacility.ScoutTable)
+    val scoutBehavior = ScoutTableIntel.behavior(session.scoutTableLevel)
     PaperPanel(
         title = stringResource(R.string.guild_facilities_title),
         body = stringResource(R.string.guild_facilities_summary),
@@ -496,6 +520,17 @@ internal fun GuildFacilitiesPanel(session: PlaySessionState, selectedQuest: Ques
             value = facilityLevelEffect(
                 state = session.facilityUpgradeState(GuildFacility.BunkRoom),
                 effect = stringResource(R.string.guild_facility_bunk_effect, session.effectivePartySlots(selectedQuest)),
+            ),
+        )
+        FacilityLine(
+            label = stringResource(R.string.guild_facility_scout_table),
+            value = facilityLevelEffect(
+                state = scoutState,
+                effect = if (scoutState.unlocked || scoutState.level > 0) {
+                    stringResource(R.string.guild_facility_scout_effect, scoutBehavior.revealedPlanWarnings)
+                } else {
+                    stringResource(R.string.guild_facility_scout_locked_effect)
+                },
             ),
         )
     }

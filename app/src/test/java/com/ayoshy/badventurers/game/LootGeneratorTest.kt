@@ -63,6 +63,44 @@ class LootGeneratorTest {
     }
 
     @Test
+    fun lootProfilesGateRareLootAtPalier2Threshold() {
+        assertEquals(100, LootGenerator.baseLootProfile.totalWeight)
+        assertEquals(100, LootGenerator.palier2RareLootProfile.totalWeight)
+        assertEquals(0, LootGenerator.baseLootProfile.rareOrBetterWeight)
+        assertEquals(10, LootGenerator.palier2RareLootProfile.rareWeight)
+        assertEquals(10, LootGenerator.palier2RareLootProfile.rareOrBetterWeight)
+        assertEquals(LootGenerator.baseLootProfile, LootGenerator.lootProfileForProgress(7))
+        assertEquals(LootGenerator.palier2RareLootProfile, LootGenerator.lootProfileForProgress(8))
+        assertEquals(false, LootGenerator.isRareLootUnlocked(7))
+        assertEquals(true, LootGenerator.isRareLootUnlocked(8))
+    }
+
+    @Test
+    fun baseGenerationDoesNotRollRareLootBeforeGate() {
+        val items = LootGenerator.generate(
+            rolls = 500,
+            seed = 5,
+            lootProfile = LootGenerator.lootProfileForProgress(7),
+        )
+
+        assertTrue(items.isNotEmpty())
+        assertTrue(items.none { it.rarity >= LootRarity.Rare })
+    }
+
+    @Test
+    fun palier2GenerationRollsBalancedRareChanceOnly() {
+        val items = LootGenerator.generate(
+            rolls = 1_000,
+            seed = 7,
+            lootProfile = LootGenerator.lootProfileForProgress(8),
+        )
+        val rareCount = items.count { it.rarity == LootRarity.Rare }
+
+        assertTrue("Rare count should stay near the 10% Palier 2 weight, got $rareCount.", rareCount in 70..130)
+        assertEquals(0, items.count { it.rarity == LootRarity.Epic || it.rarity == LootRarity.Relic })
+    }
+
+    @Test
     fun catalogSlotsMatchIconFamilies() {
         LootCatalog.items.forEach { definition ->
             when (definition.icon) {

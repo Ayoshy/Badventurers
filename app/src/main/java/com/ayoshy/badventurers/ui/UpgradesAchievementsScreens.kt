@@ -80,6 +80,8 @@ import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.ExpeditionResult
 import com.ayoshy.badventurers.game.FakeRewardedAdService
 import com.ayoshy.badventurers.game.GuildFacility
+import com.ayoshy.badventurers.game.GuildFacilityUpgradeState
+import com.ayoshy.badventurers.game.ScoutTableIntel
 import com.ayoshy.badventurers.game.Hero
 import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroClass
@@ -134,10 +136,13 @@ internal fun UpgradesScreen(
     onBuyNoticeBoard: () -> Unit,
     onBuyTrainingYard: () -> Unit,
     onBuyBunkRoom: () -> Unit,
+    onBuyScoutTable: () -> Unit,
 ) {
     val noticeBoardCost = session.noticeBoardUpgradeCost()
     val trainingYardCost = session.trainingYardUpgradeCost()
     val bunkRoomCost = session.bunkRoomUpgradeCost()
+    val scoutTableState = session.facilityUpgradeState(GuildFacility.ScoutTable)
+    val scoutTableCost = session.scoutTableUpgradeCost()
 
     ScreenScaffold(title = stringResource(R.string.upgrades_title), status = stringResource(R.string.guild_upgrade_status)) {
         InfoRow(
@@ -183,6 +188,16 @@ internal fun UpgradesScreen(
             currentGold = session.gold,
             enabled = session.canUpgradeFacility(GuildFacility.BunkRoom),
             onBuy = onBuyBunkRoom,
+        )
+        UpgradeRow(
+            title = stringResource(R.string.scout_table_upgrade_title, session.scoutTableLevel),
+            detail = stringResource(R.string.scout_table_upgrade_detail),
+            preview = scoutTableUpgradePreviewText(session),
+            cost = scoutTableCost,
+            currentGold = session.gold,
+            enabled = session.canUpgradeFacility(GuildFacility.ScoutTable),
+            disabledLabel = scoutTableDisabledLabel(scoutTableState),
+            onBuy = onBuyScoutTable,
         )
         DarkPanel(title = stringResource(R.string.next_unlock_title), body = stringResource(R.string.next_unlock_summary))
         AchievementLedgerPanel(session = session, onOpen = onAchievements)
@@ -431,13 +446,14 @@ internal fun UpgradeRow(
     cost: Int,
     currentGold: Int,
     enabled: Boolean,
+    disabledLabel: String? = null,
     onBuy: () -> Unit,
 ) {
     val missingGold = (cost - currentGold).coerceAtLeast(0)
     val buttonLabel = if (enabled) {
         stringResource(R.string.buy_cost_action, cost)
     } else {
-        stringResource(R.string.upgrade_missing_gold_action, missingGold)
+        disabledLabel ?: stringResource(R.string.upgrade_missing_gold_action, missingGold)
     }
 
     Card(
@@ -495,6 +511,25 @@ internal fun UpgradeRow(
                 )
             }
         }
+    }
+}
+
+@Composable
+internal fun scoutTableDisabledLabel(state: GuildFacilityUpgradeState): String? = when {
+    !state.unlocked -> stringResource(R.string.upgrade_locked_action)
+    state.maxed -> stringResource(R.string.upgrade_maxed_action)
+    else -> null
+}
+
+@Composable
+internal fun scoutTableUpgradePreviewText(session: PlaySessionState): String {
+    val state = session.facilityUpgradeState(GuildFacility.ScoutTable)
+    val current = ScoutTableIntel.behavior(session.scoutTableLevel)
+    val next = ScoutTableIntel.behavior(session.scoutTableLevel + 1)
+    return if (state.maxed) {
+        stringResource(R.string.scout_table_upgrade_maxed, current.revealedPlanWarnings)
+    } else {
+        stringResource(R.string.scout_table_upgrade_preview, current.revealedPlanWarnings, next.revealedPlanWarnings)
     }
 }
 

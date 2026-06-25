@@ -138,6 +138,7 @@ class PlaySessionSnapshotTest {
             noticeBoardLevel = 0,
             trainingYardLevel = 99,
             bunkRoomLevel = 99,
+            scoutTableLevel = 99,
         )
 
         val restored = snapshot.toState()
@@ -151,6 +152,11 @@ class PlaySessionSnapshotTest {
             GuildFacilityCatalog.definition(GuildFacility.BunkRoom).maxLevel,
             restored.bunkRoomLevel,
         )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.ScoutTable).maxLevel,
+            restored.scoutTableLevel,
+        )
+        assertEquals(0, snapshot.copy(scoutTableLevel = -1).toState().scoutTableLevel)
     }
 
     @Test

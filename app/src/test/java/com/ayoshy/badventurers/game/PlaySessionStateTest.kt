@@ -327,6 +327,36 @@ class PlaySessionStateTest {
     }
 
     @Test
+    fun collectResultUsesRareLootGateForGeneratedRewards() {
+        val result = ExpeditionResult(
+            outcome = ExpeditionOutcome.GreatSuccess,
+            reward = Reward(gold = 0, xp = 0, lootRolls = 120),
+            scoreMargin = 80,
+        )
+        val expedition = ExpeditionRun(
+            quest = SeedGame.questById.getValue("paperwork_toll_of_chaos"),
+            startedAtMillis = 1_000L,
+            endsAtMillis = 2_000L,
+            result = result,
+        )
+        val locked = PlaySessionState.initial().copy(
+            completedQuestCount = LootGenerator.RARE_LOOT_COMPLETED_QUEST_THRESHOLD - 1,
+            expedition = expedition,
+        )
+        val unlocked = locked.copy(
+            completedQuestCount = LootGenerator.RARE_LOOT_COMPLETED_QUEST_THRESHOLD,
+            expedition = expedition,
+        )
+
+        val lockedCollected = locked.collectResult()
+        val unlockedCollected = unlocked.collectResult()
+
+        assertTrue(lockedCollected.pendingLootItems.none { it.rarity >= LootRarity.Rare })
+        assertTrue(unlockedCollected.pendingLootItems.any { it.rarity == LootRarity.Rare })
+        assertEquals(0, unlockedCollected.pendingLootItems.count { it.rarity == LootRarity.Epic || it.rarity == LootRarity.Relic })
+    }
+
+    @Test
     fun finishQuestNowProducesResultBeforeEnd() {
         val startedAt = 1_000L
         val state = PlaySessionState.initial().startQuest(startedAt, SeedGame.firstQuest)
@@ -602,6 +632,59 @@ class PlaySessionStateTest {
     }
 
     @Test
+    fun keepPendingLootSelectionCommitsSelectedItemsAndDestroysRest() {
+        val existing = testLoot(id = "weapon_existing_spoon", bonus = 1)
+        val first = testLoot(id = "weapon_reward_spoon", bonus = 5)
+        val second = testLoot(id = "armor_reward_hat", bonus = 2)
+        val third = testLoot(id = "trinket_reward_ring", bonus = 7)
+        val state = PlaySessionState.initial().copy(
+            lootItems = listOf(existing),
+            pendingLootItems = listOf(first, second, third),
+            pendingLootKeepLimit = 2,
+            pendingLootCarryBreakdown = LootCarryBreakdown(base = 1, bunkRoom = 1),
+        )
+
+        val kept = state.keepPendingLootSelection(listOf(third, first))
+
+        assertEquals(emptyList<LootItem>(), kept.pendingLootItems)
+        assertEquals(listOf(existing, third, first), kept.lootItems)
+        assertEquals(0, kept.pendingLootKeepLimit)
+        assertEquals(0, kept.pendingLootKeptCount)
+        assertEquals(LootCarryBreakdown(), kept.pendingLootCarryBreakdown)
+    }
+
+    @Test
+    fun keepPendingLootSelectionCapsSelectedItemsAtCarryLimit() {
+        val first = testLoot(id = "weapon_reward_spoon", bonus = 5)
+        val second = testLoot(id = "armor_reward_hat", bonus = 2)
+        val third = testLoot(id = "trinket_reward_ring", bonus = 7)
+        val state = PlaySessionState.initial().copy(
+            pendingLootItems = listOf(first, second, third),
+            pendingLootKeepLimit = 1,
+        )
+
+        val kept = state.keepPendingLootSelection(listOf(first, second, third))
+
+        assertEquals(emptyList<LootItem>(), kept.pendingLootItems)
+        assertEquals(listOf(first), kept.lootItems)
+        assertEquals(0, kept.pendingLootRemainingChoices())
+    }
+
+    @Test
+    fun keepPendingLootSelectionDiscardsPendingLootWhenSelectionIsInvalid() {
+        val first = testLoot(id = "weapon_reward_spoon", bonus = 5)
+        val missing = testLoot(id = "missing_reward_spoon", bonus = 1)
+        val state = PlaySessionState.initial().copy(
+            pendingLootItems = listOf(first),
+            pendingLootKeepLimit = 1,
+        )
+
+        val kept = state.keepPendingLootSelection(listOf(missing))
+
+        assertEquals(emptyList<LootItem>(), kept.pendingLootItems)
+        assertEquals(emptyList<LootItem>(), kept.lootItems)
+    }
+    @Test
     fun lootCarryLimitStartsAtOneAndScalesWithGuildAndVeteranHeroes() {
         val veteran = HeroProgression.withProgress(party.first(), level = 5, xp = 0)
         val base = PlaySessionState.initial()
@@ -806,7 +889,8 @@ class PlaySessionStateTest {
             ready.copy(noticeBoardLevel = 2),
             ready.copy(trainingYardLevel = 2),
             ready.copy(bunkRoomLevel = 2),
-            ready.copy(noticeBoardLevel = 3, trainingYardLevel = 3, bunkRoomLevel = 2),
+            ready.copy(scoutTableLevel = 1),
+            ready.copy(noticeBoardLevel = 3, trainingYardLevel = 3, bunkRoomLevel = 2, scoutTableLevel = 2),
         )
 
         facilityStates.forEach { state ->
@@ -815,6 +899,17 @@ class PlaySessionStateTest {
             assertTrue(incidents.isNotEmpty())
             incidents.forEach { incident -> assertTrue(incident.text.isNotBlank()) }
         }
+    }
+    @Test
+    fun passiveIncidentGeneratorCanUseScoutTableWithoutCoreCrew() {
+        val readyWithoutCrew = PlaySessionState.initial()
+            .copy(coreCrewHeroIds = emptyList())
+            .startQuest(0L, SeedGame.firstQuest)
+            .finishQuestNow(engine, party, roll = 100)
+        val readyWithScoutTable = readyWithoutCrew.copy(scoutTableLevel = 1)
+
+        assertEquals(emptyList<PassiveIncident>(), PassiveIncidentGenerator.generate(readyWithoutCrew, 3_600_000L))
+        assertTrue(PassiveIncidentGenerator.generate(readyWithScoutTable, 3_600_000L).isNotEmpty())
     }
     @Test
     fun debugAdjustmentsClampResources() {
@@ -845,6 +940,7 @@ class PlaySessionStateTest {
                 noticeBoardLevel = 3,
                 trainingYardLevel = 2,
                 bunkRoomLevel = 3,
+                scoutTableLevel = 2,
                 heroes = emptyList(),
                 coreCrewHeroIds = listOf("brugg"),
                 recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
@@ -869,6 +965,7 @@ class PlaySessionStateTest {
         assertEquals(1, reset.noticeBoardLevel)
         assertEquals(1, reset.trainingYardLevel)
         assertEquals(1, reset.bunkRoomLevel)
+        assertEquals(0, reset.scoutTableLevel)
         assertEquals(HeroCatalog.starterHeroes, reset.heroes)
         assertEquals(HeroCatalog.starterHeroes.map { it.id }, reset.normalizedCoreCrewHeroIds())
         assertEquals(RecruitmentTicketCatalog.normalizedInventory(), reset.recruitmentTickets)

@@ -15,6 +15,7 @@ class GuildFacilityCatalogTest {
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.NoticeBoard).implemented)
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.TrainingYard).implemented)
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.BunkRoom).implemented)
+        assertTrue(GuildFacilityCatalog.definition(GuildFacility.ScoutTable).implemented)
     }
 
     @Test
@@ -27,6 +28,9 @@ class GuildFacilityCatalogTest {
         assertTrue(GuildFacilityEffect.HeroXpGain in effects)
         assertTrue(GuildFacilityEffect.RiskMitigation in effects)
         assertTrue(GuildFacilityEffect.ExpeditionDuration in effects)
+        assertTrue(GuildFacilityEffect.PlanWarnings in effects)
+        assertTrue(GuildFacilityEffect.UnlockPreviews in effects)
+        assertTrue(GuildFacilityEffect.PassiveScouting in effects)
         assertTrue(GuildFacilityEffect.LootQuality in effects)
         assertTrue(GuildFacilityEffect.OfflineCap in effects)
         assertTrue(GuildFacilityEffect.RecruitPoolQuality in effects)
@@ -47,6 +51,43 @@ class GuildFacilityCatalogTest {
         assertFalse(maxed.canUpgradeFacility(GuildFacility.NoticeBoard))
         assertEquals(null, maxed.facilityUpgradeState(GuildFacility.NoticeBoard).nextCost)
         assertEquals(maxed, maxed.upgradeFacility(GuildFacility.NoticeBoard))
+    }
+
+    @Test
+    fun scoutTableUnlockGateAndUpgradeUseZeroBasedFacilityLevel() {
+        val definition = GuildFacilityCatalog.definition(GuildFacility.ScoutTable)
+        val locked = PlaySessionState.initial().copy(
+            gold = 10_000,
+            reputation = 7,
+            noticeBoardLevel = 2,
+        )
+        val unlocked = locked.copy(reputation = 8)
+        val upgraded = unlocked.upgradeScoutTable()
+
+        assertEquals(0, locked.scoutTableLevel)
+        assertFalse(locked.canUpgradeFacility(GuildFacility.ScoutTable))
+        assertTrue(unlocked.canUpgradeFacility(GuildFacility.ScoutTable))
+        assertEquals(unlocked.gold - definition.costForNextLevel(0)!!, upgraded.gold)
+        assertEquals(1, upgraded.scoutTableLevel)
+    }
+
+    @Test
+    fun scoutTableWarningsChangeThePlanDecisionSurface() {
+        val quest = SeedGame.firstQuest
+        val rushPlan = ExpeditionPlanCatalog.byId(ExpeditionPlanCatalog.rushTheJobId)
+        val lootPlan = ExpeditionPlanCatalog.byId(ExpeditionPlanCatalog.lootPriorityId)
+
+        assertEquals(emptyList<ScoutPlanWarning>(), ScoutTableIntel.planWarningsFor(0, rushPlan, quest))
+
+        val firstWarning = ScoutTableIntel.planWarningsFor(1, rushPlan, quest).single()
+        assertEquals(ScoutPlanWarningType.HigherRisk, firstWarning.type)
+        assertEquals(12, firstWarning.amount)
+
+        val deeperWarnings = ScoutTableIntel.planWarningsFor(2, lootPlan, quest)
+        assertEquals(
+            listOf(ScoutPlanWarningType.HigherRisk, ScoutPlanWarningType.LowerPower),
+            deeperWarnings.map { it.type },
+        )
     }
 
     @Test

@@ -117,15 +117,52 @@ object LootEconomy {
 }
 
 object LootGenerator {
-    const val MAX_STAT_VALUE = 10
+    data class LootRarityProfile(val rarityWeights: List<Pair<LootRarity, Int>>) {
+        val totalWeight: Int
+            get() = rarityWeights.sumOf { it.second }
 
-    private val rarityWeights = listOf(
-        LootRarity.Common to 60,
-        LootRarity.Uncommon to 25,
-        LootRarity.Rare to 10,
-        LootRarity.Epic to 4,
-        LootRarity.Relic to 1,
+        val rareWeight: Int
+            get() = rarityWeights.firstOrNull { (rarity, _) -> rarity == LootRarity.Rare }?.second ?: 0
+
+        val rareOrBetterWeight: Int
+            get() = rarityWeights
+                .filter { (rarity, _) -> rarity >= LootRarity.Rare }
+                .sumOf { it.second }
+
+        init {
+            require(rarityWeights.isNotEmpty()) { "Loot rarity profiles need at least one rarity." }
+            require(rarityWeights.all { (_, weight) -> weight > 0 }) { "Loot rarity weights must be positive." }
+            require(rarityWeights.map { it.first }.toSet().size == rarityWeights.size) { "Loot rarity profiles cannot duplicate rarities." }
+        }
+    }
+
+    const val MAX_STAT_VALUE = 10
+    const val RARE_LOOT_COMPLETED_QUEST_THRESHOLD = 8
+
+    val baseLootProfile = LootRarityProfile(
+        listOf(
+            LootRarity.Common to 75,
+            LootRarity.Uncommon to 25,
+        ),
     )
+
+    val palier2RareLootProfile = LootRarityProfile(
+        listOf(
+            LootRarity.Common to 65,
+            LootRarity.Uncommon to 25,
+            LootRarity.Rare to 10,
+        ),
+    )
+
+    fun isRareLootUnlocked(completedQuestCount: Int): Boolean =
+        completedQuestCount >= RARE_LOOT_COMPLETED_QUEST_THRESHOLD
+
+    fun lootProfileForProgress(completedQuestCount: Int): LootRarityProfile =
+        if (isRareLootUnlocked(completedQuestCount)) {
+            palier2RareLootProfile
+        } else {
+            baseLootProfile
+        }
 
     private val statValueWeights = listOf(
         1 to 22,
@@ -141,14 +178,24 @@ object LootGenerator {
     )
 
     fun generate(rolls: Int, seed: Int = 0): List<LootItem> =
-        generate(rolls, Random(seed))
+        generate(rolls, Random(seed), baseLootProfile)
 
-    fun generate(rolls: Int, random: Random): List<LootItem> {
+    fun generate(
+        rolls: Int,
+        seed: Int,
+        lootProfile: LootRarityProfile,
+    ): List<LootItem> = generate(rolls, Random(seed), lootProfile)
+
+    fun generate(
+        rolls: Int,
+        random: Random,
+        lootProfile: LootRarityProfile = baseLootProfile,
+    ): List<LootItem> {
         if (rolls <= 0) return emptyList()
 
         return List(rolls) {
             val slot = random.nextEnum(LootSlot.values().asList())
-            val rarity = random.nextWeightedEnum(rarityWeights)
+            val rarity = random.nextWeightedEnum(lootProfile.rarityWeights)
             val definition = random.nextEnum(LootCatalog.bySlot.getValue(slot))
             val stats = rollStats(rarity, random)
 

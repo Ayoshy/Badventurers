@@ -123,12 +123,13 @@ object PassiveIncidentGenerator {
 
 
         val hasCoreCrew = session.normalizedCoreCrewHeroIds().isNotEmpty()
+        val hasPassiveScouting = ScoutTableIntel.behavior(session.scoutTableLevel).enablesPassiveScoutingIncidents
 
         if (elapsedSeconds < PASSIVE_INCIDENT_ONE_HOUR_SECONDS) return 0
 
 
 
-        var count = if (hasCoreCrew) 1 else 0
+        var count = if (hasCoreCrew || hasPassiveScouting) 1 else 0
 
         if (elapsedSeconds >= PASSIVE_INCIDENT_TWO_HOURS_SECONDS && random.nextInt(100) < PASSIVE_INCIDENT_SECOND_CHANCE_PERCENT) {
 
@@ -295,6 +296,14 @@ object PassiveIncidentGenerator {
 
 
 
+        val scoutTableLevel = session.facilityLevel(GuildFacility.ScoutTable)
+        if (scoutTableLevel > 0) {
+            facilityTemplates += Triple(
+                "facility-scout-${scoutTableLevel}",
+                "Scout Table marked %d routes as safe-ish before anyone tested them",
+                scoutTableLevel,
+            )
+        }
         val accountantLevel = session.facilityLevel(GuildFacility.AccountantOffice)
 
         if (accountantLevel > 0) {
@@ -416,6 +425,8 @@ object PassiveIncidentGenerator {
 
             session.bunkRoomLevel > 1 -> "Bunk Room"
 
+            session.scoutTableLevel > 0 -> "Scout Table"
+
             else -> "guild office"
 
         }
@@ -462,7 +473,9 @@ object PassiveIncidentGenerator {
 
             "a map rack near the stairs",
 
-        ) + if (session.noticeBoardLevel > 1) listOf("the Notice Board annex") else emptyList()
+        ) +
+            (if (session.noticeBoardLevel > 1) listOf("the Notice Board annex") else emptyList()) +
+            (if (session.scoutTableLevel > 0) listOf("the Scout Table map pile") else emptyList())
 
         return locations[random.nextInt(locations.size)]
 
@@ -565,7 +578,7 @@ object PassiveIncidentGenerator {
         seed = seed * 31 + trainingYardLevel
 
         seed = seed * 31 + bunkRoomLevel
-
+        seed = seed * 31 + scoutTableLevel
         seed = seed * 31 + normalizedCoreCrewHeroIds().size
 
         seed = seed * 31 + normalizedCoreCrewHeroIds().hashCode()

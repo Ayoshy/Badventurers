@@ -39,6 +39,7 @@ internal object PlaySessionSnapshotJson {
         .put("noticeBoardLevel", snapshot.noticeBoardLevel)
         .put("trainingYardLevel", snapshot.trainingYardLevel)
         .put("bunkRoomLevel", snapshot.bunkRoomLevel)
+        .put("scoutTableLevel", snapshot.scoutTableLevel)
         .put("lootRolls", snapshot.lootRolls)
         .put("heroIds", JSONArray().also { array -> snapshot.heroIds.forEach { array.put(it) } })
         .put("heroProgress", JSONArray().also { array -> snapshot.heroProgress.forEach { array.put(encodeHeroProgress(it)) } })
@@ -70,6 +71,7 @@ internal object PlaySessionSnapshotJson {
             noticeBoardLevel = json.optInt("noticeBoardLevel", initial.noticeBoardLevel),
             trainingYardLevel = json.optInt("trainingYardLevel", initial.trainingYardLevel),
             bunkRoomLevel = json.optInt("bunkRoomLevel", initial.bunkRoomLevel),
+            scoutTableLevel = json.optInt("scoutTableLevel", initial.scoutTableLevel),
             lootRolls = json.optInt("lootRolls", initial.lootRolls),
             heroIds = decodeStringArray(json.optJSONArray("heroIds")).ifEmpty { HeroCatalog.starterHeroes.map { it.id } },
             heroProgress = decodeObjectArray(json.optJSONArray("heroProgress"), ::decodeHeroProgress),

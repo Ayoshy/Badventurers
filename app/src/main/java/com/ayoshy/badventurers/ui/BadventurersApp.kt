@@ -325,10 +325,10 @@ fun BadventurersApp(
                         )
                         GameTab.RewardLoot -> RewardLootScreen(
                             session = session,
-                            onKeep = { item ->
-                                val nextSession = session.keepPendingLoot(item)
+                            onKeepSelection = { items ->
+                                val nextSession = session.keepPendingLootSelection(items)
                                 updateSession(nextSession)
-                                if (nextSession.pendingLootItems.isEmpty()) selectedTab = GameTab.Guild
+                                selectedTab = GameTab.Guild
                             },
                             onDiscardRest = {
                                 val nextSession = session.discardPendingLoot()
@@ -371,6 +371,7 @@ fun BadventurersApp(
                             onBuyNoticeBoard = { updateSession(session.upgradeNoticeBoard()) },
                             onBuyTrainingYard = { updateSession(session.upgradeTrainingYard()) },
                             onBuyBunkRoom = { updateSession(session.upgradeBunkRoom()) },
+                            onBuyScoutTable = { updateSession(session.upgradeScoutTable()) },
                         )
                         GameTab.Achievements -> AchievementsScreen(
                             session = session,

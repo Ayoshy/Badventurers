@@ -80,6 +80,9 @@ import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.ExpeditionResult
 import com.ayoshy.badventurers.game.FakeRewardedAdService
 import com.ayoshy.badventurers.game.GuildFacility
+import com.ayoshy.badventurers.game.ScoutPlanWarning
+import com.ayoshy.badventurers.game.ScoutPlanWarningType
+import com.ayoshy.badventurers.game.ScoutTableIntel
 import com.ayoshy.badventurers.game.Hero
 import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroClass
@@ -263,6 +266,7 @@ internal fun ExpeditionPrepScreen(
             quest = quest,
             selectedPlan = selectedPlan,
             availablePlans = availablePlans,
+            scoutTableLevel = session.scoutTableLevel,
             onSelectPlan = onSelectPlan,
         )
         InfoRow(
@@ -398,6 +402,7 @@ internal fun ExpeditionPlanPanel(
     quest: Quest,
     selectedPlan: ExpeditionPlan,
     availablePlans: List<ExpeditionPlan>,
+    scoutTableLevel: Int,
     onSelectPlan: (ExpeditionPlan) -> Unit,
 ) {
     PaperPanel(
@@ -410,6 +415,7 @@ internal fun ExpeditionPlanPanel(
                 quest = quest,
                 plan = plan,
                 selected = plan.id == selectedPlan.id,
+                scoutTableLevel = scoutTableLevel,
                 onClick = { onSelectPlan(plan) },
             )
         }
@@ -421,8 +427,15 @@ internal fun ExpeditionPlanChoiceRow(
     quest: Quest,
     plan: ExpeditionPlan,
     selected: Boolean,
+    scoutTableLevel: Int,
     onClick: () -> Unit,
 ) {
+    val scoutWarnings = ScoutTableIntel.planWarningsFor(scoutTableLevel, plan, quest)
+    val scoutWarningLabels = mutableListOf<String>()
+    for (warning in scoutWarnings) {
+        scoutWarningLabels += scoutPlanWarningText(warning)
+    }
+    val scoutWarningText = scoutWarningLabels.joinToString(" / ")
     val borderColor = if (selected) Color(0xFFD0A24A) else Color(0x66806C3A)
     val background = if (selected) Color(0xFFFFE8A6) else Color(0xFFFFF6CD)
     Card(
@@ -464,6 +477,16 @@ internal fun ExpeditionPlanChoiceRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (scoutWarnings.isNotEmpty()) {
+                    Text(
+                        text = scoutWarningText,
+                        color = Color(0xFF8B3F24),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
             Text(
                 text = if (selected) stringResource(R.string.prep_plan_selected_value) else stringResource(R.string.prep_roster_pick_value),
@@ -474,6 +497,15 @@ internal fun ExpeditionPlanChoiceRow(
             )
         }
     }
+}
+
+@Composable
+internal fun scoutPlanWarningText(warning: ScoutPlanWarning): String = when (warning.type) {
+    ScoutPlanWarningType.HigherRisk -> stringResource(R.string.prep_plan_scout_warning_risk, warning.amount)
+    ScoutPlanWarningType.LowerPower -> stringResource(R.string.prep_plan_scout_warning_power, warning.amount)
+    ScoutPlanWarningType.LongerDuration -> stringResource(R.string.prep_plan_scout_warning_duration, warning.amount)
+    ScoutPlanWarningType.HarderGreatSuccess -> stringResource(R.string.prep_plan_scout_warning_great_success, warning.amount)
+    ScoutPlanWarningType.LowerGold -> stringResource(R.string.prep_plan_scout_warning_gold, warning.amount)
 }
 @Composable
 internal fun PartySlotRow(slotNumber: Int, hero: Hero?, session: PlaySessionState) {
