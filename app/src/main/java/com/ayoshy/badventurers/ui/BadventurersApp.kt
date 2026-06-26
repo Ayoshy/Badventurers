@@ -334,6 +334,7 @@ fun BadventurersApp(
                             onEquip = { heroId, item -> updateSession(session.equipLoot(heroId, item)) },
                             onUnequip = { heroId, slot -> updateSession(session.unequipLoot(heroId, slot)) },
                             onReleaseHero = { heroId -> updateSession(session.releaseHero(heroId)) },
+                            onPromoteHero = { heroId -> updateSession(session.promoteHeroWithBlankContract(heroId)) },
                             onRecruit = {
                                 val recruitment = session.recruitHero(seed = System.currentTimeMillis().toInt())
                                 if (recruitment != null) {

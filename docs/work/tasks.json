@@ -401,7 +401,7 @@
     {
       "id": "BV-009",
       "title": "Recruitment tickets: Blank Contract, first-clear rewards, and duplicate value",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "recruitment",
       "track": "Achievements And Recruitment Tickets",
@@ -409,32 +409,41 @@
       "acceptance": [
         {
           "text": "Implement Blank Contract as non-random promotion material.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add first-clear ticket rewards to selected Palier 2 and Palier 3 quests.",
-          "done": false
+          "done": true
         },
         {
           "text": "Make duplicate handling show immediate reputation and future contract value.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add EN/FR copy for Blank Contract and duplicate future value.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add tests for one-time first-clear ticket rewards and duplicate conversion messaging.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
         "app/src/main/java/com/ayoshy/badventurers/game/RecruitmentTickets.kt",
         "app/src/main/java/com/ayoshy/badventurers/game/HeroPromotion.kt",
-        "app/src/main/java/com/ayoshy/badventurers/game/Achievements.kt"
+        "app/src/main/java/com/ayoshy/badventurers/game/Achievements.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/SeedGame.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/HeroesScreen.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml",
+        "app/src/test/java/com/ayoshy/badventurers/game/PlaySessionStateTest.kt",
+        "app/src/test/java/com/ayoshy/badventurers/game/HeroPromotionTest.kt",
+        "app/src/test/java/com/ayoshy/badventurers/storage/PlaySessionSnapshotJsonTest.kt"
       ],
       "notes": [
-        "Migrated from Ticket Types and Achievement Reward Pass."
+        "Migrated from Ticket Types and Achievement Reward Pass.",
+        "2026-06-26: Blank Contract now promotes a chosen hero by one persisted rank, selected Palier 2/3 first-clears grant Blank Contracts, duplicates award immediate Rep plus a Blank Contract, and EN/FR UI copy/tests cover the flow. Verified test, assembleDebug, lintDebug, and installDebug."
       ]
     },
     {
@@ -1427,7 +1436,8 @@
         "2026-06-26: Created from screenshot review. The exact mask pipeline works, but the current overlay is still too saturated and implementation-looking.",
         "2026-06-26: Replaced raw mask-color fills with warm parchment/gold idle rims, selected fill/rim/halo, and a brighter press state. Drawer accent colors were moved away from raw mask purple/cyan. Captured all five hotspot selections under artifacts/screenshots/bv035 and verified test, assembleDebug, lintDebug, and installDebug."
       ]
-    },    {
+    },
+    {
       "id": "BV-036",
       "title": "Guild Home: hotspot discoverability and first-use guidance",
       "status": "ready",

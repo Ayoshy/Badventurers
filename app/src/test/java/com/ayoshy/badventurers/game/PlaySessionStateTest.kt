@@ -557,6 +557,8 @@ class PlaySessionStateTest {
         assertEquals(HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.reputationReward)
         assertEquals(state.gold - HeroGacha.RECRUIT_COST, recruitment.session.gold)
         assertEquals(state.reputation + HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.session.reputation)
+        assertEquals(1, recruitment.duplicateBlankContractReward)
+        assertEquals(1, recruitment.session.recruitmentTicketCount(RecruitmentTicketCatalog.BLANK_CONTRACT_ID))
         assertEquals(roster.size, recruitment.session.heroes.size)
     }
 
@@ -572,6 +574,8 @@ class PlaySessionStateTest {
         assertEquals(HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.reputationReward)
         assertEquals(state.gold - HeroGacha.RECRUIT_COST, recruitment.session.gold)
         assertEquals(state.reputation + HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.session.reputation)
+        assertEquals(1, recruitment.duplicateBlankContractReward)
+        assertEquals(1, recruitment.session.recruitmentTicketCount(RecruitmentTicketCatalog.BLANK_CONTRACT_ID))
         assertEquals(state.heroes.size, recruitment.session.heroes.size)
     }
 
@@ -607,6 +611,8 @@ class PlaySessionStateTest {
         assertEquals(true, recruitment.duplicate)
         assertEquals(HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.reputationReward)
         assertEquals(state.reputation + HeroGacha.DUPLICATE_REPUTATION_REWARD, recruitment.session.reputation)
+        assertEquals(1, recruitment.duplicateBlankContractReward)
+        assertEquals(1, recruitment.session.recruitmentTicketCount(RecruitmentTicketCatalog.BLANK_CONTRACT_ID))
         assertEquals(state.heroes.size, recruitment.session.heroes.size)
         assertEquals(true, recruitment.session.isCompleted("first_hire"))
         assertEquals(true, recruitment.session.isCompleted("duplicate_form"))
@@ -628,6 +634,46 @@ class PlaySessionStateTest {
         assertEquals(null, state.recruitHeroWithTicket(RecruitmentTicketCatalog.BLANK_CONTRACT_ID, seed = 5))
         assertEquals(1, state.recruitmentTickets[RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID])
         assertEquals(1, state.recruitmentTickets[RecruitmentTicketCatalog.BLANK_CONTRACT_ID])
+    }
+
+    @Test
+    fun blankContractPromotesHeroAndConsumesMaterial() {
+        val hero = HeroCatalog.byId.getValue("brugg").toHero()
+        val state = PlaySessionState.initial().copy(
+            heroes = listOf(hero),
+            recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
+                mapOf(RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 2),
+            ),
+        )
+
+        val promoted = state.promoteHeroWithBlankContract(hero.id)
+        val promotedHero = promoted.heroes.single()
+
+        assertEquals(1, promotedHero.promotionRank)
+        assertEquals(hero.stats.total + 6, promotedHero.stats.total)
+        assertEquals(1, promoted.recruitmentTicketCount(RecruitmentTicketCatalog.BLANK_CONTRACT_ID))
+    }
+
+    @Test
+    fun blankContractPromotionRequiresIdleMaterialAndRankRoom() {
+        val hero = HeroPromotion.previewPromoted(
+            HeroCatalog.byId.getValue("brugg").toHero(),
+            targetRank = HeroPromotion.MAX_RANK,
+        )
+        val withContract = PlaySessionState.initial().copy(
+            heroes = listOf(hero),
+            recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
+                mapOf(RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1),
+            ),
+        )
+        val running = withContract.copy(expedition = ExpeditionRun(SeedGame.firstQuest, startedAtMillis = 0L, endsAtMillis = 1_000L))
+
+        assertEquals(withContract, withContract.promoteHeroWithBlankContract(hero.id))
+        assertEquals(running, running.promoteHeroWithBlankContract(hero.id))
+        assertEquals(
+            PlaySessionState.initial(),
+            PlaySessionState.initial().promoteHeroWithBlankContract(HeroCatalog.starterHeroes.first().id),
+        )
     }
 
     @Test

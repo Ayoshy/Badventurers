@@ -39,7 +39,10 @@ class QuestActivityCardLogicTest {
         assertTrue(ready.isQuestUnlocked(quest))
         assertEquals(FirstClearRewardState.Available, firstClear.state)
         assertEquals(
-            mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+            mapOf(
+                RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1,
+                RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+            ),
             firstClear.ticketRewards,
         )
         assertTrue(QuestActivityIntent.FirstClear in badges)

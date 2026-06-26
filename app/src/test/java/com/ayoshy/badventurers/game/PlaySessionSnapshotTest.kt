@@ -6,10 +6,13 @@ import org.junit.Test
 class PlaySessionSnapshotTest {
     @Test
     fun snapshotRoundTripsModifiedIdleState() {
-        val extraHero = HeroProgression.withProgress(
-            hero = HeroCatalog.byId.getValue("ledger").toHero(),
-            level = 6,
-            xp = 17,
+        val extraHero = HeroPromotion.previewPromoted(
+            hero = HeroProgression.withProgress(
+                hero = HeroCatalog.byId.getValue("ledger").toHero(),
+                level = 6,
+                xp = 17,
+            ),
+            targetRank = 2,
         )
         val generatedLoot = LootGenerator.generate(2, seed = 5)
         val state = PlaySessionState.initial().copy(
@@ -63,6 +66,7 @@ class PlaySessionSnapshotTest {
 
         assertEquals(PlaySessionSnapshot.CURRENT_VERSION, snapshot.version)
         assertEquals(state, restored)
+        assertEquals(2, restored.heroes.first { it.id == extraHero.id }.promotionRank)
     }
 
     @Test

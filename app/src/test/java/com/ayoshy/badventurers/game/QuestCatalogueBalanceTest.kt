@@ -269,7 +269,10 @@ class QuestCatalogueBalanceTest {
         )
 
         assertEquals(
-            mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+            mapOf(
+                RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1,
+                RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+            ),
             regionalLiabilityQuests.getValue("wedding_with_too_many_oaths").firstClearTicketRewards,
         )
         assertEquals(
@@ -281,7 +284,10 @@ class QuestCatalogueBalanceTest {
             regionalLiabilityQuests.getValue("the_crowns_missing_receipt").firstClearTicketRewards,
         )
         assertEquals(
-            mapOf(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1),
+            mapOf(
+                RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1,
+                RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+            ),
             regionalLiabilityQuests.getValue("the_tower_built_sideways").firstClearTicketRewards,
         )
 
@@ -313,6 +319,20 @@ class QuestCatalogueBalanceTest {
         assertEquals(
             mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1),
             SeedGame.firstQuest.firstClearTicketRewards,
+        )
+        assertEquals(
+            mapOf(
+                RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1,
+                RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+            ),
+            SeedGame.questById.getValue("paperwork_toll_of_chaos").firstClearTicketRewards,
+        )
+        assertEquals(
+            mapOf(
+                RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1,
+                RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+            ),
+            SeedGame.questById.getValue("notary_night_patrol").firstClearTicketRewards,
         )
         assertEquals(
             mapOf(

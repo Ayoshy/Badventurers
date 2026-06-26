@@ -12,17 +12,29 @@ object SeedGame {
         "the_hungry_siege" to mapOf(RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1),
         "the_last_locked_door" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
         "crypt_of_unpaid_debts" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
-        "paperwork_toll_of_chaos" to mapOf(RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1),
+        "paperwork_toll_of_chaos" to mapOf(
+            RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1,
+            RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+        ),
         "licensed_guild_caravan_haunt" to mapOf(
             RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1,
             RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1,
         ),
-        "notary_night_patrol" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+        "notary_night_patrol" to mapOf(
+            RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1,
+            RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+        ),
         "inspectorate_cove_banquet" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
-        "wedding_with_too_many_oaths" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+        "wedding_with_too_many_oaths" to mapOf(
+            RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1,
+            RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+        ),
         "the_sunken_toll_booth" to mapOf(RecruitmentTicketCatalog.VETERAN_TICKET_ID to 1),
         "the_crowns_missing_receipt" to mapOf(RecruitmentTicketCatalog.VETERAN_TICKET_ID to 1),
-        "the_tower_built_sideways" to mapOf(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1),
+        "the_tower_built_sideways" to mapOf(
+            RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1,
+            RecruitmentTicketCatalog.BLANK_CONTRACT_ID to 1,
+        ),
     )
     val firstQuest = Quest(
         id = "cave_minor_regrets",

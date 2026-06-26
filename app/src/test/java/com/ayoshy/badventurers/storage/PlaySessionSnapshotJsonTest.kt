@@ -4,6 +4,7 @@ import com.ayoshy.badventurers.game.GuildFacility
 import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.GuildFacilityCatalog
 import com.ayoshy.badventurers.game.HeroCatalog
+import com.ayoshy.badventurers.game.HeroPromotion
 import com.ayoshy.badventurers.game.LootCarryBreakdown
 import com.ayoshy.badventurers.game.LootGenerator
 import com.ayoshy.badventurers.game.PassiveIncomeReport
@@ -104,6 +105,21 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(report, restored?.lastOfflinePassiveIncome)
         assertEquals(lootFinds, restored?.lastOfflinePassiveIncome?.lootFinds)
         assertEquals(incidents, restored?.lastOfflinePassiveIncidents)
+    }
+
+    @Test
+    fun codecRoundTripsHeroPromotionRank() {
+        val promoted = HeroPromotion.previewPromoted(
+            HeroCatalog.byId.getValue("ledger").toHero(),
+            targetRank = 2,
+        )
+        val state = PlaySessionState.initial().copy(heroes = listOf(promoted))
+
+        val restored = PlaySessionSnapshotJson.decode(
+            PlaySessionSnapshotJson.encode(PlaySessionSnapshot.fromState(state)),
+        )?.toState()
+
+        assertEquals(promoted, restored?.heroes?.single())
     }
 
     @Test

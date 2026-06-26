@@ -374,8 +374,8 @@
     <string name="recruit_locked_action">Or requis</string>
     <string name="recruit_result_title">Nouvelle recrue</string>
     <string name="recruit_result_summary">%1$s rejoint la guilde: %2$s %3$s. Trait: %4$s.</string>
-    <string name="recruit_duplicate_summary">%1$s a deja un badge de guilde. Contrat converti en +%2$d Rep.</string>
-    <string name="recruit_duplicate_bonus_detail">Reputation de guilde +%1$d.</string>
+    <string name="recruit_duplicate_summary">%1$s a deja un badge de guilde. Le dossier donne +%2$d Rep et %3$d contrat vierge.</string>
+    <string name="recruit_duplicate_bonus_detail">Maintenant : +%1$d Rep. Plus tard : %2$d contrat vierge peut promouvoir un heros choisi.</string>
     <string name="recruit_odds_title">Probabilites</string>
     <string name="recruit_odds_detail">Chance par tirage</string>
     <string name="recruitment_tickets_title">Tickets d embauche</string>
@@ -398,7 +398,7 @@
     <string name="ticket_veteran_ticket_summary">La recrue commence au niveau 4 ou plus.</string>
     <string name="ticket_veteran_ticket_guarantee">Garantie : niveau minimum %1$d.</string>
     <string name="ticket_blank_contract_title">Contrat vierge</string>
-    <string name="ticket_blank_contract_summary">Materiau de promotion, pas un tirage de recrue.</string>
+    <string name="ticket_blank_contract_summary">Promeut un heros choisi d un rang. Pas un tirage de recrue.</string>
     <string name="ticket_unknown_summary">Classe en paperasse suspecte.</string>
     <string name="roster_title">Equipe</string>
     <string name="heroes_tab_roster">Equipe</string>
@@ -414,6 +414,13 @@
     <string name="result_level_up_line">%1$s atteint Nv. %2$d</string>
     <string name="result_level_up_detail">Gagne %1$d niveau(x): %2$s</string>
     <string name="hero_progression_title">Progression</string>
+    <string name="hero_promotion_title">Promotion</string>
+    <string name="hero_promotion_rank_value">Rang %1$d/%2$d</string>
+    <string name="hero_promotion_ready_detail">Contrats vierges x%1$d. Le rang %2$d ajoute %3$s.</string>
+    <string name="hero_promotion_need_contract_detail">Requiert 1 contrat vierge. Les premieres reussites et doublons peuvent en creer.</string>
+    <string name="hero_promotion_busy_detail">Les promotions sont classees quand la guilde est au repos.</string>
+    <string name="hero_promotion_maxed_detail">Rang de promotion maximum atteint.</string>
+    <string name="hero_promote_action">Promouvoir</string>
     <string name="hero_next_level_value">Nv. %1$d -&gt; %2$d</string>
     <string name="hero_xp_remaining_detail">%1$d XP avant le prochain niveau</string>
     <string name="hero_next_stats_detail">Prochain niveau: %1$s</string>

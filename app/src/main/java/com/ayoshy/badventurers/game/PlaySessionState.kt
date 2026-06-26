@@ -761,6 +761,26 @@ data class PlaySessionState(
     }
 
 
+    fun canPromoteHeroWithBlankContract(heroId: String): Boolean =
+        phase == PlayPhase.Idle &&
+            recruitmentTicketCount(RecruitmentTicketCatalog.BLANK_CONTRACT_ID) > 0 &&
+            heroes.any { hero -> hero.id == heroId && HeroPromotion.canPromote(hero) }
+
+    fun promoteHeroWithBlankContract(heroId: String): PlaySessionState {
+        if (!canPromoteHeroWithBlankContract(heroId)) return this
+        val nextTickets = RecruitmentTicketCatalog.consumeFromInventory(
+            recruitmentTickets,
+            RecruitmentTicketCatalog.BLANK_CONTRACT_ID,
+        ) ?: return this
+        val promotedHeroes = heroes.map { hero ->
+            if (hero.id == heroId) HeroPromotion.promote(hero) ?: hero else hero
+        }
+        return copy(
+            heroes = promotedHeroes,
+            recruitmentTickets = nextTickets,
+        )
+    }
+
     fun releaseHero(heroId: String): PlaySessionState {
         if (phase != PlayPhase.Idle || heroes.size <= 1 || heroes.none { it.id == heroId }) return this
 
@@ -788,9 +808,18 @@ data class PlaySessionState(
         ).single()
         val duplicate = heroes.any { it.id == hero.id }
         val reputationReward = if (duplicate) HeroGacha.DUPLICATE_REPUTATION_REWARD else 0
+        val duplicateBlankContractReward = if (duplicate) 1 else 0
         val recruited = copy(
             gold = gold - HeroGacha.RECRUIT_COST,
             reputation = reputation + reputationReward,
+            recruitmentTickets = RecruitmentTicketCatalog.addToInventory(
+                recruitmentTickets,
+                if (duplicateBlankContractReward > 0) {
+                    mapOf(RecruitmentTicketCatalog.BLANK_CONTRACT_ID to duplicateBlankContractReward)
+                } else {
+                    emptyMap()
+                },
+            ),
             heroes = if (duplicate) heroes else heroes + hero,
         )
         val tracked = AchievementTracker.applyEvent(
@@ -803,6 +832,7 @@ data class PlaySessionState(
             cost = HeroGacha.RECRUIT_COST,
             duplicate = duplicate,
             reputationReward = reputationReward,
+            duplicateBlankContractReward = duplicateBlankContractReward,
         )
     }
 
@@ -813,8 +843,17 @@ data class PlaySessionState(
         val nextTickets = RecruitmentTicketCatalog.consumeFromInventory(recruitmentTickets, ticketId) ?: return null
         val result = RecruitmentTicketResolver.resolve(ticket = ticket, seed = seed, roster = heroes)
         val hero = result.hero ?: return null
+        val duplicateBlankContractReward = if (result.duplicate) 1 else 0
+        val rewardedTickets = RecruitmentTicketCatalog.addToInventory(
+            nextTickets,
+            if (duplicateBlankContractReward > 0) {
+                mapOf(RecruitmentTicketCatalog.BLANK_CONTRACT_ID to duplicateBlankContractReward)
+            } else {
+                emptyMap()
+            },
+        )
         val recruited = copy(
-            recruitmentTickets = nextTickets,
+            recruitmentTickets = rewardedTickets,
             reputation = reputation + result.reputationReward,
             heroes = if (result.duplicate) heroes else heroes + hero,
         )
@@ -828,6 +867,7 @@ data class PlaySessionState(
             cost = 0,
             duplicate = result.duplicate,
             reputationReward = result.reputationReward,
+            duplicateBlankContractReward = duplicateBlankContractReward,
         )
     }
     companion object {
@@ -1130,6 +1170,7 @@ data class HeroRecruitmentResult(
     val cost: Int,
     val duplicate: Boolean,
     val reputationReward: Int,
+    val duplicateBlankContractReward: Int = 0,
 )
 
 sealed interface PlayPhase {

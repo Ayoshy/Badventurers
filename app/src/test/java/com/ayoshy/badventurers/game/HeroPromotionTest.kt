@@ -11,6 +11,7 @@ class HeroPromotionTest {
 
         assertEquals(brugg.level, promoted.level)
         assertEquals(brugg.xp, promoted.xp)
+        assertEquals(1, promoted.promotionRank)
         assertEquals(brugg.stats.force + 3, promoted.stats.force)
         assertEquals(brugg.stats.endurance + 2, promoted.stats.endurance)
         assertEquals(brugg.stats.ego + 1, promoted.stats.ego)
@@ -24,6 +25,27 @@ class HeroPromotionTest {
         val overCap = HeroPromotion.previewPromoted(mira, targetRank = HeroPromotion.MAX_RANK + 10)
 
         assertEquals(maxed, overCap)
+        assertEquals(HeroPromotion.MAX_RANK, maxed.promotionRank)
         assertEquals(mira.stats.total + HeroPromotion.MAX_RANK * 6, maxed.stats.total)
+    }
+
+    @Test
+    fun promotionPreviewOnlyAppliesMissingRanks() {
+        val nell = HeroCatalog.byId.getValue("nell").toHero()
+        val rankOne = HeroPromotion.previewPromoted(nell, targetRank = 1)
+        val rankTwo = HeroPromotion.previewPromoted(rankOne, targetRank = 2)
+
+        assertEquals(2, rankTwo.promotionRank)
+        assertEquals(rankOne.stats.total + 6, rankTwo.stats.total)
+    }
+
+    @Test
+    fun promoteReturnsNullAtRankCap() {
+        val maxed = HeroPromotion.previewPromoted(
+            HeroCatalog.byId.getValue("mira").toHero(),
+            targetRank = HeroPromotion.MAX_RANK,
+        )
+
+        assertEquals(null, HeroPromotion.promote(maxed))
     }
 }

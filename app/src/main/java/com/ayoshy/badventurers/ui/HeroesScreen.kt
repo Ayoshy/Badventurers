@@ -85,6 +85,7 @@ import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroClass
 import com.ayoshy.badventurers.game.HeroGacha
 import com.ayoshy.badventurers.game.HeroProgression
+import com.ayoshy.badventurers.game.HeroPromotion
 import com.ayoshy.badventurers.game.HeroRecommendation
 import com.ayoshy.badventurers.game.HeroRecommendationScorer
 import com.ayoshy.badventurers.game.HeroRarity
@@ -146,6 +147,7 @@ internal fun HeroesScreen(
     onEquip: (String, LootItem) -> Unit,
     onUnequip: (String, LootSlot) -> Unit,
     onReleaseHero: (String) -> Unit,
+    onPromoteHero: (String) -> Unit,
     onRecruit: () -> Unit,
     onRecruitWithTicket: (String) -> Unit,
 ) {
@@ -191,6 +193,7 @@ internal fun HeroesScreen(
                 onReleaseHero(heroId)
                 detailHeroId = null
             },
+            onPromoteHero = { heroId -> onPromoteHero(heroId) },
         )
     }
 }
@@ -497,6 +500,7 @@ internal fun HeroDetailDialog(
     onEquip: (LootItem) -> Unit,
     onUnequip: (LootSlot) -> Unit,
     onReleaseHero: (String) -> Unit,
+    onPromoteHero: (String) -> Unit,
 ) {
     val equipment = session.equippedItems(hero.id).associateBy { it.slot }
     var selectedSlot by remember(hero.id) { mutableStateOf<LootSlot?>(null) }
@@ -525,6 +529,13 @@ internal fun HeroDetailDialog(
                 )
                 Spacer(Modifier.height(8.dp))
                 HeroProgressionPanel(hero = hero, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
+                HeroPromotionPanel(
+                    session = session,
+                    hero = hero,
+                    onPromote = { onPromoteHero(hero.id) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Spacer(Modifier.height(8.dp))
                 HeroPortraitWithEquipment(
                     hero = hero,
@@ -725,6 +736,87 @@ internal fun HeroProgressionPanel(hero: Hero, modifier: Modifier = Modifier) {
         )
     }
 }
+@Composable
+internal fun HeroPromotionPanel(
+    session: PlaySessionState,
+    hero: Hero,
+    onPromote: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val blankContracts = session.recruitmentTicketCount(RecruitmentTicketCatalog.BLANK_CONTRACT_ID)
+    val canPromoteHero = session.canPromoteHeroWithBlankContract(hero.id)
+    val currentRank = HeroPromotion.normalizedRank(hero)
+    val nextRank = HeroPromotion.nextRank(hero)
+    val bonusSummary = if (HeroPromotion.canPromote(hero)) {
+        statBonusSummary(HeroPromotion.bonusesForRank(hero), maxItems = 4)
+    } else {
+        stringResource(R.string.hero_promotion_maxed_detail)
+    }
+    val detail = when {
+        !HeroPromotion.canPromote(hero) -> stringResource(R.string.hero_promotion_maxed_detail)
+        session.phase != PlayPhase.Idle -> stringResource(R.string.hero_promotion_busy_detail)
+        blankContracts <= 0 -> stringResource(R.string.hero_promotion_need_contract_detail)
+        else -> stringResource(R.string.hero_promotion_ready_detail, blankContracts, nextRank, bonusSummary)
+    }
+
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xE624251F))
+            .border(1.dp, Color(0x88D0A24A), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 9.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.hero_promotion_title),
+                    color = Color(0xFFFFF1C0),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                )
+                Text(
+                    text = stringResource(R.string.hero_promotion_rank_value, currentRank, HeroPromotion.MAX_RANK),
+                    color = Color(0xFFE2CF93),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                )
+            }
+            Button(
+                onClick = onPromote,
+                enabled = canPromoteHero,
+                modifier = Modifier
+                    .width(104.dp)
+                    .height(36.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2F695C),
+                    contentColor = Color(0xFFFFF1C0),
+                    disabledContainerColor = Color(0x8847332A),
+                    disabledContentColor = Color(0x99FFF1C0),
+                ),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(stringResource(R.string.hero_promote_action), fontSize = 11.sp, fontWeight = FontWeight.Black, maxLines = 1)
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = detail,
+            color = Color(0xFFDED0A2),
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
 @Composable
 internal fun HeroPortraitWithEquipment(
     hero: Hero,
@@ -1334,7 +1426,12 @@ internal fun EquipmentSlotPicker(
 internal fun RecruitReveal(recruitment: HeroRecruitmentResult) {
     val hero = recruitment.hero
     val body = if (recruitment.duplicate) {
-        stringResource(R.string.recruit_duplicate_summary, hero.name, recruitment.reputationReward)
+        stringResource(
+            R.string.recruit_duplicate_summary,
+            hero.name,
+            recruitment.reputationReward,
+            recruitment.duplicateBlankContractReward,
+        )
     } else {
         stringResource(
             R.string.recruit_result_summary,
@@ -1376,7 +1473,11 @@ internal fun RecruitReveal(recruitment: HeroRecruitmentResult) {
                 if (recruitment.duplicate) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = stringResource(R.string.recruit_duplicate_bonus_detail, recruitment.reputationReward),
+                        text = stringResource(
+                            R.string.recruit_duplicate_bonus_detail,
+                            recruitment.reputationReward,
+                            recruitment.duplicateBlankContractReward,
+                        ),
                         color = Color(0xFF756B54),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,

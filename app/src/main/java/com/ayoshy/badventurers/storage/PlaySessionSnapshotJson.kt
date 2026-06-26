@@ -112,6 +112,7 @@ internal object PlaySessionSnapshotJson {
         .put("heroId", progress.heroId)
         .put("level", progress.level)
         .put("xp", progress.xp)
+        .put("promotionRank", progress.promotionRank)
 
     private fun decodeHeroProgress(json: JSONObject): HeroProgressSnapshot? {
         val heroId = json.optString("heroId").takeIf { it.isNotBlank() } ?: return null
@@ -119,6 +120,7 @@ internal object PlaySessionSnapshotJson {
             heroId = heroId,
             level = json.optInt("level", 1),
             xp = json.optInt("xp"),
+            promotionRank = json.optInt("promotionRank", 0),
         )
     }
 

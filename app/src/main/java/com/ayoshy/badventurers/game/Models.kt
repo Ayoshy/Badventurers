@@ -184,6 +184,7 @@ data class Hero(
     val rarity: HeroRarity,
     val level: Int,
     val xp: Int = 0,
+    val promotionRank: Int = 0,
     val stats: HeroStats,
     val trait: Trait,
     val special: HeroSpecial = HeroSpecialCatalog.specialForHero(id),

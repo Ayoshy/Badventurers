@@ -94,7 +94,7 @@ data class PlaySessionSnapshot(
     }
 
     companion object {
-        const val CURRENT_VERSION = 19
+        const val CURRENT_VERSION = 20
 
         fun initial(): PlaySessionSnapshot {
             return fromState(PlaySessionState.initial())
@@ -151,14 +151,19 @@ data class HeroProgressSnapshot(
     val heroId: String,
     val level: Int,
     val xp: Int,
+    val promotionRank: Int = HeroPromotion.MIN_RANK,
 ) {
-    fun applyTo(hero: Hero): Hero = HeroProgression.withProgress(hero, level, xp)
+    fun applyTo(hero: Hero): Hero = HeroPromotion.previewPromoted(
+        hero = HeroProgression.withProgress(hero, level, xp),
+        targetRank = promotionRank,
+    )
 
     companion object {
         fun fromHero(hero: Hero): HeroProgressSnapshot = HeroProgressSnapshot(
             heroId = hero.id,
             level = hero.level,
             xp = hero.xp,
+            promotionRank = HeroPromotion.normalizedRank(hero),
         )
     }
 }

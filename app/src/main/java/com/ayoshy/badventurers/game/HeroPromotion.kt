@@ -4,6 +4,15 @@ object HeroPromotion {
     const val MIN_RANK = 0
     const val MAX_RANK = 4
 
+    fun normalizedRank(hero: Hero): Int = hero.promotionRank.coerceIn(MIN_RANK, MAX_RANK)
+
+    fun canPromote(hero: Hero): Boolean = normalizedRank(hero) < MAX_RANK
+
+    fun nextRank(hero: Hero): Int = (normalizedRank(hero) + 1).coerceAtMost(MAX_RANK)
+
+    fun promote(hero: Hero): Hero? =
+        if (canPromote(hero)) previewPromoted(hero, nextRank(hero)) else null
+
     fun bonusesForRank(hero: Hero): List<StatBonus> {
         val profile = classPromotionProfile(hero.heroClass)
         val pickedStats = listOf(
@@ -22,11 +31,15 @@ object HeroPromotion {
     }
 
     fun previewPromoted(hero: Hero, targetRank: Int): Hero {
+        val currentRank = normalizedRank(hero)
         val rank = targetRank.coerceIn(MIN_RANK, MAX_RANK)
-        if (rank == MIN_RANK) return hero
+        if (rank <= currentRank) return hero.copy(promotionRank = currentRank)
 
-        return (1..rank).fold(hero) { promoted, _ ->
-            promoted.copy(stats = promoted.stats.plus(bonusesForRank(promoted)))
+        return ((currentRank + 1)..rank).fold(hero.copy(promotionRank = currentRank)) { promoted, _ ->
+            promoted.copy(
+                stats = promoted.stats.plus(bonusesForRank(promoted)),
+                promotionRank = (promoted.promotionRank + 1).coerceAtMost(MAX_RANK),
+            )
         }
     }
 

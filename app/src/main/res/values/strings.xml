@@ -374,8 +374,8 @@
     <string name="recruit_locked_action">Need gold</string>
     <string name="recruit_result_title">New recruit</string>
     <string name="recruit_result_summary">%1$s joined as a %2$s %3$s. Trait: %4$s.</string>
-    <string name="recruit_duplicate_summary">%1$s already has a guild badge. Contract converted into +%2$d Rep.</string>
-    <string name="recruit_duplicate_bonus_detail">Guild reputation +%1$d.</string>
+    <string name="recruit_duplicate_summary">%1$s already has a guild badge. Duplicate paperwork becomes +%2$d Rep and %3$d Blank Contract.</string>
+    <string name="recruit_duplicate_bonus_detail">Now: +%1$d Rep. Later: %2$d Blank Contract can promote a chosen hero.</string>
     <string name="recruit_odds_title">Rarity odds</string>
     <string name="recruit_odds_detail">Chance per pull</string>
     <string name="recruitment_tickets_title">Hiring tickets</string>
@@ -398,7 +398,7 @@
     <string name="ticket_veteran_ticket_summary">Recruit starts at level 4 or higher.</string>
     <string name="ticket_veteran_ticket_guarantee">Guarantee: minimum level %1$d recruit.</string>
     <string name="ticket_blank_contract_title">Blank Contract</string>
-    <string name="ticket_blank_contract_summary">Promotion material, not a recruit pull.</string>
+    <string name="ticket_blank_contract_summary">Promotes a chosen hero by one rank. Not a random recruit pull.</string>
     <string name="ticket_unknown_summary">Filed under suspicious paperwork.</string>
     <string name="roster_title">Roster</string>
     <string name="heroes_tab_roster">Roster</string>
@@ -414,6 +414,13 @@
     <string name="result_level_up_line">%1$s reached Lv. %2$d</string>
     <string name="result_level_up_detail">Gained %1$d level(s): %2$s</string>
     <string name="hero_progression_title">Progression</string>
+    <string name="hero_promotion_title">Promotion</string>
+    <string name="hero_promotion_rank_value">Rank %1$d/%2$d</string>
+    <string name="hero_promotion_ready_detail">Blank Contracts x%1$d. Rank %2$d adds %3$s.</string>
+    <string name="hero_promotion_need_contract_detail">Needs 1 Blank Contract. First clears and duplicate recruits can create them.</string>
+    <string name="hero_promotion_busy_detail">Promotions are filed while the guild is idle.</string>
+    <string name="hero_promotion_maxed_detail">Maximum promotion rank reached.</string>
+    <string name="hero_promote_action">Promote</string>
     <string name="hero_next_level_value">Lv. %1$d -&gt; %2$d</string>
     <string name="hero_xp_remaining_detail">%1$d XP to next level</string>
     <string name="hero_next_stats_detail">Next level: %1$s</string>
