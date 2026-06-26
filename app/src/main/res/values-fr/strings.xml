@@ -29,7 +29,20 @@
     <string name="quest_special_contract_clause_detail">Clause : %1$s</string>
     <string name="quest_special_contract_ready_detail">Coute 1 contrat / stock %1$d / gain XXL</string>
     <string name="quest_special_contract_missing_detail">Il faut 1 contrat / stock %1$d</string>
-    <string name="prep_difficulty_title">Difficulte</string>
+    <string name="quest_intent_recommended_next">Recommande</string>
+    <string name="quest_intent_first_clear">Premiere victoire</string>
+    <string name="quest_intent_contract">Contrat</string>
+    <string name="quest_intent_gold">Or</string>
+    <string name="quest_intent_loot">Butin</string>
+    <string name="quest_intent_xp">XP</string>
+    <string name="quest_intent_reputation">Rep requise</string>
+    <string name="quest_first_clear_reward_detail">Premiere victoire : %1$s</string>
+    <string name="quest_first_clear_claimed_detail">Premiere victoire reclamee</string>
+    <string name="quest_first_clear_ticket_stack">%1$s x%2$d</string>
+    <string name="quest_repeat_reward_detail">Rejouer : %1$d or de base, XP et jets de butin</string>
+    <string name="result_first_clear_jackpot_title">Jackpot premiere victoire</string>
+    <string name="result_first_clear_jackpot_detail">Recompense unique gagnee : %1$s. Recrute depuis Heros au retour.</string>
+    <string name="result_first_clear_jackpot_value">Ticket</string>    <string name="prep_difficulty_title">Difficulte</string>
     <string name="prep_special_title">Speciaux actifs</string>
     <string name="quest_difficulty_errand">Course</string>
     <string name="quest_difficulty_trouble">Probleme</string>

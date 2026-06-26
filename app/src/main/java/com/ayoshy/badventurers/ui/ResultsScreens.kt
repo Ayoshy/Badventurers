@@ -170,6 +170,14 @@ internal fun QuestResultScreen(
         val postCollectAdvice = ProgressionAdvisor.recommend(postCollectSession, selectedQuest = run.quest)
         val specialContractReward = session.collectableSpecialContracts(result, run.quest)
         val usedSpecialContract = ExpeditionPlanCatalog.requiresSpecialContract(run.planId, run.quest)
+        val firstClearTicketRewards = if (
+            run.quest.id !in session.clearedQuestIds &&
+            (result.outcome == ExpeditionOutcome.GreatSuccess || result.outcome == ExpeditionOutcome.Success)
+        ) {
+            run.quest.firstClearTicketRewards.filterValues { count -> count > 0 }
+        } else {
+            emptyMap()
+        }
 
         QuestCardArt(
             bannerResourceId = questBannerResource(run.quest),
@@ -221,6 +229,16 @@ internal fun QuestResultScreen(
                     stringResource(R.string.result_special_contract_payoff_detail_empty)
                 },
                 value = stringResource(R.string.special_contract_xxl_value),
+            )
+        }
+        if (firstClearTicketRewards.isNotEmpty()) {
+            InfoRow(
+                title = stringResource(R.string.result_first_clear_jackpot_title),
+                detail = stringResource(
+                    R.string.result_first_clear_jackpot_detail,
+                    firstClearTicketRewardText(firstClearTicketRewards),
+                ),
+                value = stringResource(R.string.result_first_clear_jackpot_value),
             )
         }
 
@@ -462,6 +480,14 @@ internal fun OfflineSummaryScreen(
         val postCollectAdvice = ProgressionAdvisor.recommend(postCollectSession, selectedQuest = run.quest)
         val specialContractReward = session.collectableSpecialContracts(result, run.quest)
         val usedSpecialContract = ExpeditionPlanCatalog.requiresSpecialContract(run.planId, run.quest)
+        val firstClearTicketRewards = if (
+            run.quest.id !in session.clearedQuestIds &&
+            (result.outcome == ExpeditionOutcome.GreatSuccess || result.outcome == ExpeditionOutcome.Success)
+        ) {
+            run.quest.firstClearTicketRewards.filterValues { count -> count > 0 }
+        } else {
+            emptyMap()
+        }
         val offlineHighlights = session.offlineReportHighlights(postCollectSession)
         val passiveReport = session.lastOfflinePassiveIncome ?: session.passiveIncomeReport(
             sinceMillis = run.startedAtMillis,
@@ -518,6 +544,16 @@ internal fun OfflineSummaryScreen(
                     stringResource(R.string.result_special_contract_payoff_detail_empty)
                 },
                 value = stringResource(R.string.special_contract_xxl_value),
+            )
+        }
+        if (firstClearTicketRewards.isNotEmpty()) {
+            InfoRow(
+                title = stringResource(R.string.result_first_clear_jackpot_title),
+                detail = stringResource(
+                    R.string.result_first_clear_jackpot_detail,
+                    firstClearTicketRewardText(firstClearTicketRewards),
+                ),
+                value = stringResource(R.string.result_first_clear_jackpot_value),
             )
         }
 

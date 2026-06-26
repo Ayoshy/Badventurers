@@ -273,7 +273,7 @@ class QuestCatalogueBalanceTest {
             regionalLiabilityQuests.getValue("wedding_with_too_many_oaths").firstClearTicketRewards,
         )
         assertEquals(
-            emptyMap<String, Int>(),
+            mapOf(RecruitmentTicketCatalog.VETERAN_TICKET_ID to 1),
             regionalLiabilityQuests.getValue("the_sunken_toll_booth").firstClearTicketRewards,
         )
         assertEquals(
@@ -300,6 +300,28 @@ class QuestCatalogueBalanceTest {
         }
     }
 
+    @Test
+    fun everyCurrentQuestHasAVisibleFirstClearTicketReward() {
+        SeedGame.quests.forEach { quest ->
+            assertTrue("${quest.id} should show a first-clear jackpot", quest.firstClearTicketRewards.isNotEmpty())
+            quest.firstClearTicketRewards.forEach { (ticketId, count) ->
+                assertTrue("${quest.id} references unknown ticket $ticketId", ticketId in RecruitmentTicketCatalog.byId)
+                assertTrue("${quest.id} ticket reward should be positive", count > 0)
+            }
+        }
+
+        assertEquals(
+            mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1),
+            SeedGame.firstQuest.firstClearTicketRewards,
+        )
+        assertEquals(
+            mapOf(
+                RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1,
+                RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1,
+            ),
+            SeedGame.questById.getValue("licensed_guild_caravan_haunt").firstClearTicketRewards,
+        )
+    }
     @Test
     fun everyCurrentQuestOffersAQuestSpecificContractClause() {
         SeedGame.quests.forEach { quest ->

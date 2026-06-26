@@ -39,6 +39,7 @@ First clear should feel like a jackpot, not a slightly larger repeat payout. Use
 - Palier 3: Rare/Epic/Veteran tickets, multiple tickets, or another premium non-random recruitment payoff.
 
 Every Activity Board card should show the first-clear jackpot separately from repeat rewards. Quest Result should celebrate the jackpot and route the player toward Heroes/Recruitment when a ticket is earned.
+ implementation: every current quest has a one-time first-clear ticket reward in `SeedGame.firstClearTicketRewardLadder`, mirrored in `../data/quests.csv`. Activity Board cards show that jackpot separately from repeat rewards, and Quest Result celebrates the ticket when the first Success or Great Success clears the quest.
 
 ## New Quest Checklist
 

@@ -3,6 +3,27 @@ package com.ayoshy.badventurers.game
 object SeedGame {
     val heroes = HeroCatalog.starterHeroes
 
+    private val firstClearTicketRewardLadder = mapOf(
+        "cave_minor_regrets" to mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1),
+        "forest_of_wrong_turns" to mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1),
+        "bandit_tax_office" to mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 2),
+        "salted_swamp_chapel" to mapOf(RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1),
+        "moonlit_smuggler_run" to mapOf(RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 2),
+        "the_hungry_siege" to mapOf(RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1),
+        "the_last_locked_door" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+        "crypt_of_unpaid_debts" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+        "paperwork_toll_of_chaos" to mapOf(RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1),
+        "licensed_guild_caravan_haunt" to mapOf(
+            RecruitmentTicketCatalog.SPECIALIST_INVITATION_ID to 1,
+            RecruitmentTicketCatalog.BASIC_HIRING_VOUCHER_ID to 1,
+        ),
+        "notary_night_patrol" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+        "inspectorate_cove_banquet" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+        "wedding_with_too_many_oaths" to mapOf(RecruitmentTicketCatalog.RARE_CONTRACT_TICKET_ID to 1),
+        "the_sunken_toll_booth" to mapOf(RecruitmentTicketCatalog.VETERAN_TICKET_ID to 1),
+        "the_crowns_missing_receipt" to mapOf(RecruitmentTicketCatalog.VETERAN_TICKET_ID to 1),
+        "the_tower_built_sideways" to mapOf(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1),
+    )
     val firstQuest = Quest(
         id = "cave_minor_regrets",
         title = "Cave of Minor Regrets",
@@ -15,6 +36,7 @@ object SeedGame {
         partySlots = 3,
         tags = listOf(QuestTag.Cave, QuestTag.Breach, QuestTag.Trap, QuestTag.Paperwork, QuestTag.Simple),
         recommendedHeroIds = listOf("brugg", "mira", "nell", "orla", "expert_en_demolition"),
+        firstClearTicketRewards = firstClearTicketRewardLadder.getValue("cave_minor_regrets"),
     )
 
     val quests = listOf(
@@ -336,12 +358,15 @@ object SeedGame {
             ),
             firstClearTicketRewards = mapOf(RecruitmentTicketCatalog.EPIC_LIABILITY_WRIT_ID to 1),
         ),
-    )
+    ).map { quest -> quest.copy(firstClearTicketRewards = firstClearTicketRewardLadder.getValue(quest.id)) }
 
     val questById = quests.associateBy { it.id }
 
     init {
         require(quests.size == questById.size) { "Quest ids must be unique." }
+        require(firstClearTicketRewardLadder.keys == questById.keys) {
+            "Every quest must have one first-clear ticket reward entry."
+        }
         require(quests.all { quest -> quest.firstClearTicketRewards.keys.all { it in RecruitmentTicketCatalog.byId } }) {
             "Quest first-clear ticket rewards must reference known tickets."
         }

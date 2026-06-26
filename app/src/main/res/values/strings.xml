@@ -29,7 +29,20 @@
     <string name="quest_special_contract_clause_detail">Clause: %1$s</string>
     <string name="quest_special_contract_ready_detail">Costs 1 contract / stored %1$d / XXL payoff</string>
     <string name="quest_special_contract_missing_detail">Need 1 contract / stored %1$d</string>
-    <string name="prep_difficulty_title">Difficulty</string>
+    <string name="quest_intent_recommended_next">Recommended</string>
+    <string name="quest_intent_first_clear">First clear</string>
+    <string name="quest_intent_contract">Contract</string>
+    <string name="quest_intent_gold">Gold</string>
+    <string name="quest_intent_loot">Loot</string>
+    <string name="quest_intent_xp">XP</string>
+    <string name="quest_intent_reputation">Rep gate</string>
+    <string name="quest_first_clear_reward_detail">First clear: %1$s</string>
+    <string name="quest_first_clear_claimed_detail">First clear claimed</string>
+    <string name="quest_first_clear_ticket_stack">%1$s x%2$d</string>
+    <string name="quest_repeat_reward_detail">Repeat: %1$d base gold, XP, and loot rolls</string>
+    <string name="result_first_clear_jackpot_title">First-clear jackpot</string>
+    <string name="result_first_clear_jackpot_detail">One-time reward gained: %1$s. Recruit from Heroes when you get home.</string>
+    <string name="result_first_clear_jackpot_value">Ticket</string>    <string name="prep_difficulty_title">Difficulty</string>
     <string name="prep_special_title">Active specials</string>
     <string name="quest_difficulty_errand">Errand</string>
     <string name="quest_difficulty_trouble">Trouble</string>

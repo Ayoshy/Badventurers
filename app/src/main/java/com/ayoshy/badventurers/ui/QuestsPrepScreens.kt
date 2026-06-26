@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -166,11 +168,6 @@ internal fun QuestsScreen(
     }
 }
 
-private enum class QuestActivityRegion {
-    LocalJobs,
-    DangerousWork,
-    SpecialContracts,
-}
 
 @Composable
 private fun QuestActivityRegionSelector(
@@ -276,6 +273,8 @@ private fun QuestActivityCard(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 8.dp),
         )
+        QuestIntentBadges(session = session, quest = quest, region = region)
+        QuestRewardSummary(session = session, quest = quest)
         if (specialPlan != null) {
             Text(
                 text = stringResource(R.string.quest_special_contract_clause_detail, expeditionPlanTitle(specialPlan)),
@@ -297,9 +296,8 @@ private fun QuestActivityCard(
                 fontWeight = FontWeight.Black,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
-        } else {
-            RecommendedHeroesInline(session = session, quest = quest)
         }
+        RecommendedHeroesInline(session = session, quest = quest)
         if (!unlocked) {
             Text(
                 text = questUnlockDetail(session, quest),
@@ -330,21 +328,100 @@ private fun questActivityRegionTitle(region: QuestActivityRegion): String =
         QuestActivityRegion.SpecialContracts -> stringResource(R.string.quest_activity_contracts_title)
     }
 
-private fun Quest.matchesActivityRegion(region: QuestActivityRegion): Boolean =
-    when (region) {
-        QuestActivityRegion.LocalJobs -> risk != QuestRisk.High &&
-            difficultyTier != QuestDifficultyTier.Disaster &&
-            difficultyTier != QuestDifficultyTier.LegendaryMess
-        QuestActivityRegion.DangerousWork -> risk == QuestRisk.High ||
-            difficultyTier == QuestDifficultyTier.Disaster ||
-            difficultyTier == QuestDifficultyTier.LegendaryMess
-        QuestActivityRegion.SpecialContracts -> specialContractPlan() != null
-    }
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun QuestIntentBadges(session: PlaySessionState, quest: Quest, region: QuestActivityRegion) {
+    val badges = questActivityIntentBadges(session, quest, region)
+    if (badges.isEmpty()) return
 
-private fun Quest.specialContractPlan(): ExpeditionPlan? =
-    ExpeditionPlanCatalog.availableFor(this).firstOrNull { plan ->
-        id in plan.questIds && plan.requiresSpecialContract
+    FlowRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        badges.forEach { intent ->
+            Text(
+                text = questActivityIntentLabel(intent),
+                color = Color(0xFF211F1A),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(questActivityIntentColor(intent))
+                    .padding(horizontal = 7.dp, vertical = 3.dp),
+            )
+        }
     }
+}
+
+@Composable
+private fun questActivityIntentLabel(intent: QuestActivityIntent): String = when (intent) {
+    QuestActivityIntent.RecommendedNext -> stringResource(R.string.quest_intent_recommended_next)
+    QuestActivityIntent.FirstClear -> stringResource(R.string.quest_intent_first_clear)
+    QuestActivityIntent.Contract -> stringResource(R.string.quest_intent_contract)
+    QuestActivityIntent.Gold -> stringResource(R.string.quest_intent_gold)
+    QuestActivityIntent.Loot -> stringResource(R.string.quest_intent_loot)
+    QuestActivityIntent.Xp -> stringResource(R.string.quest_intent_xp)
+    QuestActivityIntent.Reputation -> stringResource(R.string.quest_intent_reputation)
+}
+
+private fun questActivityIntentColor(intent: QuestActivityIntent): Color = when (intent) {
+    QuestActivityIntent.RecommendedNext -> Color(0xFFD0A24A)
+    QuestActivityIntent.FirstClear -> Color(0xFFFFD27D)
+    QuestActivityIntent.Contract -> Color(0xFFFFE08A)
+    QuestActivityIntent.Gold -> Color(0xFFE4B857)
+    QuestActivityIntent.Loot -> Color(0xFFA6D38E)
+    QuestActivityIntent.Xp -> Color(0xFF9EC6E8)
+    QuestActivityIntent.Reputation -> Color(0xFFFF9B79)
+}
+
+@Composable
+private fun QuestRewardSummary(session: PlaySessionState, quest: Quest) {
+    val firstClear = firstClearRewardPreview(session, quest)
+    if (firstClear.state != FirstClearRewardState.None) {
+        Text(
+            text = when (firstClear.state) {
+                FirstClearRewardState.Available -> stringResource(
+                    R.string.quest_first_clear_reward_detail,
+                    firstClearTicketRewardText(firstClear.ticketRewards),
+                )
+                FirstClearRewardState.Claimed -> stringResource(R.string.quest_first_clear_claimed_detail)
+                FirstClearRewardState.None -> ""
+            },
+            color = if (firstClear.state == FirstClearRewardState.Available) Color(0xFFFFE08A) else Color(0xFFB9AA82),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Black,
+            modifier = Modifier.padding(bottom = 4.dp),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    Text(
+        text = stringResource(R.string.quest_repeat_reward_detail, quest.baseGold),
+        color = Color(0xFFDED0A2),
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(bottom = 8.dp),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+internal fun firstClearTicketRewardText(rewards: Map<String, Int>): String {
+    val labels = mutableListOf<String>()
+    for ((ticketId, count) in rewards) {
+        val title = recruitmentTicketTitle(ticketId)
+        labels += if (count > 1) stringResource(R.string.quest_first_clear_ticket_stack, title, count) else title
+    }
+    return labels.joinToString()
+}
+
+
 @Composable
 internal fun ExpeditionPrepScreen(
     session: PlaySessionState,
