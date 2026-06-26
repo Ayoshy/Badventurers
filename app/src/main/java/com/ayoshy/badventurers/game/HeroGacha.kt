@@ -143,7 +143,7 @@ object HeroCatalog {
         ),
         HeroDefinition(
             id = "paladin",
-            name = "Dame Brindle",
+            name = "Sir Brindle",
             heroClass = HeroClass.Paladin,
             rarity = HeroRarity.Legendary,
             level = 4,

@@ -451,6 +451,7 @@ internal fun achievementRewardSummary(definition: AchievementDefinition): String
                 if (item.gold > 0) parts += "+${item.gold}g"
                 if (item.reputation > 0) parts += "+${item.reputation} Rep"
                 if (item.lootRolls > 0) parts += "+${item.lootRolls} loot"
+                if (item.specialContracts > 0) parts += "+${item.specialContracts} contract"
             }
             is com.ayoshy.badventurers.game.AchievementReward.Tickets -> {
                 item.tickets.forEach { (_, count) ->

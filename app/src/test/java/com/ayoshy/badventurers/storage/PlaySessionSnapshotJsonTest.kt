@@ -24,6 +24,7 @@ class PlaySessionSnapshotJsonTest {
     fun codecRoundTripsFacilityLevels() {
         val state = PlaySessionState.initial().copy(
             gold = 1_250,
+            specialContracts = 12,
             reputation = 11,
             supplies = 12,
             guildLevel = 4,
@@ -52,6 +53,7 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(2, restored?.armoryForgeLevel)
         assertEquals(1, restored?.tavernKitchenLevel)
         assertEquals(state.gold, restored?.gold)
+        assertEquals(state.specialContracts, restored?.specialContracts)
         assertEquals(state.reputation, restored?.reputation)
         assertEquals(state.supplies, restored?.supplies)
         assertEquals(state.guildLevel, restored?.guildLevel)
@@ -83,7 +85,7 @@ class PlaySessionSnapshotJsonTest {
             PassiveIncident(
                 id = "watch-ledger",
                 text = "Mira turned a loose form into rent.",
-                reward = PassiveIncidentReward(gold = 3, reputation = 1),
+                reward = PassiveIncidentReward(gold = 3, reputation = 1, specialContracts = 1),
             ),
         )
         val state = PlaySessionState.initial().copy(
@@ -123,6 +125,7 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(2, restored?.guildLevel)
         assertEquals(5, restored?.completedQuestCount)
         assertEquals(0, restored?.supplies)
+        assertEquals(0, restored?.specialContracts)
         assertEquals(1, restored?.noticeBoardLevel)
         assertEquals(1, restored?.trainingYardLevel)
         assertEquals(1, restored?.bunkRoomLevel)

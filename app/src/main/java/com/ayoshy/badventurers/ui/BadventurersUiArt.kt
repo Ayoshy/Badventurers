@@ -257,16 +257,21 @@ internal fun HeroPortraitTile(
 
 internal fun heroPortraitResource(hero: Hero): Int =
     when (hero.id) {
-        "brugg", "darrik", "orla" -> R.drawable.hero_portrait_brugg
-        "mira", "pippa" -> R.drawable.hero_portrait_mira
-        "nell", "vex" -> R.drawable.hero_portrait_nell
-        "quill", "ledger" -> R.drawable.hero_portrait_quill
+        "brugg" -> R.drawable.hero_portrait_brugg
+        "darrik" -> R.drawable.hero_portrait_darrik
+        "orla" -> R.drawable.hero_portrait_orla
+        "mira" -> R.drawable.hero_portrait_mira
+        "pippa" -> R.drawable.hero_portrait_pippa
+        "nell" -> R.drawable.hero_portrait_nell
+        "vex" -> R.drawable.hero_portrait_vex
+        "quill" -> R.drawable.hero_portrait_quill
+        "ledger" -> R.drawable.hero_portrait_comptable
         "sable" -> R.drawable.hero_portrait_ninja
         "bramble" -> R.drawable.hero_portrait_hunter
         "pax" -> R.drawable.hero_portrait_priest
         "morrow" -> R.drawable.hero_portrait_necromancer
         "paladin" -> R.drawable.hero_portrait_paladin
-        "comptable" -> R.drawable.hero_portrait_comptable
+        "comptable" -> R.drawable.hero_portrait_tally_noakes
         "jardinier" -> R.drawable.hero_portrait_jardinier
         "chevalier_de_la_mort" -> R.drawable.hero_portrait_chevalier_de_la_mort
         "chef_cuistot" -> R.drawable.hero_portrait_chef_cuistot
@@ -283,7 +288,7 @@ internal fun heroPortraitResource(hero: Hero): Int =
             HeroClass.Priest -> R.drawable.hero_portrait_priest
             HeroClass.Necromancer -> R.drawable.hero_portrait_necromancer
             HeroClass.Paladin -> R.drawable.hero_portrait_paladin
-            HeroClass.Accountant -> R.drawable.hero_portrait_comptable
+            HeroClass.Accountant -> R.drawable.hero_portrait_tally_noakes
             HeroClass.Gardener -> R.drawable.hero_portrait_jardinier
             HeroClass.DeathKnight -> R.drawable.hero_portrait_chevalier_de_la_mort
             HeroClass.Chef -> R.drawable.hero_portrait_chef_cuistot

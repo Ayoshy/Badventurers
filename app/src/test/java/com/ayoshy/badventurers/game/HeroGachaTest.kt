@@ -72,6 +72,12 @@ class HeroGachaTest {
             ),
         )
     }
+
+    @Test
+    fun paladinUsesMasculineNameForCurrentPortrait() {
+        assertEquals("Sir Brindle", HeroCatalog.byId.getValue("paladin").name)
+    }
+
     @Test
     fun summonedHeroesStayTiedToCatalogDefinitions() {
         val heroes = HeroGacha.summon(100, seed = 17)

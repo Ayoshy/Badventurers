@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-06-25",
+  "updated": "2026-06-26",
   "source": "docs/product/kanban.md",
   "columns": [
     {
@@ -774,12 +774,12 @@
     },
     {
       "id": "BV-020",
-      "title": "New task",
+      "title": "Quests update",
       "status": "ready",
       "priority": "P2",
-      "area": "general",
+      "area": "quests",
       "track": "Backlog",
-      "summary": "",
+      "summary": "The Contracts should be exclusive maps. Not reuse of old ones from local/hard jobs\nLocal/Hard number of jobs balance is bad (2 vs 12+)",
       "acceptance": [],
       "refs": [],
       "notes": []
@@ -1018,7 +1018,7 @@
     {
       "id": "BV-027",
       "title": "Quests screen: Activity Board regions and purpose-led cards",
-      "status": "ready",
+      "status": "doing",
       "priority": "P1",
       "area": "quests",
       "track": "Quest Polish",
@@ -1026,11 +1026,11 @@
       "acceptance": [
         {
           "text": "Add a tab, segmented control, or equivalent region selector for Local Jobs, Dangerous Work, and Special Contracts.",
-          "done": false
+          "done": true
         },
         {
           "text": "Keep Local Jobs unlocked by default and use it for the safe starter/default activities.",
-          "done": false
+          "done": true
         },
         {
           "text": "Gate Dangerous Work with existing quest unlock requirements and show clear locked-state requirements.",
@@ -1062,40 +1062,53 @@
         "docs/data/quests.csv"
       ],
       "notes": [
-        "2026-06-25: Created from user feedback that the quests screen is a boring endless scroll where quests differ mostly by required/reward numbers."
+        "2026-06-25: Created from user feedback that the quests screen is a boring endless scroll where quests differ mostly by required/reward numbers.",
+        "2026-06-26: Implemented the first visible Quest Activity Board pass: Local Jobs, Hard Jobs, and Contracts segmented selector; lane summary; filtered quest cards; and contract stock/cost state on the Contracts lane."
       ]
     },
     {
       "id": "BV-028",
       "title": "Special Contracts: make contract plans a first-class activity lane",
-      "status": "ready",
+      "status": "doing",
       "priority": "P1",
       "area": "quests",
       "track": "Quest Polish",
-      "summary": "Turn Special Contracts into a lane where the player starts from a contract plan or clause, then chooses a compatible quest. This should make plans feel like deliberate activity types, not a hidden dropdown inside prep.",
+      "summary": "Turn Special Contracts into a limited high-stakes activity lane. The player spends one stored contract to launch a Special Contract, contracts can be looted or earned passively/through achievements with no storage cap, and the payoff should be XXL enough to feel worth the item cost.",
       "acceptance": [
         {
-          "text": "List available contract plans or plan families before listing compatible quests in the Special Contracts region.",
-          "done": false
+          "text": "List the available contract clause on each compatible quest in the Special Contracts region.",
+          "done": true
         },
         {
-          "text": "Include generic plans and quest-specific clauses that already exist in ExpeditionPlans.",
-          "done": false
+          "text": "Add a stored Special Contract resource with no upper storage limit.",
+          "done": true
         },
         {
-          "text": "Show the tradeoff for each plan in player language: safer, faster, more loot, more gold, better recovery, or specialist payoff.",
-          "done": false
+          "text": "Award Special Contracts from at least one active source and one passive or achievement source.",
+          "done": true
         },
         {
-          "text": "When a plan is selected, filter or highlight quests where that plan is especially relevant.",
-          "done": false
+          "text": "Require and consume one Special Contract when launching a Special Contract plan or lane activity.",
+          "done": true
+        },
+        {
+          "text": "Keep standard/default quest plans free so normal questing never stalls behind contracts.",
+          "done": true
+        },
+        {
+          "text": "Make Special Contract rewards visibly XXL through stronger gold/loot/ticket payoff than normal repeats.",
+          "done": true
+        },
+        {
+          "text": "Show contract inventory, item cost, and locked/empty state in Expedition Prep now, and in the Quest Activity Board when BV-027 lands.",
+          "done": true
         },
         {
           "text": "Keep Expedition Prep as the final confirmation surface and avoid duplicating launch logic.",
           "done": false
         },
         {
-          "text": "Add tests or checks that quest-specific clauses remain discoverable from the Special Contracts lane.",
+          "text": "Add persistence and tests for earning, storing without cap, consuming, and reward payoff.",
           "done": false
         }
       ],
@@ -1103,10 +1116,17 @@
         "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionPlans.kt",
         "app/src/main/java/com/ayoshy/badventurers/ui/QuestsPrepScreens.kt",
         "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiText.kt",
-        "docs/data/expedition-plans.csv"
+        "docs/data/expedition-plans.csv",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/storage/PlaySessionSnapshotJson.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/Achievements.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PassiveIncidents.kt"
       ],
       "notes": [
-        "2026-06-25: Split from the broader Quest Activity Board idea so contracts can get their own UX pass."
+        "2026-06-25: Split from the broader Quest Activity Board idea so contracts can get their own UX pass.",
+        "2026-06-25: User refined Special Contracts into a limited consumable action: spend 1 stored contract to launch, contracts come from loot/passive/achievements, storage has no cap, and rewards should be XXL.",
+        "2026-06-25: Implemented the Special Contract resource, quest-plan cost/consumption, XXL payoff modifiers, active/passive/achievement sources, persistence, Expedition Prep affordance, and regression tests. Activity Board region UX remains for BV-027.",
+        "2026-06-26: Quest Board now exposes the Contracts lane with stored count, cost/locked state, and the selected contract clause before opening Expedition Prep."
       ]
     },
     {
@@ -1159,6 +1179,59 @@
       "notes": [
         "2026-06-25: Created from user direction that first clear should give a big reward, probably recruitment tickets that become rarer or more numerous over time.",
         "This narrows the first-clear portion of BV-009 into an explicit reward-ladder slice."
+      ]
+    },
+    {
+      "id": "BV-030",
+      "title": "Hero naming/artwork update",
+      "status": "done",
+      "priority": "P2",
+      "area": "design",
+      "track": "Backlog",
+      "summary": "Identified issues with heroes sharing the same artwork and heroes having wrong names. Apply the rule: one hero = one unique artwork.\n* The paladin is named \"Dame Brindle\" but is a guy.\n* Sir Ledger is the original accountant portrait; Tally Noakes needs a new distinct accountant skin.\n* Several catalog heroes still share starter portraits.",
+      "acceptance": [
+        {
+          "text": "Rename the paladin from Dame Brindle to Sir Brindle in code and source data.",
+          "done": true
+        },
+        {
+          "text": "Audit the full HeroCatalog portrait mapping for duplicated hero artwork.",
+          "done": true
+        },
+        {
+          "text": "Generate or keep distinct portraits for Darrik, Orla, Pippa, Vex, and Tally Noakes while restoring Sir Ledger to the original accountant portrait.",
+          "done": true
+        },
+        {
+          "text": "Map every current catalog hero to a distinct portrait resource.",
+          "done": true
+        },
+        {
+          "text": "Update the hero/item catalog to match the corrected name and artwork references.",
+          "done": true
+        },
+        {
+          "text": "Add tests enforcing the corrected paladin name and one unique portrait resource per catalog hero.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/HeroGacha.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiArt.kt",
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_darrik.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_orla.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_pippa.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_vex.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_tally_noakes.png",
+        "artifacts/hero-art/bv030/bv030-unique-hero-portraits-contact-sheet.png",
+        "app/src/test/java/com/ayoshy/badventurers/game/HeroGachaTest.kt",
+        "app/src/test/java/com/ayoshy/badventurers/ui/BadventurersUiArtTest.kt",
+        "docs/data/heroes.csv",
+        "docs/content/hero-item-catalog.md"
+      ],
+      "notes": [
+        "2026-06-26: Corrected the paladin name to Sir Brindle and expanded the slice to enforce one hero = one unique artwork across the full HeroCatalog.",
+        "2026-06-26: Kept the accepted Darrik and Orla portraits, replaced Pippa and Vex with more distinct silhouettes, restored Sir Ledger to the original accountant portrait, and revised Tally Noakes into a stout field-audit marshal skin after the first Tally pass read too close to Pippa."
       ]
     }
   ]

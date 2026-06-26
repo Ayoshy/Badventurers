@@ -312,6 +312,18 @@ class QuestCatalogueBalanceTest {
     }
 
     @Test
+    fun questSpecificPlansRequireSpecialContractsButGenericPlansStayFree() {
+        SeedGame.quests.forEach { quest ->
+            val available = ExpeditionPlanCatalog.availableFor(quest)
+            val genericPlans = available.filter { it.questIds.isEmpty() }
+            val questSpecificPlans = available.filter { quest.id in it.questIds }
+
+            assertTrue("${quest.id} should keep free generic plans", genericPlans.isNotEmpty())
+            assertTrue("${quest.id} generic plans should be free", genericPlans.all { !it.requiresSpecialContract })
+            assertTrue("${quest.id} clauses should cost a Special Contract", questSpecificPlans.all { it.specialContractCost == 1 })
+        }
+    }
+    @Test
     fun questSpecificPlansDoNotApplyToOtherQuests() {
         val cave = SeedGame.firstQuest
         val lockedDoor = SeedGame.questById.getValue("the_last_locked_door")

@@ -1,6 +1,7 @@
 package com.ayoshy.badventurers.ui
 
 import com.ayoshy.badventurers.R
+import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.LootCatalog
 import com.ayoshy.badventurers.game.LootItem
 import com.ayoshy.badventurers.game.LootRarity
@@ -9,6 +10,39 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class BadventurersUiArtTest {
+    @Test
+    fun catalogHeroesUseUniquePortraitResources() {
+        val portraitsByHero = HeroCatalog.heroes.associate { definition ->
+            definition.id to heroPortraitResource(definition.toHero())
+        }
+        val duplicateGroups = portraitsByHero.entries
+            .groupBy({ it.value }, { it.key })
+            .filterValues { it.size > 1 }
+
+        assertEquals(
+            "Each catalog hero should use a unique portrait resource.",
+            emptyMap<Int, List<String>>(),
+            duplicateGroups,
+        )
+        assertEquals(HeroCatalog.heroes.size, portraitsByHero.values.toSet().size)
+    }
+
+    @Test
+    fun accountantPortraitOwnershipMatchesCatalogIntent() {
+        assertEquals(
+            R.drawable.hero_portrait_comptable,
+            heroPortraitResource(HeroCatalog.byId.getValue("ledger").toHero()),
+        )
+        assertEquals(
+            R.drawable.hero_portrait_tally_noakes,
+            heroPortraitResource(HeroCatalog.byId.getValue("comptable").toHero()),
+        )
+        assertNotEquals(
+            heroPortraitResource(HeroCatalog.byId.getValue("ledger").toHero()),
+            heroPortraitResource(HeroCatalog.byId.getValue("comptable").toHero()),
+        )
+    }
+
     @Test
     fun acceptedLootArtResourcesCoverWholeCatalog() {
         val expectedIds = LootRarity.values()

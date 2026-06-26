@@ -53,7 +53,7 @@ class PlaySessionSnapshotTest {
                 PassiveIncident(
                     id = "watch-ledger",
                     text = "Brugg watched the ledgers blink.",
-                    reward = PassiveIncidentReward(gold = 4, reputation = 1),
+                    reward = PassiveIncidentReward(gold = 4, reputation = 1, specialContracts = 1),
                 ),
             ),
         )

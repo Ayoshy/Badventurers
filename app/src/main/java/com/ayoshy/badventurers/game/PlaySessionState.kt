@@ -29,6 +29,7 @@ data class PlaySessionState(
     val achievementProgress: List<AchievementProgress> = AchievementCatalog.initialProgress(),
     val lastOfflinePassiveIncome: PassiveIncomeReport? = null,
     val lastOfflinePassiveIncidents: List<PassiveIncident> = emptyList(),
+    val specialContracts: Int = 0,
     val recruitmentTickets: Map<String, Int> = RecruitmentTicketCatalog.normalizedInventory()
 ) {
     val phase: PlayPhase
@@ -55,14 +56,18 @@ data class PlaySessionState(
         planId: String = ExpeditionPlanCatalog.defaultPlanId,
     ): PlaySessionState {
         if (phase != PlayPhase.Idle || !isQuestUnlocked(quest)) return this
+        val selectedPlan = ExpeditionPlanCatalog.planForQuest(planId, quest)
+        val contractCost = selectedPlan.specialContractCost
+        if (specialContracts < contractCost) return this
         val selectedParty = selectedPartyForQuest(quest, party)
         return copy(
+            specialContracts = (specialContracts - contractCost).coerceAtLeast(0),
             expedition = ExpeditionRun(
                 quest = quest,
                 partyHeroIds = selectedParty.map { it.id },
                 startedAtMillis = nowMillis,
-                endsAtMillis = nowMillis + ExpeditionPlanCatalog.durationSeconds(quest, planId) * 1000L,
-                planId = ExpeditionPlanCatalog.coercePlanId(planId),
+                endsAtMillis = nowMillis + ExpeditionPlanCatalog.durationSeconds(quest, selectedPlan.id) * 1000L,
+                planId = selectedPlan.id,
             ),
             lastOfflinePassiveIncome = null,
             lastOfflinePassiveIncidents = emptyList(),
@@ -124,6 +129,7 @@ data class PlaySessionState(
         val run = expedition ?: return this
         val result = run.result ?: return this
         val baseGold = collectableRewardGold(result)
+        val earnedSpecialContracts = collectableSpecialContracts(result, run.quest)
         val firstClearTicketRewards = if (result.isFirstClearSuccess() && run.quest.id !in clearedQuestIds) {
             run.quest.firstClearTicketRewards
         } else {
@@ -150,6 +156,7 @@ data class PlaySessionState(
             completedQuestCount = completedQuestCount + 1,
             clearedQuestIds = nextClearedQuestIds,
             heroes = advancedHeroes,
+            specialContracts = specialContracts + earnedSpecialContracts,
             recruitmentTickets = RecruitmentTicketCatalog.addToInventory(recruitmentTickets, firstClearTicketRewards),
             journalEntries = (journalEntries + generatedJournal).takeLast(12),
             expedition = null,
@@ -183,11 +190,13 @@ data class PlaySessionState(
         val incidents = PassiveIncidentGenerator.generate(tracked, reportUntilMillis)
         val incidentGold = incidents.sumOf { it.reward.gold }
         val incidentReputation = incidents.sumOf { it.reward.reputation }
+        val incidentSpecialContracts = incidents.sumOf { it.reward.specialContracts }
 
         val credited = tracked.copy(
             gold = tracked.gold + passiveReport.gold + incidentGold,
             reputation = (tracked.reputation + incidentReputation).coerceAtLeast(0),
             supplies = tracked.supplies + passiveReport.supplies,
+            specialContracts = tracked.specialContracts + incidentSpecialContracts,
             lastOfflinePassiveIncome = passiveReport,
             lastOfflinePassiveIncidents = incidents,
         )
@@ -250,6 +259,12 @@ data class PlaySessionState(
 
     fun collectableLootRolls(result: ExpeditionResult): Int =
         result.reward.lootRolls + achievementRewardChoiceLootRolls(result)
+
+    fun collectableSpecialContracts(result: ExpeditionResult, quest: Quest): Int =
+        specialContractsLootedFrom(result, quest)
+
+    fun canAffordPlan(planId: String?, quest: Quest): Boolean =
+        specialContracts >= ExpeditionPlanCatalog.specialContractCost(planId, quest)
 
     fun lootCarryLimit(party: List<Hero> = heroes): Int =
         lootCarryBreakdown(party).total.coerceAtLeast(BASE_LOOT_KEEP_LIMIT)
@@ -539,6 +554,7 @@ data class PlaySessionState(
             supplies = 0,
             completedQuestCount = 0,
             clearedQuestIds = emptySet(),
+            specialContracts = 0,
             noticeBoardLevel = 1,
             trainingYardLevel = 1,
             bunkRoomLevel = 1,
@@ -1021,6 +1037,7 @@ data class PlaySessionState(
                 gold = gold + reward.gold,
                 reputation = reputation + reward.reputation,
                 lootRolls = lootRolls + reward.lootRolls,
+                specialContracts = specialContracts + reward.specialContracts.coerceAtLeast(0),
             ).appendPendingLoot(generatedLoot, lootCarryBreakdown())
         }
         is AchievementReward.Tickets -> copy(
@@ -1123,6 +1140,14 @@ sealed interface PlayPhase {
 
 private fun ExpeditionResult.isFirstClearSuccess(): Boolean =
     outcome == ExpeditionOutcome.GreatSuccess || outcome == ExpeditionOutcome.Success
+
+private fun specialContractsLootedFrom(result: ExpeditionResult, quest: Quest): Int = when {
+    !result.isFirstClearSuccess() -> 0
+    quest.hasAny(QuestTag.Contract) && result.outcome == ExpeditionOutcome.GreatSuccess -> 2
+    quest.hasAny(QuestTag.Contract) -> 1
+    result.outcome == ExpeditionOutcome.GreatSuccess && quest.risk == QuestRisk.High -> 1
+    else -> 0
+}
 
 private fun recruitmentTicketRewards(reward: AchievementReward): Map<String, Int> = when (reward) {
     is AchievementReward.Tickets -> reward.tickets

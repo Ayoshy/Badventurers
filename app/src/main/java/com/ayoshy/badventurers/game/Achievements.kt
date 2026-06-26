@@ -62,6 +62,7 @@ sealed interface AchievementReward {
         val gold: Int = 0,
         val reputation: Int = 0,
         val lootRolls: Int = 0,
+        val specialContracts: Int = 0,
     ) : AchievementReward
 
     data class Tickets(val tickets: Map<String, Int> = emptyMap()) : AchievementReward
@@ -123,7 +124,7 @@ object AchievementCatalog {
             summary = "Complete 10 expeditions.",
             target = 10,
             sealReward = 2,
-            reward = AchievementReward.Currency(reputation = 2),
+            reward = AchievementReward.Currency(reputation = 2, specialContracts = 1),
         ),
         AchievementDefinition(
             id = "regional_liability",
@@ -143,7 +144,7 @@ object AchievementCatalog {
             summary = "Complete 8 expeditions. The map stopped asking questions.",
             target = 8,
             sealReward = 2,
-            reward = AchievementReward.Currency(lootRolls = 1),
+            reward = AchievementReward.Currency(lootRolls = 1, specialContracts = 2),
         ),
         AchievementDefinition(
             id = "all_risk_no_notes",
@@ -152,7 +153,7 @@ object AchievementCatalog {
             summary = "Complete a high-risk expedition.",
             target = 1,
             sealReward = 2,
-            reward = AchievementReward.Currency(lootRolls = 1),
+            reward = AchievementReward.Currency(lootRolls = 1, specialContracts = 2),
         ),
         AchievementDefinition(
             id = "almost_competent",

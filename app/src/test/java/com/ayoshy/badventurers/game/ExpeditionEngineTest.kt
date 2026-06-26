@@ -126,6 +126,25 @@ class ExpeditionEngineTest {
         assertTrue(greedy.scoreMargin < standard.scoreMargin)
     }
     @Test
+    fun specialContractClausesAddXxlGoldAndLootPayoff() {
+        val quest = SeedGame.questById.getValue("paperwork_toll_of_chaos").copy(
+            difficulty = 60,
+            risk = QuestRisk.Low,
+            tags = emptyList(),
+            recommendedHeroIds = emptyList(),
+        )
+        val standard = engine.resolve(party = SeedGame.heroes, quest = quest, roll = 100)
+        val contracted = engine.resolve(
+            party = SeedGame.heroes,
+            quest = quest,
+            roll = 100,
+            planId = ExpeditionPlanCatalog.paperworkTollId,
+        )
+
+        assertTrue(contracted.reward.gold > standard.reward.gold)
+        assertTrue(contracted.reward.lootRolls >= standard.reward.lootRolls + 2)
+    }
+    @Test
     fun protectiveSpecialCanStopRidiculousFailureOnCursedQuest() {
         val party = listOf(HeroCatalog.byId.getValue("pax").toHero())
         val quest = SeedGame.questById.getValue("crypt_of_unpaid_debts").copy(difficulty = 999)

@@ -271,9 +271,9 @@ fun BadventurersApp(
                                 val partySlots = session.effectivePartySlots(quest)
                                 selectedQuestPartyIds = selectedQuestPartyIds.take(partySlots)
                             },
-                            onPrepare = { quest ->
+                            onPrepare = { quest, plan ->
                                 selectedQuestId = quest.id
-                                selectedPlanId = ExpeditionPlanCatalog.selectedPlanForUi(selectedPlanId, quest).id
+                                selectedPlanId = plan?.id ?: ExpeditionPlanCatalog.selectedPlanForUi(selectedPlanId, quest).id
                                 selectedTab = GameTab.ExpeditionPrep
                             },
                             onParty = { selectedTab = GameTab.Heroes },

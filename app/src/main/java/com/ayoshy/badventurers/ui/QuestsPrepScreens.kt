@@ -135,58 +135,216 @@ internal fun QuestsScreen(
     session: PlaySessionState,
     selectedQuest: Quest,
     onSelectQuest: (Quest) -> Unit,
-    onPrepare: (Quest) -> Unit,
+    onPrepare: (Quest, ExpeditionPlan?) -> Unit,
     onParty: () -> Unit,
 ) {
     val canPrepare = session.phase == PlayPhase.Idle
     val prepareLabel = if (canPrepare) stringResource(R.string.prep_action) else stringResource(R.string.quest_blocked_action)
+    var selectedRegion by rememberSaveable { mutableStateOf(QuestActivityRegion.LocalJobs.name) }
+    val activityRegion = QuestActivityRegion.valueOf(selectedRegion)
+    val visibleQuests = SeedGame.quests.filter { quest -> quest.matchesActivityRegion(activityRegion) }
 
     ScreenScaffold(title = stringResource(R.string.quests_title), status = phaseStatus(session.phase)) {
-        SeedGame.quests.forEach { quest ->
-            val selected = quest.id == selectedQuest.id
-            val unlocked = session.isQuestUnlocked(quest)
-            val primaryLabel = when {
-                !unlocked -> stringResource(R.string.quest_locked_action)
-                selected -> prepareLabel
-                else -> stringResource(R.string.quest_select_action)
-            }
-            QuestCardArt(
-                bannerResourceId = questBannerResource(quest),
-                frameResourceId = questFrameResource(quest.difficulty),
-                borderStyle = questDifficultyBorderStyle(quest.difficulty),
+        QuestActivityRegionSelector(
+            selectedRegion = activityRegion,
+            onSelectRegion = { region -> selectedRegion = region.name },
+        )
+        QuestActivitySummaryPanel(region = activityRegion, session = session, questCount = visibleQuests.size)
+        visibleQuests.forEach { quest ->
+            QuestActivityCard(
+                session = session,
+                quest = quest,
+                selected = quest.id == selectedQuest.id,
+                region = activityRegion,
+                canPrepare = canPrepare,
+                prepareLabel = prepareLabel,
+                onSelectQuest = onSelectQuest,
+                onPrepare = onPrepare,
+                onParty = onParty,
             )
-            DarkPanel(title = questTitle(quest), body = questSummary(quest)) {
+        }
+    }
+}
+
+private enum class QuestActivityRegion {
+    LocalJobs,
+    DangerousWork,
+    SpecialContracts,
+}
+
+@Composable
+private fun QuestActivityRegionSelector(
+    selectedRegion: QuestActivityRegion,
+    onSelectRegion: (QuestActivityRegion) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        QuestActivityRegion.values().forEach { region ->
+            val selected = region == selectedRegion
+            Button(
+                onClick = { onSelectRegion(region) },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(42.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selected) Color(0xFFD0A24A) else Color(0xFF2F2B22),
+                    contentColor = if (selected) Color(0xFF211F1A) else Color(0xFFFFF1C0),
+                ),
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+            ) {
                 Text(
-                    text = "${questDifficultyLabel(quest.difficultyTier)} - ${questTagsLabel(quest.tags)}",
-                    color = Color(0xFFDED0A2),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-                RecommendedHeroesInline(session = session, quest = quest)
-                if (!unlocked) {
-                    Text(
-                        text = questUnlockDetail(session, quest),
-                        color = Color(0xFFFFD27D),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Black,
-                        modifier = Modifier.padding(bottom = 8.dp),
-                    )
-                }
-                ActionRow(
-                    primaryLabel = primaryLabel,
-                    secondaryLabel = stringResource(R.string.party_action),
-                    onPrimary = {
-                        onSelectQuest(quest)
-                        if (unlocked) onPrepare(quest)
-                    },
-                    onSecondary = onParty,
-                    primaryEnabled = canPrepare && unlocked,
+                    text = questActivityRegionTitle(region),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    lineHeight = 12.sp,
                 )
             }
         }
     }
 }
+
+@Composable
+private fun QuestActivitySummaryPanel(region: QuestActivityRegion, session: PlaySessionState, questCount: Int) {
+    val body = when (region) {
+        QuestActivityRegion.LocalJobs -> stringResource(R.string.quest_activity_local_summary)
+        QuestActivityRegion.DangerousWork -> stringResource(R.string.quest_activity_hard_summary)
+        QuestActivityRegion.SpecialContracts -> stringResource(
+            R.string.quest_activity_contracts_summary,
+            session.specialContracts,
+        )
+    }
+    val stockValue = when (region) {
+        QuestActivityRegion.LocalJobs -> stringResource(R.string.quest_activity_free_value)
+        QuestActivityRegion.DangerousWork -> stringResource(R.string.quest_activity_hard_value)
+        QuestActivityRegion.SpecialContracts -> stringResource(
+            R.string.quest_activity_contract_stock_value,
+            session.specialContracts,
+        )
+    }
+    InfoRow(
+        title = questActivityRegionTitle(region),
+        detail = body,
+        value = if (region == QuestActivityRegion.SpecialContracts) {
+            stockValue
+        } else {
+            stringResource(R.string.quest_activity_count_value, questCount)
+        },
+    )
+}
+
+@Composable
+private fun QuestActivityCard(
+    session: PlaySessionState,
+    quest: Quest,
+    selected: Boolean,
+    region: QuestActivityRegion,
+    canPrepare: Boolean,
+    prepareLabel: String,
+    onSelectQuest: (Quest) -> Unit,
+    onPrepare: (Quest, ExpeditionPlan?) -> Unit,
+    onParty: () -> Unit,
+) {
+    val unlocked = session.isQuestUnlocked(quest)
+    val specialPlan = if (region == QuestActivityRegion.SpecialContracts) quest.specialContractPlan() else null
+    val specialContractReady = specialPlan == null || session.specialContracts >= specialPlan.specialContractCost
+    val primaryEnabled = canPrepare && unlocked && specialContractReady
+    val primaryLabel = when {
+        !unlocked -> stringResource(R.string.quest_locked_action)
+        specialPlan != null && !specialContractReady -> stringResource(R.string.special_contract_need_action)
+        specialPlan != null -> stringResource(R.string.quest_special_contract_prepare_action)
+        selected -> prepareLabel
+        else -> stringResource(R.string.quest_select_action)
+    }
+
+    QuestCardArt(
+        bannerResourceId = questBannerResource(quest),
+        frameResourceId = questFrameResource(quest.difficulty),
+        borderStyle = questDifficultyBorderStyle(quest.difficulty),
+    )
+    DarkPanel(title = questTitle(quest), body = questSummary(quest)) {
+        Text(
+            text = "${questDifficultyLabel(quest.difficultyTier)} - ${questTagsLabel(quest.tags)}",
+            color = Color(0xFFDED0A2),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        if (specialPlan != null) {
+            Text(
+                text = stringResource(R.string.quest_special_contract_clause_detail, expeditionPlanTitle(specialPlan)),
+                color = Color(0xFFFFE08A),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Black,
+                modifier = Modifier.padding(bottom = 4.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = if (specialContractReady) {
+                    stringResource(R.string.quest_special_contract_ready_detail, session.specialContracts)
+                } else {
+                    stringResource(R.string.quest_special_contract_missing_detail, session.specialContracts)
+                },
+                color = if (specialContractReady) Color(0xFFFFE08A) else Color(0xFFFF9B79),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Black,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        } else {
+            RecommendedHeroesInline(session = session, quest = quest)
+        }
+        if (!unlocked) {
+            Text(
+                text = questUnlockDetail(session, quest),
+                color = Color(0xFFFFD27D),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Black,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        }
+        ActionRow(
+            primaryLabel = primaryLabel,
+            secondaryLabel = stringResource(R.string.party_action),
+            onPrimary = {
+                onSelectQuest(quest)
+                if (unlocked) onPrepare(quest, specialPlan)
+            },
+            onSecondary = onParty,
+            primaryEnabled = primaryEnabled,
+        )
+    }
+}
+
+@Composable
+private fun questActivityRegionTitle(region: QuestActivityRegion): String =
+    when (region) {
+        QuestActivityRegion.LocalJobs -> stringResource(R.string.quest_activity_local_title)
+        QuestActivityRegion.DangerousWork -> stringResource(R.string.quest_activity_hard_title)
+        QuestActivityRegion.SpecialContracts -> stringResource(R.string.quest_activity_contracts_title)
+    }
+
+private fun Quest.matchesActivityRegion(region: QuestActivityRegion): Boolean =
+    when (region) {
+        QuestActivityRegion.LocalJobs -> risk != QuestRisk.High &&
+            difficultyTier != QuestDifficultyTier.Disaster &&
+            difficultyTier != QuestDifficultyTier.LegendaryMess
+        QuestActivityRegion.DangerousWork -> risk == QuestRisk.High ||
+            difficultyTier == QuestDifficultyTier.Disaster ||
+            difficultyTier == QuestDifficultyTier.LegendaryMess
+        QuestActivityRegion.SpecialContracts -> specialContractPlan() != null
+    }
+
+private fun Quest.specialContractPlan(): ExpeditionPlan? =
+    ExpeditionPlanCatalog.availableFor(this).firstOrNull { plan ->
+        id in plan.questIds && plan.requiresSpecialContract
+    }
 @Composable
 internal fun ExpeditionPrepScreen(
     session: PlaySessionState,
@@ -224,9 +382,14 @@ internal fun ExpeditionPrepScreen(
     )
     val activeSpecials = HeroSpecialCatalog.activeHeroes(partyHeroes, quest)
     val unlocked = session.isQuestUnlocked(quest)
-    val canLaunch = session.phase == PlayPhase.Idle && partyHeroes.isNotEmpty() && unlocked
+    val selectedPlanCost = selectedPlan.specialContractCost
+    val selectedPlanAffordable = session.canAffordPlan(selectedPlan.id, quest)
+    val selectedPlanRequiresContract = selectedPlanCost > 0
+    val canLaunch = session.phase == PlayPhase.Idle && partyHeroes.isNotEmpty() && unlocked && selectedPlanAffordable
     val launchLabel = when {
         !unlocked -> stringResource(R.string.quest_locked_action)
+        selectedPlanRequiresContract && !selectedPlanAffordable -> stringResource(R.string.special_contract_need_action)
+        canLaunch && selectedPlanRequiresContract -> stringResource(R.string.launch_special_contract_action)
         canLaunch -> stringResource(R.string.launch_quest_action)
         else -> stringResource(R.string.quest_blocked_action)
     }
@@ -255,6 +418,19 @@ internal fun ExpeditionPrepScreen(
                 onSecondary = onParty,
                 primaryEnabled = canLaunch,
             )
+            if (selectedPlanRequiresContract) {
+                Text(
+                    text = if (selectedPlanAffordable) {
+                        stringResource(R.string.prep_special_contract_ready_detail, session.specialContracts)
+                    } else {
+                        stringResource(R.string.prep_special_contract_missing_detail, session.specialContracts)
+                    },
+                    color = if (selectedPlanAffordable) Color(0xFFFFE08A) else Color(0xFFFF9B79),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
         }
         RecommendedHeroesPanel(
             session = session,
@@ -267,6 +443,7 @@ internal fun ExpeditionPrepScreen(
             selectedPlan = selectedPlan,
             availablePlans = availablePlans,
             scoutTableLevel = session.scoutTableLevel,
+            specialContracts = session.specialContracts,
             onSelectPlan = onSelectPlan,
         )
         InfoRow(
@@ -403,6 +580,7 @@ internal fun ExpeditionPlanPanel(
     selectedPlan: ExpeditionPlan,
     availablePlans: List<ExpeditionPlan>,
     scoutTableLevel: Int,
+    specialContracts: Int,
     onSelectPlan: (ExpeditionPlan) -> Unit,
 ) {
     PaperPanel(
@@ -416,6 +594,7 @@ internal fun ExpeditionPlanPanel(
                 plan = plan,
                 selected = plan.id == selectedPlan.id,
                 scoutTableLevel = scoutTableLevel,
+                specialContracts = specialContracts,
                 onClick = { onSelectPlan(plan) },
             )
         }
@@ -428,6 +607,7 @@ internal fun ExpeditionPlanChoiceRow(
     plan: ExpeditionPlan,
     selected: Boolean,
     scoutTableLevel: Int,
+    specialContracts: Int,
     onClick: () -> Unit,
 ) {
     val scoutWarnings = ScoutTableIntel.planWarningsFor(scoutTableLevel, plan, quest)
@@ -436,13 +616,23 @@ internal fun ExpeditionPlanChoiceRow(
         scoutWarningLabels += scoutPlanWarningText(warning)
     }
     val scoutWarningText = scoutWarningLabels.joinToString(" / ")
-    val borderColor = if (selected) Color(0xFFD0A24A) else Color(0x66806C3A)
-    val background = if (selected) Color(0xFFFFE8A6) else Color(0xFFFFF6CD)
+    val requiresContract = plan.requiresSpecialContract
+    val canAffordContract = !requiresContract || specialContracts >= plan.specialContractCost
+    val borderColor = when {
+        selected -> Color(0xFFD0A24A)
+        requiresContract && !canAffordContract -> Color(0xFF9C5137)
+        else -> Color(0x66806C3A)
+    }
+    val background = when {
+        selected -> Color(0xFFFFE8A6)
+        requiresContract && !canAffordContract -> Color(0xFFFFE0D2)
+        else -> Color(0xFFFFF6CD)
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 7.dp)
-            .clickable(onClick = onClick),
+            .clickable(enabled = canAffordContract, onClick = onClick),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, borderColor),
         colors = CardDefaults.cardColors(containerColor = background),
@@ -477,6 +667,20 @@ internal fun ExpeditionPlanChoiceRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (requiresContract) {
+                    Text(
+                        text = if (canAffordContract) {
+                            stringResource(R.string.special_contract_row_ready, specialContracts)
+                        } else {
+                            stringResource(R.string.special_contract_row_locked, specialContracts)
+                        },
+                        color = if (canAffordContract) Color(0xFF5B4E2F) else Color(0xFF8B3F24),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 if (scoutWarnings.isNotEmpty()) {
                     Text(
                         text = scoutWarningText,
@@ -489,7 +693,12 @@ internal fun ExpeditionPlanChoiceRow(
                 }
             }
             Text(
-                text = if (selected) stringResource(R.string.prep_plan_selected_value) else stringResource(R.string.prep_roster_pick_value),
+                text = when {
+                    requiresContract && !canAffordContract -> stringResource(R.string.special_contract_need_short)
+                    requiresContract -> stringResource(R.string.special_contract_xxl_value)
+                    selected -> stringResource(R.string.prep_plan_selected_value)
+                    else -> stringResource(R.string.prep_roster_pick_value)
+                },
                 color = Color(0xFF211F1A),
                 fontWeight = FontWeight.Black,
                 fontSize = 12.sp,

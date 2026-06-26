@@ -168,6 +168,8 @@ internal fun QuestResultScreen(
             .filter { (_, preview) -> preview.levelsGained > 0 }
         val postCollectSession = session.collectResult()
         val postCollectAdvice = ProgressionAdvisor.recommend(postCollectSession, selectedQuest = run.quest)
+        val specialContractReward = session.collectableSpecialContracts(result, run.quest)
+        val usedSpecialContract = ExpeditionPlanCatalog.requiresSpecialContract(run.planId, run.quest)
 
         QuestCardArt(
             bannerResourceId = questBannerResource(run.quest),
@@ -209,6 +211,18 @@ internal fun QuestResultScreen(
             value = outcomeLabel(result.outcome),
         )
         ResultCausesPanel(causes = resultCauses)
+
+        if (usedSpecialContract || specialContractReward > 0) {
+            InfoRow(
+                title = stringResource(R.string.result_special_contract_payoff_title),
+                detail = if (specialContractReward > 0) {
+                    stringResource(R.string.result_special_contract_payoff_detail, specialContractReward)
+                } else {
+                    stringResource(R.string.result_special_contract_payoff_detail_empty)
+                },
+                value = stringResource(R.string.special_contract_xxl_value),
+            )
+        }
 
         InfoRow(
             title = stringResource(R.string.result_reward_title),
@@ -446,6 +460,8 @@ internal fun OfflineSummaryScreen(
         val resultCauses = ResultCauseGenerator.generate(session, run, resultParty, maxCauses = 3)
         val postCollectSession = session.collectResult()
         val postCollectAdvice = ProgressionAdvisor.recommend(postCollectSession, selectedQuest = run.quest)
+        val specialContractReward = session.collectableSpecialContracts(result, run.quest)
+        val usedSpecialContract = ExpeditionPlanCatalog.requiresSpecialContract(run.planId, run.quest)
         val offlineHighlights = session.offlineReportHighlights(postCollectSession)
         val passiveReport = session.lastOfflinePassiveIncome ?: session.passiveIncomeReport(
             sinceMillis = run.startedAtMillis,
@@ -492,6 +508,18 @@ internal fun OfflineSummaryScreen(
             value = outcomeLabel(result.outcome),
         )
         ResultCausesPanel(causes = resultCauses)
+
+        if (usedSpecialContract || specialContractReward > 0) {
+            InfoRow(
+                title = stringResource(R.string.result_special_contract_payoff_title),
+                detail = if (specialContractReward > 0) {
+                    stringResource(R.string.result_special_contract_payoff_detail, specialContractReward)
+                } else {
+                    stringResource(R.string.result_special_contract_payoff_detail_empty)
+                },
+                value = stringResource(R.string.special_contract_xxl_value),
+            )
+        }
 
         InfoRow(
             title = stringResource(R.string.result_reward_title),
@@ -584,15 +612,13 @@ internal fun PassiveIncidentsPanel(incidents: List<PassiveIncident>) {
 }
 
 @Composable
-internal fun passiveIncidentRewardLabel(reward: PassiveIncidentReward): String = when {
-    reward.gold > 0 && reward.reputation > 0 -> stringResource(
-        R.string.offline_passive_incident_reward_gold_rep,
-        reward.gold,
-        reward.reputation,
-    )
-    reward.gold > 0 -> stringResource(R.string.offline_passive_incident_reward_gold, reward.gold)
-    reward.reputation > 0 -> stringResource(R.string.offline_passive_incident_reward_rep, reward.reputation)
-    else -> stringResource(R.string.offline_passive_incident_reward_none)
+internal fun passiveIncidentRewardLabel(reward: PassiveIncidentReward): String {
+    val parts = buildList {
+        if (reward.gold > 0) add(stringResource(R.string.offline_passive_incident_reward_gold, reward.gold))
+        if (reward.reputation > 0) add(stringResource(R.string.offline_passive_incident_reward_rep, reward.reputation))
+        if (reward.specialContracts > 0) add(stringResource(R.string.offline_passive_incident_reward_contract, reward.specialContracts))
+    }
+    return parts.ifEmpty { listOf(stringResource(R.string.offline_passive_incident_reward_none)) }.joinToString(", ")
 }
 
 @Composable

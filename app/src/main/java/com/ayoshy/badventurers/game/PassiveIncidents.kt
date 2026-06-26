@@ -28,6 +28,8 @@ data class PassiveIncidentReward(
 
     val reputation: Int = 0,
 
+    val specialContracts: Int = 0,
+
 ) {
 
     init {
@@ -35,6 +37,8 @@ data class PassiveIncidentReward(
         require(gold in 0..PASSIVE_INCIDENT_MAX_GOLD_REWARD)
 
         require(reputation in 0..1)
+
+        require(specialContracts in 0..1)
 
     }
 
@@ -554,6 +558,8 @@ object PassiveIncidentGenerator {
         gold = random.nextInt(PASSIVE_INCIDENT_MAX_GOLD_REWARD + 1),
 
         reputation = if (random.nextInt(6) == 0) 1 else 0,
+
+        specialContracts = if (random.nextInt(10) == 0) 1 else 0,
 
     )
 

@@ -2,13 +2,19 @@ package com.ayoshy.badventurers.game
 
 import kotlin.math.roundToInt
 
+private const val SPECIAL_CONTRACT_PLAN_COST = 1
+
 data class ExpeditionPlan(
     val id: String,
     val title: String,
     val summary: String,
     val questIds: Set<String> = emptySet(),
     val modifiers: ExpeditionPlanModifiers = ExpeditionPlanModifiers(),
-)
+    val requiresSpecialContract: Boolean = false,
+) {
+    val specialContractCost: Int
+        get() = if (requiresSpecialContract) SPECIAL_CONTRACT_PLAN_COST else 0
+}
 
 data class ExpeditionPlanModifiers(
     val durationPercentDelta: Int = 0,
@@ -104,6 +110,7 @@ object ExpeditionPlanCatalog {
             scoreBonus = 10,
             riskPenaltyDelta = -8,
         ),
+        requiresSpecialContract = true,
     )
 
     private val followWorstMap = ExpeditionPlan(
@@ -117,6 +124,7 @@ object ExpeditionPlanCatalog {
             riskPenaltyDelta = 8,
             successLootBonus = 1,
         ),
+        requiresSpecialContract = true,
     )
 
     private val demandReceipts = ExpeditionPlan(
@@ -131,6 +139,7 @@ object ExpeditionPlanCatalog {
             goldBonusPercent = 30,
             greatSuccessMarginDelta = 10,
         ),
+        requiresSpecialContract = true,
     )
 
     private val blessTheBrine = ExpeditionPlan(
@@ -144,6 +153,7 @@ object ExpeditionPlanCatalog {
             riskPenaltyDelta = -6,
             greatSuccessMarginDelta = 8,
         ),
+        requiresSpecialContract = true,
     )
 
     private val moonlessShortcut = ExpeditionPlan(
@@ -157,6 +167,7 @@ object ExpeditionPlanCatalog {
             riskPenaltyDelta = 10,
             successLootBonus = 1,
         ),
+        requiresSpecialContract = true,
     )
 
     private val rationTheBiscuits = ExpeditionPlan(
@@ -170,6 +181,7 @@ object ExpeditionPlanCatalog {
             riskPenaltyDelta = -6,
             greatSuccessMarginDelta = 10,
         ),
+        requiresSpecialContract = true,
     )
 
     private val bringDoorForms = ExpeditionPlan(
@@ -183,6 +195,7 @@ object ExpeditionPlanCatalog {
             riskPenaltyDelta = -4,
             goldBonusPercent = 10,
         ),
+        requiresSpecialContract = true,
     )
 
     private val itemizedLastRites = ExpeditionPlan(
@@ -196,6 +209,7 @@ object ExpeditionPlanCatalog {
             riskPenaltyDelta = 4,
             goldBonusPercent = 25,
         ),
+        requiresSpecialContract = true,
     )
 
     private val paperworkToll = ExpeditionPlan(
@@ -209,6 +223,7 @@ object ExpeditionPlanCatalog {
             riskPenaltyDelta = -6,
             goldBonusPercent = 12,
         ),
+        requiresSpecialContract = true,
     )
 
     private val caravanManifest = ExpeditionPlan(
@@ -222,6 +237,7 @@ object ExpeditionPlanCatalog {
             riskPenaltyDelta = 8,
             successLootBonus = 1,
         ),
+        requiresSpecialContract = true,
     )
 
     private val notaryNightPatrol = ExpeditionPlan(
@@ -236,6 +252,7 @@ object ExpeditionPlanCatalog {
             greatSuccessMarginDelta = 10,
             goldBonusPercent = 10,
         ),
+        requiresSpecialContract = true,
     )
 
     private val inspectorateBanquet = ExpeditionPlan(
@@ -250,6 +267,7 @@ object ExpeditionPlanCatalog {
             goldBonusPercent = 18,
             greatSuccessMarginDelta = 8,
         ),
+        requiresSpecialContract = true,
     )
 
     private val weddingOathLedger = ExpeditionPlan(
@@ -264,6 +282,7 @@ object ExpeditionPlanCatalog {
             goldBonusPercent = 10,
             greatSuccessMarginDelta = 8,
         ),
+        requiresSpecialContract = true,
     )
 
     private val sunkenTollDredge = ExpeditionPlan(
@@ -278,6 +297,7 @@ object ExpeditionPlanCatalog {
             goldBonusPercent = 12,
             successLootBonus = 1,
         ),
+        requiresSpecialContract = true,
     )
 
     private val crownReceiptSubpoena = ExpeditionPlan(
@@ -292,6 +312,7 @@ object ExpeditionPlanCatalog {
             goldBonusPercent = 25,
             greatSuccessMarginDelta = 6,
         ),
+        requiresSpecialContract = true,
     )
 
     private val sidewaysTowerBrace = ExpeditionPlan(
@@ -305,6 +326,7 @@ object ExpeditionPlanCatalog {
             riskPenaltyDelta = -8,
             greatSuccessMarginDelta = 12,
         ),
+        requiresSpecialContract = true,
     )
 
     private val genericPlans = listOf(rushTheJob, safetyFirst, lootPriority, auditEverything)
@@ -334,6 +356,12 @@ object ExpeditionPlanCatalog {
 
     fun coercePlanId(planId: String?): String = byId(planId).id
 
+    fun requiresSpecialContract(planId: String?, quest: Quest): Boolean = validPlanForQuest(planId, quest).requiresSpecialContract
+
+    fun specialContractCost(planId: String?, quest: Quest): Int = validPlanForQuest(planId, quest).specialContractCost
+
+    fun planForQuest(planId: String?, quest: Quest): ExpeditionPlan = validPlanForQuest(planId, quest)
+
     fun availableFor(quest: Quest): List<ExpeditionPlan> =
         genericPlans + questSpecificPlans.filter { quest.id in it.questIds }
 
@@ -345,12 +373,20 @@ object ExpeditionPlanCatalog {
     }
 
     fun modifiersFor(planId: String?, quest: Quest): ExpeditionPlanModifiers {
-        val plan = byId(planId)
-        return if (plan.questIds.isNotEmpty() && quest.id !in plan.questIds) {
-            standard.modifiers
+        val plan = validPlanForQuest(planId, quest)
+        return if (plan.requiresSpecialContract) {
+            plan.modifiers.copy(
+                goldBonusPercent = plan.modifiers.goldBonusPercent + SPECIAL_CONTRACT_GOLD_BONUS_PERCENT,
+                successLootBonus = plan.modifiers.successLootBonus + SPECIAL_CONTRACT_SUCCESS_LOOT_BONUS,
+            )
         } else {
             plan.modifiers
         }
+    }
+
+    private fun validPlanForQuest(planId: String?, quest: Quest): ExpeditionPlan {
+        val plan = byId(planId)
+        return if (plan.questIds.isNotEmpty() && quest.id !in plan.questIds) standard else plan
     }
 
     fun durationSeconds(quest: Quest, planId: String?): Int {
@@ -360,5 +396,7 @@ object ExpeditionPlanCatalog {
             .coerceAtLeast(MIN_EXPEDITION_DURATION_SECONDS)
     }
 
+    private const val SPECIAL_CONTRACT_GOLD_BONUS_PERCENT = 75
+    private const val SPECIAL_CONTRACT_SUCCESS_LOOT_BONUS = 2
     private const val MIN_EXPEDITION_DURATION_SECONDS = 15
 }

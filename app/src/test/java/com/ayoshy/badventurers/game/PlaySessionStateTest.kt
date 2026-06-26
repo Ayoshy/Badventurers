@@ -51,6 +51,91 @@ class PlaySessionStateTest {
         assertTrue(requireNotNull(state.expedition).endsAtMillis < startedAt + SeedGame.firstQuest.durationSeconds * 1000L)
     }
     @Test
+    fun specialContractPlanRequiresStoredContractAndConsumesOne() {
+        val quest = SeedGame.questById.getValue("paperwork_toll_of_chaos")
+        val unlocked = PlaySessionState.initial().copy(
+            completedQuestCount = 8,
+            reputation = 30,
+            noticeBoardLevel = 2,
+        )
+
+        val withoutContract = unlocked.startQuest(
+            nowMillis = 1_000L,
+            quest = quest,
+            party = party,
+            planId = ExpeditionPlanCatalog.paperworkTollId,
+        )
+        val withContract = unlocked.copy(specialContracts = 2).startQuest(
+            nowMillis = 1_000L,
+            quest = quest,
+            party = party,
+            planId = ExpeditionPlanCatalog.paperworkTollId,
+        )
+
+        assertEquals(PlayPhase.Idle, withoutContract.phase)
+        assertEquals(0, withoutContract.specialContracts)
+        assertEquals(PlayPhase.Running, withContract.phase)
+        assertEquals(1, withContract.specialContracts)
+        assertEquals(ExpeditionPlanCatalog.paperworkTollId, withContract.expedition?.planId)
+    }
+
+    @Test
+    fun standardPlansStayFreeWhenNoSpecialContractsAreStored() {
+        val quest = SeedGame.questById.getValue("paperwork_toll_of_chaos")
+        val unlocked = PlaySessionState.initial().copy(
+            completedQuestCount = 8,
+            reputation = 30,
+            noticeBoardLevel = 2,
+        )
+
+        val started = unlocked.startQuest(
+            nowMillis = 1_000L,
+            quest = quest,
+            party = party,
+            planId = ExpeditionPlanCatalog.auditEverythingId,
+        )
+
+        assertEquals(PlayPhase.Running, started.phase)
+        assertEquals(0, started.specialContracts)
+        assertEquals(ExpeditionPlanCatalog.auditEverythingId, started.expedition?.planId)
+    }
+
+    @Test
+    fun collectResultCanLootSpecialContractsFromSuccessfulContractJobs() {
+        val quest = SeedGame.questById.getValue("paperwork_toll_of_chaos")
+        val ready = PlaySessionState.initial().copy(
+            completedQuestCount = 8,
+            reputation = 30,
+            noticeBoardLevel = 2,
+            expedition = ExpeditionRun(
+                quest = quest,
+                startedAtMillis = 1_000L,
+                endsAtMillis = 2_000L,
+                result = ExpeditionResult(
+                    outcome = ExpeditionOutcome.GreatSuccess,
+                    reward = Reward(gold = 0, xp = 0, lootRolls = 0),
+                    scoreMargin = 90,
+                ),
+            ),
+        )
+
+        val collected = ready.collectResult()
+
+        assertEquals(2, collected.specialContracts)
+        assertEquals(PlayPhase.Idle, collected.phase)
+    }
+
+    @Test
+    fun claimAchievementCanAwardSpecialContracts() {
+        val claimable = PlaySessionState.initial().copy(completedQuestCount = 10)
+
+        val claimed = claimable.claimAchievement("professional_regret_ii", nowMillis = 5L)
+        val claimedAgain = claimed.claimAchievement("professional_regret_ii", nowMillis = 6L)
+
+        assertEquals(1, claimed.specialContracts)
+        assertEquals(1, claimedAgain.specialContracts)
+    }
+    @Test
     fun finishQuestUsesStoredPartyInsteadOfFullRoster() {
         val quest = SeedGame.firstQuest.copy(tags = emptyList(), recommendedHeroIds = emptyList())
         val selectedParty = listOf(party.first())
@@ -1036,6 +1121,7 @@ class PlaySessionStateTest {
                 guildLevel = 4,
                 completedQuestCount = 12,
                 clearedQuestIds = setOf("cave_minor_regrets"),
+                specialContracts = 4,
                 noticeBoardLevel = 3,
                 trainingYardLevel = 2,
                 bunkRoomLevel = 3,
@@ -1065,6 +1151,7 @@ class PlaySessionStateTest {
         assertEquals(0, reset.supplies)
         assertEquals(0, reset.completedQuestCount)
         assertEquals(emptySet<String>(), reset.clearedQuestIds)
+        assertEquals(0, reset.specialContracts)
         assertEquals(1, reset.noticeBoardLevel)
         assertEquals(1, reset.trainingYardLevel)
         assertEquals(1, reset.bunkRoomLevel)

@@ -59,6 +59,7 @@ internal object PlaySessionSnapshotJson {
         .put("achievementProgress", JSONArray().also { array -> snapshot.achievementProgress.forEach { array.put(encodeAchievementProgress(it)) } })
         .put("lastOfflinePassiveIncome", snapshot.lastOfflinePassiveIncome?.let { encodePassiveIncomeReport(it) })
         .put("lastOfflinePassiveIncidents", JSONArray().also { array -> snapshot.lastOfflinePassiveIncidents.forEach { array.put(encodePassiveIncident(it)) } })
+        .put("specialContracts", snapshot.specialContracts)
         .put("recruitmentTickets", encodeRecruitmentTickets(snapshot.recruitmentTickets))
         .toString()
 
@@ -97,6 +98,7 @@ internal object PlaySessionSnapshotJson {
             journalEntries = decodeObjectArray(json.optJSONArray("journalEntries"), ::decodeJournalEntry),
             expedition = json.optJSONObject("expedition")?.let(::decodeExpedition),
             achievementProgress = decodeObjectArray(json.optJSONArray("achievementProgress"), ::decodeAchievementProgress),
+            specialContracts = json.optInt("specialContracts", initial.specialContracts).coerceAtLeast(0),
             recruitmentTickets = decodeRecruitmentTickets(json.optJSONObject("recruitmentTickets")),
             lastOfflinePassiveIncome = json.optJSONObject("lastOfflinePassiveIncome")?.let(::decodePassiveIncomeReport),
             lastOfflinePassiveIncidents = decodeObjectArray(json.optJSONArray("lastOfflinePassiveIncidents"), ::decodePassiveIncident),
@@ -127,6 +129,7 @@ internal object PlaySessionSnapshotJson {
         .put("text", incident.text)
         .put("gold", incident.reward.gold)
         .put("reputation", incident.reward.reputation)
+        .put("specialContracts", incident.reward.specialContracts)
 
     private fun decodePassiveIncident(json: JSONObject): PassiveIncident? {
         val id = json.optString("id").takeIf { it.isNotBlank() } ?: return null
@@ -136,6 +139,7 @@ internal object PlaySessionSnapshotJson {
             reward = PassiveIncidentReward(
                 gold = json.optInt("gold"),
                 reputation = json.optInt("reputation"),
+                specialContracts = json.optInt("specialContracts").coerceIn(0, 1),
             ),
         )
     }

@@ -29,6 +29,7 @@ data class PlaySessionSnapshot(
     val achievementProgress: List<AchievementProgress> = emptyList(),
     val lastOfflinePassiveIncome: PassiveIncomeReport? = null,
     val lastOfflinePassiveIncidents: List<PassiveIncident> = emptyList(),
+    val specialContracts: Int = 0,
     val recruitmentTickets: Map<String, Int> = RecruitmentTicketCatalog.normalizedInventory(),
 ) {
     fun toState(): PlaySessionState {
@@ -84,6 +85,7 @@ data class PlaySessionSnapshot(
             journalEntries = journalEntries.map { it.toEntry() },
             expedition = expedition?.toRun(),
             achievementProgress = AchievementCatalog.normalizeProgress(achievementProgress),
+            specialContracts = specialContracts.coerceAtLeast(0),
             recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(recruitmentTickets),
             lastOfflinePassiveIncidents = lastOfflinePassiveIncidents,
             lastOfflinePassiveIncome = lastOfflinePassiveIncome,
@@ -92,7 +94,7 @@ data class PlaySessionSnapshot(
     }
 
     companion object {
-        const val CURRENT_VERSION = 18
+        const val CURRENT_VERSION = 19
 
         fun initial(): PlaySessionSnapshot {
             return fromState(PlaySessionState.initial())
@@ -126,6 +128,7 @@ data class PlaySessionSnapshot(
                 journalEntries = state.journalEntries.map { JournalEntrySnapshot.fromEntry(it) },
                 expedition = state.expedition?.let { ExpeditionRunSnapshot.fromRun(it) },
                 achievementProgress = AchievementCatalog.normalizeProgress(state.achievementProgress),
+                specialContracts = state.specialContracts.coerceAtLeast(0),
                 recruitmentTickets = state.normalizedRecruitmentTickets(),
                 lastOfflinePassiveIncidents = state.lastOfflinePassiveIncidents,
                 lastOfflinePassiveIncome = state.lastOfflinePassiveIncome,
