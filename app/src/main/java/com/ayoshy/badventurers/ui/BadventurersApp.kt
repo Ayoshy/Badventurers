@@ -1,12 +1,5 @@
 package com.ayoshy.badventurers.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -55,7 +48,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.booleanResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -202,18 +194,20 @@ fun BadventurersApp(
                 .fillMaxSize()
                 .background(Color(0xFF141512)),
         ) {
-            Image(
-                painter = painterResource(
-                    if (selectedTab == GameTab.Achievements) {
-                        R.drawable.achievement_hall_concept
-                    } else {
-                        R.drawable.guild_home_background
-                    },
-                ),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
+            if (selectedTab != GameTab.Guild) {
+                Image(
+                    painter = painterResource(
+                        if (selectedTab == GameTab.Achievements) {
+                            R.drawable.achievement_hall_concept
+                        } else {
+                            R.drawable.guild_home_background
+                        },
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -235,12 +229,7 @@ fun BadventurersApp(
                     .navigationBarsPadding(),
             ) {
                 if (selectedTab == GameTab.Guild) {
-                    TopBar(
-                        session = session,
-                        onGoldDelta = { updateSession(session.adjustGold(it)) },
-                        onReputationDelta = { updateSession(session.adjustReputation(it)) },
-                        onGuildLevelDelta = { updateSession(session.adjustGuildLevel(it)) },
-                    )
+                    TopBar(session = session)
                 }
                 Box(
                     modifier = Modifier
@@ -255,6 +244,8 @@ fun BadventurersApp(
                             onViewResult = { selectedTab = GameTab.QuestResult },
                             onNextQuest = { selectedTab = GameTab.Quests },
                             onAchievements = { selectedTab = GameTab.Achievements },
+                            onLoot = { selectedTab = GameTab.Loot },
+                            onFacilities = { selectedTab = GameTab.Upgrades },
                             onToggleCoreCrew = { heroId -> updateSession(session.toggleCoreCrewHero(heroId)) },
                             onFinishQuestNow = {
                                 updateSession(session.finishQuestNow(expeditionEngine, session.heroes))
@@ -276,7 +267,6 @@ fun BadventurersApp(
                                 selectedPlanId = plan?.id ?: ExpeditionPlanCatalog.selectedPlanForUi(selectedPlanId, quest).id
                                 selectedTab = GameTab.ExpeditionPrep
                             },
-                            onParty = { selectedTab = GameTab.Heroes },
                         )
                         GameTab.ExpeditionPrep -> ExpeditionPrepScreen(
                             session = session,
@@ -297,7 +287,6 @@ fun BadventurersApp(
                                 updateSession(session.startQuest(currentTime, selectedQuest, selectedQuestParty, selectedPlan.id))
                                 selectedTab = GameTab.Guild
                             },
-                            onParty = { selectedTab = GameTab.Heroes },
                         )
                         GameTab.OfflineSummary -> OfflineSummaryScreen(
                             session = session,
@@ -390,127 +379,67 @@ fun BadventurersApp(
 }
 
 @Composable
-private fun TopBar(
-    session: PlaySessionState,
-    onGoldDelta: (Int) -> Unit,
-    onReputationDelta: (Int) -> Unit,
-    onGuildLevelDelta: (Int) -> Unit,
-) {
-    Column(
+private fun TopBar(session: PlaySessionState) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xF2141512), Color(0xAA141512)),
+                    listOf(Color(0xFA141512), Color(0xDD141512)),
                 ),
             )
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                color = Color(0xFFFFF1C0),
-                fontWeight = FontWeight.Black,
-                fontSize = 22.sp,
-                maxLines = 1,
-            )
-        }
-        Spacer(Modifier.height(10.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            ResourceChip(
-                label = stringResource(R.string.gold_label),
-                value = formatCount(session.gold),
-                onDecrease = { onGoldDelta(-500) },
-                onIncrease = { onGoldDelta(500) },
-            )
-            ResourceChip(
-                label = stringResource(R.string.reputation_label),
-                value = session.reputation.toString(),
-                onDecrease = { onReputationDelta(-1) },
-                onIncrease = { onReputationDelta(1) },
-            )
-            ResourceChip(
-                label = stringResource(R.string.guild_level_label),
-                value = "Lv. ${session.guildLevel}",
-                onDecrease = { onGuildLevelDelta(-1) },
-                onIncrease = { onGuildLevelDelta(1) },
-            )
-        }
+        ResourceChip(
+            label = stringResource(R.string.gold_label),
+            value = formatCount(session.gold),
+            modifier = Modifier.weight(1f),
+        )
+        ResourceChip(
+            label = stringResource(R.string.reputation_label),
+            value = session.reputation.toString(),
+            modifier = Modifier.weight(1f),
+        )
+        ResourceChip(
+            label = stringResource(R.string.guild_level_label),
+            value = stringResource(R.string.guild_level_value, session.guildLevel),
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
 @Composable
-private fun RowScope.ResourceChip(
+private fun ResourceChip(
     label: String,
     value: String,
-    onDecrease: (() -> Unit)? = null,
-    onIncrease: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = Modifier.weight(1f),
-        shape = RoundedCornerShape(7.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xEEF8E7B5)),
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
-            Text(
-                text = label,
-                color = Color(0xFF4F4630),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(3.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = value,
-                    color = Color(0xFF211F1A),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                val decrease = onDecrease
-                val increase = onIncrease
-                if (decrease != null && increase != null) {
-                    ResourceStepButton(text = "-", onClick = decrease)
-                    ResourceStepButton(text = "+", onClick = increase)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ResourceStepButton(text: String, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.size(width = 24.dp, height = 24.dp),
-        contentPadding = PaddingValues(0.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF7B5531),
-            contentColor = Color(0xFFFFF1C0),
-        ),
-        shape = RoundedCornerShape(6.dp),
+    Column(
+        modifier = modifier
+            .height(30.dp)
+            .clip(RoundedCornerShape(7.dp))
+            .background(Color(0xEAF8E7B5))
+            .padding(horizontal = 7.dp, vertical = 3.dp),
     ) {
         Text(
-            text = text,
+            text = label,
+            color = Color(0xFF4F4630),
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            lineHeight = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = value,
+            color = Color(0xFF211F1A),
             fontSize = 13.sp,
             fontWeight = FontWeight.Black,
-            textAlign = TextAlign.Center,
+            lineHeight = 13.sp,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -532,6 +461,7 @@ private fun BottomBar(selectedTab: GameTab, onTabSelected: (GameTab) -> Unit) {
         BottomTab(GameTab.Upgrades, selectedTab, "U", stringResource(R.string.upgrades_title), onTabSelected)
     }
 }
+
 @Composable
 private fun RowScope.BottomTab(
     tab: GameTab,

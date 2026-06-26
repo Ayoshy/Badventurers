@@ -1,0 +1,20 @@
+Use case: stylized-concept
+Asset type: mobile game UI background concept art for an interactive guild hub, portrait 9:16.
+Primary request: Create a cleaner production blockout-quality fantasy guild home screen artwork built from navigation needs first. It must be a tappable mobile hub, with obvious isolated landmarks and generous margins.
+Scene/backdrop: cozy low-budget fantasy adventurer guild hall interior, portrait mobile framing, full-bleed room view, no UI labels.
+Strict layout requirements:
+- Reserve the top 9% of the image as a visually calm resource HUD-safe band: dark wall/beam space and light decor only, no important tappable props there.
+- Reserve the bottom 9% as a visually calm selected-hotspot drawer-safe band: mostly floor/shadow/rug edge, no important tappable props there.
+- Keep all five interactive landmarks fully inside the frame with at least 48px visual margin from the left/right/bottom edges.
+- Leave a clear central stone-floor dead zone separating the landmarks. Do not fill it with furniture.
+Interactive landmarks:
+1. Upper-center: large rectangular guild charter / achievements board on the back wall, framed, clean silhouette, not hidden by lamps.
+2. Center: core crew counter / roster desk with exactly four clearly visible empty hero chairs or standing plaques along the back edge. Object should read as one compact landmark, not a giant floor region.
+3. Lower-left, inset from edges: complete quest / expedition map table, fully visible, with map, compass, parchment, candle.
+4. Lower-right, inset from edges: complete loot cache / treasure sorting station, fully visible, chest open, coins, gems, inventory crates.
+5. Mid-right: facilities / upgrades workshop station, fully visible and separate from loot, with weapon rack, small anvil/workbench, training dummy, tools.
+Composition/framing: slightly zoomed out compared with a cinematic tavern; functional game-screen composition; each landmark should have a clear tappable silhouette and empty floor gutter around it. No colored overlay polygons, no text. Camera: straight-on slightly elevated 2D pixel-art room background.
+Style/medium: polished 16-bit-inspired pixel art with modern mobile readability, crisp silhouettes, clean values, not muddy.
+Lighting/mood: warm lantern tavern lighting with subtle cool window accents, readable and cozy.
+Color palette: moss green guild cloth, brass, burgundy accents, warm wood and stone, varied enough to avoid a one-note brown/beige look.
+Constraints: no readable text, no labels, no buttons, no watermark, no logos, no characters, no cropped important props, no clutter in central floor, no important object in HUD or bottom drawer safe bands.

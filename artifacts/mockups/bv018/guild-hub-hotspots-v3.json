@@ -1,0 +1,65 @@
+{
+  "image": "guild-hub-functional-art-v3.png",
+  "overlay": "guild-hub-hotspot-overlay-v3.png",
+  "imageSize": { "width": 941, "height": 1672 },
+  "status": "directional mockup, not final production art",
+  "mappingIntent": "Tight object-shaped hotspots with visible dead floor between landmarks. Runtime may add small finger tap slop, but should not turn these into broad screen rectangles.",
+  "safeBands": {
+    "topHud": { "yMin": 0.000, "yMax": 0.090, "reason": "resources/HUD only" },
+    "bottomDrawer": { "yMin": 0.908, "yMax": 1.000, "reason": "selected hotspot/status drawer only" }
+  },
+  "hotspots": [
+    {
+      "id": "guild_charter_board",
+      "action": "open_achievements",
+      "label": "Guild Charter",
+      "pin": [0.504, 0.294],
+      "points": [[0.264,0.213],[0.744,0.213],[0.761,0.366],[0.250,0.372],[0.247,0.235]]
+    },
+    {
+      "id": "core_crew_desk",
+      "action": "open_core_crew",
+      "label": "Core Crew",
+      "pin": [0.437, 0.472],
+      "points": [[0.168,0.397],[0.707,0.397],[0.735,0.500],[0.672,0.554],[0.208,0.557],[0.145,0.493],[0.145,0.424]]
+    },
+    {
+      "id": "quest_table",
+      "action": "open_quests",
+      "label": "Quests / Expedition",
+      "pin": [0.244, 0.774],
+      "points": [[0.057,0.669],[0.453,0.672],[0.433,0.871],[0.055,0.871],[0.030,0.762]]
+    },
+    {
+      "id": "loot_cache",
+      "action": "open_loot",
+      "label": "Loot Cache",
+      "pin": [0.781, 0.734],
+      "points": [[0.663,0.633],[0.953,0.622],[0.958,0.839],[0.664,0.843],[0.601,0.730]]
+    },
+    {
+      "id": "facilities_workshop",
+      "action": "open_facilities",
+      "label": "Facilities / Upgrades",
+      "pin": [0.831, 0.423],
+      "points": [[0.716,0.311],[0.980,0.306],[0.977,0.549],[0.757,0.541],[0.681,0.431]]
+    }
+  ],
+  "coreCrewSlots": [
+    { "slot": 1, "center": [0.283, 0.398], "radius": [0.037, 0.014] },
+    { "slot": 2, "center": [0.406, 0.398], "radius": [0.037, 0.014] },
+    { "slot": 3, "center": [0.529, 0.400], "radius": [0.037, 0.014] },
+    { "slot": 4, "center": [0.650, 0.401], "radius": [0.037, 0.014] }
+  ],
+  "deadZones": [
+    { "id": "central_walk_floor", "reason": "Prevents accidental navigation and gives the screen breathing room." },
+    { "id": "upper_decor", "reason": "Balcony, banners, chandelier, and wall dressing are ambiance only unless promoted later." },
+    { "id": "side_decor", "reason": "Plants, barrels, stairs, crates, and incidental props should not become hidden buttons." }
+  ],
+  "productionArtCorrections": [
+    "Push the quest table and loot cache farther inward from the left/right/bottom edges than this V3 draft managed.",
+    "Keep bottom drawer and top HUD bands visually calmer, with no essential prop crossing them.",
+    "Design the facilities station as one clear workshop landmark, not a general right-wall rectangle.",
+    "Keep the core crew desk compact and make the four hero slots readable even before any hero portraits are placed."
+  ]
+}

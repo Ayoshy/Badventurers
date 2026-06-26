@@ -187,12 +187,15 @@ internal fun PaperPanel(title: String, body: String, footer: @Composable ColumnS
 @Composable
 internal fun ActionRow(
     primaryLabel: String,
-    secondaryLabel: String,
+    secondaryLabel: String? = null,
     onPrimary: () -> Unit,
-    onSecondary: () -> Unit,
+    onSecondary: (() -> Unit)? = null,
     primaryEnabled: Boolean = true,
     secondaryEnabled: Boolean = true,
 ) {
+    val secondaryText = secondaryLabel
+    val secondaryAction = onSecondary
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -202,20 +205,26 @@ internal fun ActionRow(
         Button(
             onClick = onPrimary,
             enabled = primaryEnabled,
-            modifier = Modifier.weight(1f),
+            modifier = if (secondaryText != null && secondaryAction != null) {
+                Modifier.weight(1f)
+            } else {
+                Modifier.fillMaxWidth()
+            },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
             shape = RoundedCornerShape(8.dp),
         ) {
             Text(primaryLabel, fontWeight = FontWeight.Black)
         }
-        Button(
-            onClick = onSecondary,
-            enabled = secondaryEnabled,
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDEC777), contentColor = Color(0xFF211F1A)),
-            shape = RoundedCornerShape(8.dp),
-        ) {
-            Text(secondaryLabel, fontWeight = FontWeight.Black)
+        if (secondaryText != null && secondaryAction != null) {
+            Button(
+                onClick = secondaryAction,
+                enabled = secondaryEnabled,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDEC777), contentColor = Color(0xFF211F1A)),
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(secondaryText, fontWeight = FontWeight.Black)
+            }
         }
     }
 }

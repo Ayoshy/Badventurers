@@ -1,0 +1,20 @@
+Use case: game asset concept / UI mockup
+Asset type: portrait mobile guild home background concept for Badventurers
+Primary request: create a functional illustrated guild hub background designed around clickable gameplay landmarks, not a generic tavern scene.
+
+Scene/backdrop: a cozy low-budget fantasy adventurer guild interior, portrait 9:16 mobile composition. The room is built as an interactive hub with five clearly readable landmark zones placed inside comfortable mobile safe areas.
+
+Required landmarks and layout:
+1. Quest map table in the lower-left foreground: maps, pins, tiny toy monster marker, candle, compass, and travel paperwork. This is the Quests / Expedition hotspot.
+2. Core crew counter across the lower-middle / mid-left: a guild front desk with three to four obvious hero standing spots behind or beside it, like little marked floor circles or stools, so assigned heroes can appear there later.
+3. Achievement / Guild Charter notice board in the upper-middle wall: pinned medals, charter scrolls, wax seals, checklist papers, and an empty central space for claim/progress glow. No readable text.
+4. Loot hoard / storage nook in the lower-right foreground: treasure chest, gear pile, sacks, weapons, shiny but compact and not cropped by the edge.
+5. Facilities / upgrades wall on the mid-right: armor rack, forge tools, bunk-room signpost, training dummy, shelves, and repair props, arranged as one coherent upgrade/workshop hotspot.
+
+Composition/framing: full-bleed portrait background with a clear central walking-floor negative space so the UI does not feel crowded. All five landmarks must be visually distinct and tappable. Leave a small dark-but-readable safe band at the top for resource HUD icons and a small unobtrusive safe area at the bottom for a status strip. Avoid important objects touching the extreme screen edges. Use a subtle camera angle like polished 2D mobile game background art.
+
+Style/medium: polished 16-bit-inspired 2D pixel art with modern mobile readability, crisp pixel clusters, detailed but not noisy, cozy fantasy guild, warm tavern lighting, moss green guild cloth accents, brass highlights, burgundy cloth accents, cool blue moonlight in shadows. Humorous low-budget fantasy bureaucracy: suspicious paperwork, mismatched props, cheap repairs, labels implied but not readable.
+
+Lighting/mood: warm chandelier/lantern light with cool window shadows; inviting, readable, not muddy. Strong value separation between hotspots.
+
+Constraints: no readable text, no UI labels, no buttons, no character portraits, no real-world logos, no watermark. Do not create a never-ending text dashboard. Do not crop the quest table or loot hoard. The image should work as a background for an Android portrait game screen and as a clickable illustrated hub.

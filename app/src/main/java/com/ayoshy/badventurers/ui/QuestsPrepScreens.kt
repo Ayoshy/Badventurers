@@ -138,7 +138,6 @@ internal fun QuestsScreen(
     selectedQuest: Quest,
     onSelectQuest: (Quest) -> Unit,
     onPrepare: (Quest, ExpeditionPlan?) -> Unit,
-    onParty: () -> Unit,
 ) {
     val canPrepare = session.phase == PlayPhase.Idle
     val prepareLabel = if (canPrepare) stringResource(R.string.prep_action) else stringResource(R.string.quest_blocked_action)
@@ -162,7 +161,6 @@ internal fun QuestsScreen(
                 prepareLabel = prepareLabel,
                 onSelectQuest = onSelectQuest,
                 onPrepare = onPrepare,
-                onParty = onParty,
             )
         }
     }
@@ -246,7 +244,6 @@ private fun QuestActivityCard(
     prepareLabel: String,
     onSelectQuest: (Quest) -> Unit,
     onPrepare: (Quest, ExpeditionPlan?) -> Unit,
-    onParty: () -> Unit,
 ) {
     val unlocked = session.isQuestUnlocked(quest)
     val specialPlan = if (region == QuestActivityRegion.SpecialContracts) quest.specialContractPlan() else null
@@ -309,12 +306,10 @@ private fun QuestActivityCard(
         }
         ActionRow(
             primaryLabel = primaryLabel,
-            secondaryLabel = stringResource(R.string.party_action),
             onPrimary = {
                 onSelectQuest(quest)
                 if (unlocked) onPrepare(quest, specialPlan)
             },
-            onSecondary = onParty,
             primaryEnabled = primaryEnabled,
         )
     }
@@ -431,7 +426,6 @@ internal fun ExpeditionPrepScreen(
     onToggleHero: (String) -> Unit,
     onSelectPlan: (ExpeditionPlan) -> Unit,
     onLaunch: () -> Unit,
-    onParty: () -> Unit,
 ) {
     val partySlots = session.effectivePartySlots(quest)
     val partyHeroes = selectedPartyIds.mapNotNull { heroId -> session.heroes.firstOrNull { it.id == heroId } }.take(partySlots)
@@ -490,9 +484,7 @@ internal fun ExpeditionPrepScreen(
             }
             ActionRow(
                 primaryLabel = launchLabel,
-                secondaryLabel = stringResource(R.string.party_action),
                 onPrimary = onLaunch,
-                onSecondary = onParty,
                 primaryEnabled = canLaunch,
             )
             if (selectedPlanRequiresContract) {

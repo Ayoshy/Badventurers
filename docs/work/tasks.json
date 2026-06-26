@@ -742,7 +742,7 @@
     {
       "id": "BV-018",
       "title": "Beautify the Guild screen",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "polish",
       "track": "Backlog",
@@ -750,15 +750,23 @@
       "acceptance": [
         {
           "text": "The next quest part can totally go. It can be accessed from the quest screen directly",
-          "done": false
+          "done": true
         },
         {
           "text": "The whole idea is to have the artwork clickable/interactable. Analyze each part of the artwork and assign specific clickable areas corresponding to the possible actions on the guild tab.",
-          "done": false
+          "done": true
         }
       ],
-      "refs": [],
-      "notes": []
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersApp.kt",
+        "app/src/main/res-guild/drawable-nodpi/guild_hub_interactive_v3.png",
+        "app/src/test/java/com/ayoshy/badventurers/ui/GuildHubHotspotMappingTest.kt",
+        "artifacts/mockups/bv018/guild-hub-hotspots-v3.json"
+      ],
+      "notes": [
+        "2026-06-26: Replaced the Guild Home text wall with a purpose-built interactive artwork hub using normalized object-shaped hotspot mapping for Charter, Core Crew, Quest Table, Loot Cache, and Facilities. Core Crew opens a focused management dialog; the other hotspots route to existing screens. Verified test, assembleDebug, lintDebug, installDebug, and emulator smoke capture."
+      ]
     },
     {
       "id": "BV-019",
@@ -1235,6 +1243,337 @@
       "notes": [
         "2026-06-26: Corrected the paladin name to Sir Brindle and expanded the slice to enforce one hero = one unique artwork across the full HeroCatalog.",
         "2026-06-26: Kept the accepted Darrik and Orla portraits, replaced Pippa and Vex with more distinct silhouettes, restored Sir Ledger to the original accountant portrait, and revised Tally Noakes into a stout field-audit marshal skin after the first Tally pass read too close to Pippa."
+      ]
+    },
+    {
+      "id": "BV-031",
+      "title": "Move Reputaion score  to reputation levels",
+      "status": "ready",
+      "priority": "P2",
+      "area": "design",
+      "track": "Backlog",
+      "summary": "Install a new progression system that represents the guilds envergure. Instead of gaining rep points that are pretty meaningless, the idea is to climb towards ranks, each unlocking some perks/features/gold/tickets (TBD). \n\nThis would also improve the existing artwork of the guild hub, from trash tier to fucking palace.\n\neach tier needs to have a name/icon/guild xp.",
+      "acceptance": [],
+      "refs": [],
+      "notes": []
+    },
+    {
+      "id": "BV-032",
+      "title": "Guild hub: pixel-perfect hotspot mask pipeline",
+      "status": "done",
+      "priority": "P1",
+      "area": "polish",
+      "track": "Guild Polish",
+      "summary": "Replace the temporary polygon/debug-style Guild hub interaction layer with a production pixel-perfect hotspot and highlight pipeline. The current BV-018 hub is acceptable as a functional first pass, but final interaction should be driven by art-authored masks instead of hand-tuned polygons.",
+      "acceptance": [
+        {
+          "text": "Create a guild_hub_hotspot_mask.png at the exact same dimensions as the base hub artwork, using one flat unique color per action: Charter/Achievements, Core Crew, Quests/Expedition, Loot, Facilities/Upgrades; transparent or black pixels mean no action.",
+          "done": true
+        },
+        {
+          "text": "Create production highlight assets per hotspot, or derive highlight/outline rendering from the hotspot mask, so selected/clickable objects are highlighted on their exact silhouette instead of with approximate polygons or floating markers.",
+          "done": true
+        },
+        {
+          "text": "Replace GuildScreen polygon hit testing with rendered-image coordinate mapping plus mask color lookup, preserving aspect-ratio letterboxing/cropping behavior across phone sizes.",
+          "done": true
+        },
+        {
+          "text": "Keep HUD band, bottom drawer band, central floor, and decorative props non-interactive unless explicitly assigned a future feature.",
+          "done": true
+        },
+        {
+          "text": "Document the mask palette, action mapping, dimensions, and export rules so future hub art can be rebuilt from source without guessing.",
+          "done": true
+        },
+        {
+          "text": "Add tests for color-to-action mapping, coordinate conversion, dead zones, and at least one emulator smoke capture proving the hub highlights and taps line up.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildHubHotspotMapping.kt",
+        "app/src/main/res-guild/drawable-nodpi/guild_hub_interactive_v3.png",
+        "app/src/main/res-guild/drawable-nodpi/guild_hub_hotspot_mask.png",
+        "app/src/test/java/com/ayoshy/badventurers/ui/GuildHubHotspotMappingTest.kt",
+        "docs/design/guild-hub-hotspot-mask.md",
+        "artifacts/mockups/bv032/guild-hub-hotspot-mask-contact-sheet.png",
+        "artifacts/screenshots/bv032/emulator-20260626-153210.png",
+        "artifacts/screenshots/bv032/emulator-20260626-153327.png",
+        "artifacts/screenshots/bv032/bv032-window-initial.xml",
+        "artifacts/screenshots/bv032/bv032-window-loot.xml",
+        "artifacts/screenshots/bv032/bv032-window-deadzone.xml"
+      ],
+      "notes": [
+        "2026-06-26: Created from Guild hub implementation review. User accepted the current BV-018 version as a temporary functional pass, but the final solution should be pixel-perfect: base art plus hotspot mask plus highlight masks/derived outlines. Do not spend more time polishing the temporary polygon highlight beyond keeping it usable.",
+        "2026-06-26: Added exact-size guild_hub_hotspot_mask.png, documented the palette/export pipeline, replaced polygon taps with mask color lookup and mask-derived highlights, and added mapping/dead-zone tests. Verified focused test, test/assembleDebug/lintDebug, installDebug, mask palette check, and emulator smoke with Loot hotspot tap plus central-floor dead-zone check."
+      ]
+    },
+    {
+      "id": "BV-033",
+      "title": "Guild Home: production-safe top HUD",
+      "status": "done",
+      "priority": "P1",
+      "area": "polish",
+      "track": "Guild Polish",
+      "summary": "The Guild Home HUD should be compact, safe-area aware, and production-presentable while the new interactive hub art remains the only Guild background. Debug economy controls should not appear on the main Guild surface.",
+      "acceptance": [
+        {
+          "text": "Redesign the top resource/status band so it uses less vertical space and visually belongs to the guild hub art.",
+          "done": true
+        },
+        {
+          "text": "Remove gold, reputation, and guild-level +/- controls from the production Guild HUD.",
+          "done": true
+        },
+        {
+          "text": "Keep resource values readable at phone size and avoid overlap with status bars, cutouts, or the hub artwork focal points.",
+          "done": true
+        },
+        {
+          "text": "Ensure the old guild_home_background is not drawn behind the new interactive Guild hub.",
+          "done": true
+        },
+        {
+          "text": "Add or update EN/FR strings and smoke captures for the compact HUD state.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersApp.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml",
+        "artifacts/screenshots/emulator-20260626-161933.png",
+        "artifacts/screenshots/bv033-fixed-window.xml"
+      ],
+      "notes": [
+        "2026-06-26: Created from Guild Home screenshot review. The current top HUD obscures too much art and debug controls are visible in the main production surface.",
+        "2026-06-26: Replaced the Guild Home HUD with a compact resource strip, removed the debug economy drawer entirely after visual review, stopped drawing the legacy guild_home_background behind the Guild tab, and captured fixed emulator evidence. Verified test, assembleDebug, lintDebug, and installDebug."
+      ]
+    },
+    {
+      "id": "BV-034",
+      "title": "REMOVED : Guild Home: collapsible hotspot action drawer",
+      "status": "done",
+      "priority": "P1",
+      "area": "polish",
+      "track": "Guild Polish",
+      "summary": "The bottom contextual drawer confirms hotspot selection, but it permanently covers a large part of the lower hub art and can hide the table/chest landmarks the player just tapped. Convert it into a compact, collapsible action surface that preserves the hub as the primary screen.",
+      "acceptance": [
+        {
+          "text": "Provide a collapsed state that shows selected hotspot, current phase, and primary action without covering the lower landmarks.",
+          "done": false
+        },
+        {
+          "text": "Allow expansion for details only when needed, such as long result, running timer, or explanation copy.",
+          "done": false
+        },
+        {
+          "text": "Ensure Quest Table, Loot Cache, and Facilities hotspots remain visible and tappable while the drawer is present.",
+          "done": false
+        },
+        {
+          "text": "Add emulator smoke captures for at least default, selected Loot, and selected Charter states.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
+        "app/src/main/res-guild/drawable-nodpi/guild_hub_hotspot_mask.png",
+        "artifacts/screenshots/bv032/"
+      ],
+      "notes": [
+        "2026-06-26: Created from screenshot review. The contextual drawer is useful, but currently reads as a heavy card sitting on top of the art."
+      ]
+    },
+    {
+      "id": "BV-035",
+      "title": "Guild Home: production hotspot highlight treatment",
+      "status": "done",
+      "priority": "P1",
+      "area": "polish",
+      "track": "Guild Polish",
+      "summary": "BV-032 made highlights exact to the mask silhouette, but the visual treatment still looked like translucent debug colors over the art. Replace the raw mask-color overlay with a polished, diegetic selected/clickable treatment.",
+      "acceptance": [
+        {
+          "text": "Keep the mask as the source of truth, but render clickable and selected states with subtle warm outlines, rim light, or glow instead of raw red/purple/green fills.",
+          "done": true
+        },
+        {
+          "text": "Differentiate idle clickable, press, and selected states without reducing art readability.",
+          "done": true
+        },
+        {
+          "text": "Verify highlights remain aligned with the mask on the 941x1672 hub art and common emulator sizes.",
+          "done": true
+        },
+        {
+          "text": "Add screenshot evidence showing all five hotspots selected at least once.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildHubHotspotMapping.kt",
+        "docs/design/guild-hub-hotspot-mask.md",
+        "artifacts/screenshots/bv035/charter.png",
+        "artifacts/screenshots/bv035/core-crew.png",
+        "artifacts/screenshots/bv035/quest-table.png",
+        "artifacts/screenshots/bv035/loot-cache.png",
+        "artifacts/screenshots/bv035/facilities.png"
+      ],
+      "notes": [
+        "2026-06-26: Created from screenshot review. The exact mask pipeline works, but the current overlay is still too saturated and implementation-looking.",
+        "2026-06-26: Replaced raw mask-color fills with warm parchment/gold idle rims, selected fill/rim/halo, and a brighter press state. Drawer accent colors were moved away from raw mask purple/cyan. Captured all five hotspot selections under artifacts/screenshots/bv035 and verified test, assembleDebug, lintDebug, and installDebug."
+      ]
+    },    {
+      "id": "BV-036",
+      "title": "Guild Home: hotspot discoverability and first-use guidance",
+      "status": "ready",
+      "priority": "P2",
+      "area": "polish",
+      "track": "Guild Polish",
+      "summary": "The hub is now clickable, but a new player may not immediately know that the charter board, crew desk, quest table, loot chest, and facilities rack are the main actions. Add lightweight affordances without turning the screen back into a text menu.",
+      "acceptance": [
+        {
+          "text": "Add a restrained first-use hint or pulse that teaches the player to tap guild landmarks.",
+          "done": false
+        },
+        {
+          "text": "Show short landmark labels or hints only when helpful, then reduce them after the player successfully taps hotspots.",
+          "done": false
+        },
+        {
+          "text": "Persist or derive whether the hint has already been satisfied without creating noisy save-state risk.",
+          "done": false
+        },
+        {
+          "text": "Localize visible hint copy in EN and FR.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml"
+      ],
+      "notes": [
+        "2026-06-26: Created from screenshot review. The art has readable landmarks, but the interaction model needs a gentle onboarding affordance."
+      ]
+    },
+    {
+      "id": "BV-037",
+      "title": "Guild Home: bottom navigation icon polish",
+      "status": "ready",
+      "priority": "P2",
+      "area": "polish",
+      "track": "Guild Polish",
+      "summary": "The bottom nav currently uses letter placeholders inside chips, which weakens the otherwise bespoke pixel-art presentation. Replace placeholder letters with polished tab icons and a quieter active state that still works in portrait.",
+      "acceptance": [
+        {
+          "text": "Replace G/Q/H/L/U letter placeholders with readable themed icons or pixel assets for Guild, Quests, Heroes, Loot, and Upgrades.",
+          "done": false
+        },
+        {
+          "text": "Tune selected/unselected tab states so the active tab is clear without adding bulky cards over the hub.",
+          "done": false
+        },
+        {
+          "text": "Verify EN/FR labels do not clip and the nav clears the Android navigation bar/home indicator area.",
+          "done": false
+        },
+        {
+          "text": "Add screenshot evidence for the Guild tab and at least one non-Guild tab after the icon pass.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersApp.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiComponents.kt",
+        "app/src/main/res-ui/",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml"
+      ],
+      "notes": [
+        "2026-06-26: Created from screenshot review. The bottom nav typography and letter chips read like placeholders next to the hub art."
+      ]
+    },
+    {
+      "id": "BV-038",
+      "title": "Guild Home: responsive safe-area and device-frame QA",
+      "status": "ready",
+      "priority": "P1",
+      "area": "polish",
+      "track": "Guild Polish",
+      "summary": "The screenshot shows the Guild Home inside a phone frame with tight status-bar, bottom-nav, and card overlays. Create a deliberate QA pass for portrait device bounds so the hub art, HUD, drawer, and navigation do not overlap awkwardly across common sizes.",
+      "acceptance": [
+        {
+          "text": "Define minimum layout constraints for the Guild Home at small, standard, and tall portrait sizes.",
+          "done": false
+        },
+        {
+          "text": "Verify status bar, cutout/camera area, bottom navigation, home indicator, HUD, and drawer do not overlap content incoherently.",
+          "done": false
+        },
+        {
+          "text": "Capture emulator screenshots for at least two portrait resolutions and include them under artifacts/screenshots.",
+          "done": false
+        },
+        {
+          "text": "Add focused layout or mapping tests where feasible so future hub changes do not regress safe-area behavior.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersApp.kt",
+        "tools/capture-emulator.ps1",
+        "artifacts/screenshots/"
+      ],
+      "notes": [
+        "2026-06-26: Created from screenshot review. The Guild Home needs explicit portrait-device QA now that it is becoming the main visual surface."
+      ]
+    },
+    {
+      "id": "BV-039",
+      "title": "Guild Home: stateful landmark storytelling",
+      "status": "ready",
+      "priority": "P2",
+      "area": "polish",
+      "track": "Guild Polish",
+      "summary": "The hub art is attractive but mostly static. Make each landmark communicate useful game state so the player can read what needs attention before opening a drawer or tab.",
+      "acceptance": [
+        {
+          "text": "Show pending loot or recovery attention on the Loot Cache landmark without relying only on drawer text.",
+          "done": false
+        },
+        {
+          "text": "Show claimable achievements or charter progress on the Guild Charter landmark.",
+          "done": false
+        },
+        {
+          "text": "Show active/running/result-ready quest state on the Quest Table landmark.",
+          "done": false
+        },
+        {
+          "text": "Show upgrade availability or facility attention on the Facilities landmark.",
+          "done": false
+        },
+        {
+          "text": "Keep state indicators subtle, localized where text is visible, and aligned to the mask-defined landmarks.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/ProgressionAdvisor.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/res-guild/drawable-nodpi/guild_hub_hotspot_mask.png"
+      ],
+      "notes": [
+        "2026-06-26: Created from screenshot review. The hub should eventually answer what needs attention at a glance, not only after the player taps a hotspot."
       ]
     }
   ]

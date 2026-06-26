@@ -1,5 +1,7 @@
 package com.ayoshy.badventurers.ui
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -7,11 +9,13 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -54,7 +58,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.booleanResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -62,7 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -128,6 +135,7 @@ import com.ayoshy.badventurers.game.StatBonus
 import com.ayoshy.badventurers.game.StatType
 import com.ayoshy.badventurers.game.Trait
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 
 @Composable
 internal fun GuildScreen(
@@ -137,84 +145,514 @@ internal fun GuildScreen(
     onViewResult: () -> Unit,
     onNextQuest: () -> Unit,
     onAchievements: () -> Unit,
+    onLoot: () -> Unit,
+    onFacilities: () -> Unit,
     onToggleCoreCrew: (String) -> Unit,
     onFinishQuestNow: () -> Unit,
     onResetProgress: () -> Unit,
 ) {
-    ScreenScaffold(title = stringResource(R.string.guild_home_title), status = phaseStatus(session.phase)) {
-        when (session.phase) {
-            PlayPhase.Idle -> {
-                DarkPanel(title = stringResource(R.string.idle_quest_title), body = stringResource(R.string.idle_quest_summary)) {
-                    ActionRow(
-                        primaryLabel = stringResource(R.string.next_quest_action),
-                        secondaryLabel = stringResource(R.string.party_action),
-                        onPrimary = onNextQuest,
-                        onSecondary = {},
-                    )
-                }
-            }
-            PlayPhase.Running -> {
-                val secondsLeft = remainingSeconds(session, nowMillis)
-                DarkPanel(
-                    title = stringResource(R.string.running_quest_title),
-                    body = stringResource(R.string.running_quest_summary, secondsLeft),
-                ) {
-                    ProgressBar(progress = session.progress(nowMillis).toFloat())
-                    if (booleanResource(R.bool.debug_tools_enabled)) {
-                        Button(
-                            onClick = onFinishQuestNow,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B5531)),
-                            shape = RoundedCornerShape(8.dp),
-                        ) {
-                            Text(stringResource(R.string.instant_quest_action), fontWeight = FontWeight.Black)
-                        }
-                    }
-                }
-            }
-            PlayPhase.ResultReady -> {
-                val result = session.expedition?.result
-                if (result != null) {
-                    DarkPanel(
-                        title = stringResource(R.string.result_quest_title),
-                        body = stringResource(
-                            R.string.result_quest_summary,
-                            outcomeLabel(result.outcome),
-                            rewardGoldWithNoticeBoard(session),
-                            session.collectableLootRolls(result),
-                        ),
-                    ) {
-                        ActionRow(
-                            primaryLabel = stringResource(R.string.view_report_action),
-                            secondaryLabel = stringResource(R.string.next_quest_action),
-                            onPrimary = onViewResult,
-                            onSecondary = onNextQuest,
-                        )
-                    }
-                }
-            }
-        }
-        CoreCrewPanel(session = session, onToggleCoreCrew = onToggleCoreCrew)
-        GuildFacilitiesPanel(session, selectedQuest)
-        TierGoalPanel(session = session)
-        AchievementLedgerPanel(session = session, onOpen = onAchievements)
-        ProgressionAdvicePanel(session = session, selectedQuest = selectedQuest)
-        if (booleanResource(R.bool.debug_tools_enabled)) {
-            TestProgressPanel(onResetProgress = onResetProgress)
-        }
-        val journalLines = session.journalEntries.takeLast(5).map { journalEntryText(it) }
-        if (journalLines.isEmpty()) {
-            JournalLine(stringResource(R.string.journal_01))
-            JournalLine(stringResource(R.string.journal_02))
-            JournalLine(stringResource(R.string.journal_03))
+    var selectedHotspotName by rememberSaveable { mutableStateOf(defaultGuildHubHotspot(session.phase).name) }
+    var showCoreCrewDialog by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(session.phase) {
+        selectedHotspotName = defaultGuildHubHotspot(session.phase).name
+    }
+
+    val selectedHotspot = GuildHubHotspot.values()
+        .firstOrNull { it.name == selectedHotspotName }
+        ?: defaultGuildHubHotspot(session.phase)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF10110F)),
+    ) {
+        GuildHubArtwork(
+            selectedHotspot = selectedHotspot,
+            onHotspotSelected = { selectedHotspotName = it.name },
+            modifier = Modifier.fillMaxSize(),
+        )
+        GuildHubSelectionDrawer(
+            session = session,
+            selectedQuest = selectedQuest,
+            nowMillis = nowMillis,
+            selectedHotspot = selectedHotspot,
+            onViewResult = onViewResult,
+            onNextQuest = onNextQuest,
+            onAchievements = onAchievements,
+            onLoot = onLoot,
+            onFacilities = onFacilities,
+            onManageCoreCrew = { showCoreCrewDialog = true },
+            onFinishQuestNow = onFinishQuestNow,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+        )
+
+    }
+
+    if (showCoreCrewDialog) {
+        CoreCrewDialog(
+            session = session,
+            onToggleCoreCrew = onToggleCoreCrew,
+            onDismiss = { showCoreCrewDialog = false },
+        )
+    }
+}
+
+private fun defaultGuildHubHotspot(phase: PlayPhase): GuildHubHotspot =
+    when (phase) {
+        PlayPhase.Idle -> GuildHubHotspot.QuestTable
+        PlayPhase.Running -> GuildHubHotspot.QuestTable
+        PlayPhase.ResultReady -> GuildHubHotspot.QuestTable
+    }
+
+@Composable
+private fun GuildHubArtwork(
+    selectedHotspot: GuildHubHotspot,
+    onHotspotSelected: (GuildHubHotspot) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val hotspotMaskBitmap = rememberGuildHubHotspotMaskBitmap()
+
+    BoxWithConstraints(
+        modifier = modifier.background(Color(0xFF10110F)),
+        contentAlignment = Alignment.Center,
+    ) {
+        val useHeight = maxWidth.value / maxHeight.value > GuildHubAspectRatio
+        val hubModifier = if (useHeight) {
+            Modifier
+                .fillMaxHeight()
+                .aspectRatio(GuildHubAspectRatio)
         } else {
-            journalLines.forEach { line -> JournalLine(line) }
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(GuildHubAspectRatio)
+        }
+
+        var pressedHotspotName by remember { mutableStateOf<String?>(null) }
+        val pressedHotspot = GuildHubHotspot.values().firstOrNull { it.name == pressedHotspotName }
+
+        Box(
+            modifier = hubModifier
+                .pointerInput(hotspotMaskBitmap) {
+                    detectTapGestures(
+                        onPress = { tap ->
+                            val mask = hotspotMaskBitmap ?: return@detectTapGestures
+                            val hotspot = guildHubHotspotAtRenderedPoint(
+                                pointX = tap.x,
+                                pointY = tap.y,
+                                containerWidth = size.width.toFloat(),
+                                containerHeight = size.height.toFloat(),
+                                sourceWidth = mask.width,
+                                sourceHeight = mask.height,
+                                contentScale = GuildHubImageScale.Fit,
+                                maskColorAt = { x, y -> mask.getPixel(x, y) },
+                            )
+                            if (hotspot != null) {
+                                pressedHotspotName = hotspot.name
+                                try {
+                                    tryAwaitRelease()
+                                } finally {
+                                    pressedHotspotName = null
+                                }
+                            }
+                        },
+                        onTap = { tap ->
+                            val mask = hotspotMaskBitmap ?: return@detectTapGestures
+                            val hotspot = guildHubHotspotAtRenderedPoint(
+                                pointX = tap.x,
+                                pointY = tap.y,
+                                containerWidth = size.width.toFloat(),
+                                containerHeight = size.height.toFloat(),
+                                sourceWidth = mask.width,
+                                sourceHeight = mask.height,
+                                contentScale = GuildHubImageScale.Fit,
+                                maskColorAt = { x, y -> mask.getPixel(x, y) },
+                            )
+                            if (hotspot != null) onHotspotSelected(hotspot)
+                        },
+                    )
+                },
+        ) {
+            Image(
+                painter = painterResource(R.drawable.guild_hub_interactive_v3),
+                contentDescription = stringResource(R.string.guild_hub_art_content_description),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.FillBounds,
+            )
+            if (hotspotMaskBitmap != null) {
+                GuildHubMaskHighlights(
+                    maskBitmap = hotspotMaskBitmap,
+                    selectedHotspot = selectedHotspot,
+                    pressedHotspot = pressedHotspot,
+                )
+            }
         }
     }
 }
 
+@Composable
+private fun rememberGuildHubHotspotMaskBitmap(): Bitmap? {
+    val context = LocalContext.current
+    return remember(context) {
+        BitmapFactory.decodeResource(context.resources, R.drawable.guild_hub_hotspot_mask)
+    }
+}
+
+@Composable
+private fun GuildHubMaskHighlights(
+    maskBitmap: Bitmap,
+    selectedHotspot: GuildHubHotspot,
+    pressedHotspot: GuildHubHotspot?,
+) {
+    val overlay = remember(maskBitmap, selectedHotspot, pressedHotspot) {
+        buildGuildHubHotspotOverlayBitmap(
+            maskBitmap = maskBitmap,
+            selectedHotspot = selectedHotspot,
+            pressedHotspot = pressedHotspot,
+        ).asImageBitmap()
+    }
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val destinationSize = IntSize(
+            width = size.width.roundToInt().coerceAtLeast(1),
+            height = size.height.roundToInt().coerceAtLeast(1),
+        )
+        drawImage(image = overlay, dstSize = destinationSize)
+    }
+}
+
+private fun buildGuildHubHotspotOverlayBitmap(
+    maskBitmap: Bitmap,
+    selectedHotspot: GuildHubHotspot,
+    pressedHotspot: GuildHubHotspot?,
+): Bitmap {
+    val width = maskBitmap.width
+    val height = maskBitmap.height
+    val sourcePixels = IntArray(width * height)
+    val outputPixels = IntArray(width * height)
+    maskBitmap.getPixels(sourcePixels, 0, width, 0, 0, width, height)
+
+    for (y in 0 until height) {
+        for (x in 0 until width) {
+            val hotspot = guildHubHotspotAt(sourcePixels, width, x, y) ?: continue
+            val isPressed = hotspot == pressedHotspot
+            val isSelected = hotspot == selectedHotspot
+            val pixel = y * width + x
+            val softEdge = guildHubHotspotEdge(sourcePixels, width, height, x, y, hotspot, radius = 1)
+            val wideEdge = (isPressed || isSelected) && guildHubHotspotEdge(sourcePixels, width, height, x, y, hotspot, radius = 2)
+
+            outputPixels[pixel] = when {
+                isPressed && wideEdge -> GuildHubHighlightPressedRim
+                isPressed -> GuildHubHighlightPressedFill
+                isSelected && wideEdge -> GuildHubHighlightSelectedRim
+                isSelected -> GuildHubHighlightSelectedFill
+                softEdge -> GuildHubHighlightIdleRim
+                else -> outputPixels[pixel]
+            }
+
+            if (isPressed && softEdge) {
+                paintGuildHubHotspotHalo(
+                    sourcePixels = sourcePixels,
+                    outputPixels = outputPixels,
+                    width = width,
+                    height = height,
+                    x = x,
+                    y = y,
+                    radius = 3,
+                    color = GuildHubHighlightPressedHalo,
+                )
+            } else if (isSelected && softEdge) {
+                paintGuildHubHotspotHalo(
+                    sourcePixels = sourcePixels,
+                    outputPixels = outputPixels,
+                    width = width,
+                    height = height,
+                    x = x,
+                    y = y,
+                    radius = 2,
+                    color = GuildHubHighlightSelectedHalo,
+                )
+            }
+        }
+    }
+
+    return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
+        setPixels(outputPixels, 0, width, 0, 0, width, height)
+    }
+}
+private val GuildHubHighlightIdleRim = guildHubHighlightArgb(alpha = 0x22, rgb = 0xFFF0B8)
+private val GuildHubHighlightSelectedFill = guildHubHighlightArgb(alpha = 0x12, rgb = 0xFFE7A3)
+private val GuildHubHighlightSelectedRim = guildHubHighlightArgb(alpha = 0xA4, rgb = 0xFFE9A7)
+private val GuildHubHighlightSelectedHalo = guildHubHighlightArgb(alpha = 0x4E, rgb = 0xFFB75A)
+private val GuildHubHighlightPressedFill = guildHubHighlightArgb(alpha = 0x24, rgb = 0xFFF1B8)
+private val GuildHubHighlightPressedRim = guildHubHighlightArgb(alpha = 0xC8, rgb = 0xFFF6C8)
+private val GuildHubHighlightPressedHalo = guildHubHighlightArgb(alpha = 0x68, rgb = 0xFFC46B)
+private const val GuildHubHighlightTransparent = 0x00000000
+
+private fun guildHubHighlightArgb(alpha: Int, rgb: Int): Int =
+    (alpha.coerceIn(0x00, 0xFF) shl 24) or (rgb and 0x00FFFFFF)
+
+private fun guildHubHotspotAt(
+    sourcePixels: IntArray,
+    width: Int,
+    x: Int,
+    y: Int,
+): GuildHubHotspot? = guildHubHotspotForMaskColor(sourcePixels[y * width + x])
+
+private fun guildHubHotspotEdge(
+    sourcePixels: IntArray,
+    width: Int,
+    height: Int,
+    x: Int,
+    y: Int,
+    hotspot: GuildHubHotspot,
+    radius: Int,
+): Boolean {
+    for (dy in -radius..radius) {
+        for (dx in -radius..radius) {
+            if (dx == 0 && dy == 0) continue
+            val nx = x + dx
+            val ny = y + dy
+            if (nx !in 0 until width || ny !in 0 until height) return true
+            if (guildHubHotspotAt(sourcePixels, width, nx, ny) != hotspot) return true
+        }
+    }
+    return false
+}
+
+private fun paintGuildHubHotspotHalo(
+    sourcePixels: IntArray,
+    outputPixels: IntArray,
+    width: Int,
+    height: Int,
+    x: Int,
+    y: Int,
+    radius: Int,
+    color: Int,
+) {
+    for (dy in -radius..radius) {
+        for (dx in -radius..radius) {
+            val nx = x + dx
+            val ny = y + dy
+            if (nx !in 0 until width || ny !in 0 until height) continue
+            val pixel = ny * width + nx
+            if (guildHubHotspotAt(sourcePixels, width, nx, ny) == null && outputPixels[pixel] == GuildHubHighlightTransparent) {
+                outputPixels[pixel] = color
+            }
+        }
+    }
+}
+@Composable
+private fun GuildHubSelectionDrawer(
+    session: PlaySessionState,
+    selectedQuest: Quest,
+    nowMillis: Long,
+    selectedHotspot: GuildHubHotspot,
+    onViewResult: () -> Unit,
+    onNextQuest: () -> Unit,
+    onAchievements: () -> Unit,
+    onLoot: () -> Unit,
+    onFacilities: () -> Unit,
+    onManageCoreCrew: () -> Unit,
+    onFinishQuestNow: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val debugEnabled = booleanResource(R.bool.debug_tools_enabled)
+    val title = guildHubHotspotLabel(selectedHotspot)
+    val body = guildHubDrawerBody(session, selectedQuest, nowMillis, selectedHotspot)
+    val primaryLabel = when (selectedHotspot) {
+        GuildHubHotspot.Charter -> stringResource(R.string.guild_hub_open_achievements_action)
+        GuildHubHotspot.CoreCrew -> stringResource(R.string.guild_hub_manage_core_crew_action)
+        GuildHubHotspot.QuestTable -> if (session.phase == PlayPhase.ResultReady) {
+            stringResource(R.string.view_report_action)
+        } else {
+            stringResource(R.string.guild_hub_open_quests_action)
+        }
+        GuildHubHotspot.LootCache -> stringResource(R.string.guild_hub_open_loot_action)
+        GuildHubHotspot.Facilities -> stringResource(R.string.guild_hub_open_facilities_action)
+    }
+    val primaryAction: () -> Unit = when (selectedHotspot) {
+        GuildHubHotspot.Charter -> onAchievements
+        GuildHubHotspot.CoreCrew -> onManageCoreCrew
+        GuildHubHotspot.QuestTable -> if (session.phase == PlayPhase.ResultReady) onViewResult else onNextQuest
+        GuildHubHotspot.LootCache -> onLoot
+        GuildHubHotspot.Facilities -> onFacilities
+    }
+    val secondaryLabel = when {
+        selectedHotspot == GuildHubHotspot.QuestTable && session.phase == PlayPhase.ResultReady -> stringResource(R.string.guild_hub_open_quests_action)
+        selectedHotspot == GuildHubHotspot.QuestTable && session.phase == PlayPhase.Running && debugEnabled -> stringResource(R.string.instant_quest_action)
+        else -> null
+    }
+    val secondaryAction: (() -> Unit)? = when {
+        selectedHotspot == GuildHubHotspot.QuestTable && session.phase == PlayPhase.ResultReady -> onNextQuest
+        selectedHotspot == GuildHubHotspot.QuestTable && session.phase == PlayPhase.Running && debugEnabled -> onFinishQuestNow
+        else -> null
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xEA171813)),
+        border = BorderStroke(1.dp, guildHubHotspotColor(selectedHotspot).copy(alpha = 0.65f)),
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = title,
+                    color = Color(0xFFFFF0BD),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = phaseStatus(session.phase),
+                    color = Color(0xFFD7C891),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                )
+            }
+            Spacer(Modifier.height(5.dp))
+            Text(
+                text = body,
+                color = Color(0xFFE6D8A6),
+                fontSize = 12.sp,
+                lineHeight = 15.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (selectedHotspot == GuildHubHotspot.QuestTable && session.phase == PlayPhase.Running) {
+                ProgressBar(progress = session.progress(nowMillis).toFloat())
+            }
+            ActionRow(
+                primaryLabel = primaryLabel,
+                secondaryLabel = secondaryLabel,
+                onPrimary = primaryAction,
+                onSecondary = secondaryAction,
+            )
+        }
+    }
+}
+
+@Composable
+private fun guildHubDrawerBody(
+    session: PlaySessionState,
+    selectedQuest: Quest,
+    nowMillis: Long,
+    selectedHotspot: GuildHubHotspot,
+): String = when (selectedHotspot) {
+    GuildHubHotspot.Charter -> stringResource(
+        R.string.guild_hub_charter_body,
+        session.completedAchievementCount(),
+        session.claimableAchievementCount(),
+        session.achievementSeals(),
+    )
+    GuildHubHotspot.CoreCrew -> stringResource(
+        R.string.guild_hub_core_crew_body,
+        session.normalizedCoreCrewHeroIds().size,
+        session.coreCrewSlots(),
+        session.passiveGoldPerHour(),
+    )
+    GuildHubHotspot.QuestTable -> when (session.phase) {
+        PlayPhase.Idle -> stringResource(R.string.guild_hub_quests_idle_body, selectedQuest.title)
+        PlayPhase.Running -> stringResource(R.string.running_quest_summary, remainingSeconds(session, nowMillis))
+        PlayPhase.ResultReady -> session.expedition?.result?.let { result ->
+            stringResource(
+                R.string.result_quest_summary,
+                outcomeLabel(result.outcome),
+                rewardGoldWithNoticeBoard(session),
+                session.collectableLootRolls(result),
+            )
+        } ?: stringResource(R.string.guild_hub_quests_idle_body, selectedQuest.title)
+    }
+    GuildHubHotspot.LootCache -> stringResource(
+        R.string.guild_hub_loot_body,
+        session.lootItems.size,
+        session.pendingLootItems.size,
+    )
+    GuildHubHotspot.Facilities -> stringResource(
+        R.string.guild_hub_facilities_body,
+        guildFacilityLevelTotal(session),
+    )
+}
+
+@Composable
+private fun guildHubHotspotLabel(hotspot: GuildHubHotspot): String = when (hotspot) {
+    GuildHubHotspot.Charter -> stringResource(R.string.guild_hub_charter_title)
+    GuildHubHotspot.CoreCrew -> stringResource(R.string.guild_hub_core_crew_title)
+    GuildHubHotspot.QuestTable -> stringResource(R.string.guild_hub_quests_title)
+    GuildHubHotspot.LootCache -> stringResource(R.string.guild_hub_loot_title)
+    GuildHubHotspot.Facilities -> stringResource(R.string.guild_hub_facilities_title)
+}
+
+private fun guildHubHotspotColor(hotspot: GuildHubHotspot): Color = when (hotspot) {
+    GuildHubHotspot.Charter -> Color(0xFFE7A177)
+    GuildHubHotspot.CoreCrew -> Color(0xFFBBD18A)
+    GuildHubHotspot.QuestTable -> Color(0xFFFFC26B)
+    GuildHubHotspot.LootCache -> Color(0xFFFFD66D)
+    GuildHubHotspot.Facilities -> Color(0xFFD7B17A)
+}
+
+private fun guildFacilityLevelTotal(session: PlaySessionState): Int =
+    GuildFacility.values().sumOf { facility -> session.facilityUpgradeState(facility).level }
+
+@Composable
+private fun CoreCrewDialog(
+    session: PlaySessionState,
+    onToggleCoreCrew: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.94f)
+                .heightIn(max = 640.dp),
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF171813)),
+            border = BorderStroke(1.dp, Color(0x885EE08B)),
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.core_crew_title),
+                        color = Color(0xFFFFF0BD),
+                        fontWeight = FontWeight.Black,
+                        fontSize = 17.sp,
+                    )
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2F695C)),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Text(stringResource(R.string.close_action), fontWeight = FontWeight.Black)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                CoreCrewPanel(session = session, onToggleCoreCrew = onToggleCoreCrew)
+            }
+        }
+    }
+}
 @Composable
 internal fun CoreCrewPanel(session: PlaySessionState, onToggleCoreCrew: (String) -> Unit) {
     val selectedIds = session.normalizedCoreCrewHeroIds()
