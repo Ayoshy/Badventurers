@@ -88,9 +88,8 @@ internal fun LiveLiteWatchScreen(
 
     ScreenScaffold(title = stringResource(R.string.live_lite_title), status = status) {
         LiveLiteStageScene(
-            stage = model.stage,
+            model = model,
             progress = progress,
-            heroCount = model.heroPoses.size,
             modifier = Modifier.padding(bottom = 10.dp),
         )
         LiveLiteForecastPanel(

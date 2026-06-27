@@ -1858,7 +1858,7 @@
     {
       "id": "BV-044",
       "title": "Starter hero animation pack",
-      "status": "later",
+      "status": "done",
       "priority": "P1",
       "area": "art",
       "track": "Hero Animation",
@@ -1866,33 +1866,41 @@
       "acceptance": [
         {
           "text": "Create accepted animation sheets for Brugg, Mira, and Nell covering idle, walk, fight, hurt/dead, celebrate, and loot/interact.",
-          "done": false
+          "done": true
         },
         {
           "text": "Keep silhouettes, props, and personality consistent with current hero portraits.",
-          "done": false
+          "done": true
         },
         {
           "text": "Run the hero animation validator and generate review contact sheets.",
-          "done": false
+          "done": true
         },
         {
           "text": "Wire accepted starter animation resources through the manifest without changing gameplay rules.",
-          "done": false
+          "done": true
         },
         {
           "text": "Capture emulator evidence that the starter animations render legibly on a phone-sized Live-Lite surface.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
         "app/src/main/res-heroes/drawable-nodpi/hero_portrait_brugg.png",
         "app/src/main/res-heroes/drawable-nodpi/hero_portrait_mira.png",
         "app/src/main/res-heroes/drawable-nodpi/hero_portrait_nell.png",
-        "docs/content/hero-item-catalog.md"
+        "docs/content/hero-item-catalog.md",
+        "docs/design/hero-animation-spec.md",
+        "docs/data/hero-animation-manifest.json",
+        "tools/generate-starter-hero-animations.ps1",
+        "tools/validate-hero-animations.ps1",
+        "docs/art/hero-animations/starter/starter-hero-animation-contact-sheet.png",
+        "docs/art/hero-animations/starter/starter-hero-animation-phone-preview.png"
       ],
       "notes": [
-        "Starter trio first because they are guaranteed to appear in early Live-Lite runs and reveal whether the animation direction works."
+        "Starter trio first because they are guaranteed to appear in early Live-Lite runs and reveal whether the animation direction works.",
+        "2026-06-27: Promoted from later as the next Workboard item after BV-042/BV-043/BV-047 completed.",
+        "2026-06-27: Generated accepted starter animation sheets for Brugg, Mira, and Nell, marked starter states accepted in the animation manifest/catalog/CSV, generated contact-sheet and phone-preview review images, and captured emulator Watch Expedition evidence at artifacts/screenshots/emulator-20260627-163546.png and artifacts/screenshots/emulator-20260627-163609.png. Sampled top-stage pixels changed 413/6375 between captures."
       ]
     },
     {
@@ -1939,7 +1947,7 @@
     {
       "id": "BV-046",
       "title": "Live-Lite hero animation lane",
-      "status": "later",
+      "status": "done",
       "priority": "P1",
       "area": "mode",
       "track": "Live-Lite",
@@ -1947,32 +1955,37 @@
       "acceptance": [
         {
           "text": "Render active party heroes from their animation packs instead of abstract dots/blocks.",
-          "done": false
+          "done": true
         },
         {
           "text": "Use walk loops for route progress and switch to fight, hurt/dead, celebrate, or loot/interact on matching Live-Lite beats.",
-          "done": false
+          "done": true
         },
         {
           "text": "Keep motion readable and non-overlapping on portrait phone screens for 1-4 heroes.",
-          "done": false
+          "done": true
         },
         {
           "text": "Fallback gracefully to portrait/idle placeholders only when animation coverage is missing.",
-          "done": false
+          "done": true
         },
         {
           "text": "Capture emulator video or screenshot evidence for at least one running expedition with animated heroes.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
         "app/src/main/java/com/ayoshy/badventurers/ui/LiveLiteWatchScreen.kt",
         "app/src/main/java/com/ayoshy/badventurers/ui/LiveLiteArt.kt",
-        "app/src/main/java/com/ayoshy/badventurers/game/LiveLiteExpedition.kt"
+        "app/src/main/java/com/ayoshy/badventurers/game/LiveLiteExpedition.kt",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_walk.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_walk.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_walk.png"
       ],
       "notes": [
-        "Do not deepen Live-Lite combat before this visual lane works; the mode goal is to watch recognizable heroes move and act."
+        "Do not deepen Live-Lite combat before this visual lane works; the mode goal is to watch recognizable heroes move and act.",
+        "2026-06-27: Promoted alongside BV-044 because starter animation acceptance needs a Live-Lite stage render path for phone/emulator evidence.",
+        "2026-06-27: Live-Lite stage now renders accepted starter hero animation sheets, advances the party along the route, maps active hero beats to fight/hurt-dead/celebrate/loot-interact states, keeps abstract fallback for uncovered heroes, and has emulator evidence at artifacts/screenshots/emulator-20260627-163546.png and artifacts/screenshots/emulator-20260627-163609.png."
       ]
     },
     {

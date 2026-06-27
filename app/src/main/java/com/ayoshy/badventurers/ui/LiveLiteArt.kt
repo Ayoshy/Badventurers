@@ -1,5 +1,11 @@
 package com.ayoshy.badventurers.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
@@ -17,13 +24,24 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.ayoshy.badventurers.R
 import com.ayoshy.badventurers.game.LiveLiteAssetCategories
 import com.ayoshy.badventurers.game.LiveLiteAssetKeys
 import com.ayoshy.badventurers.game.LiveLiteAssetRef
+import com.ayoshy.badventurers.game.LiveLiteHeroPose
+import com.ayoshy.badventurers.game.LiveLiteHeroPoseSet
+import com.ayoshy.badventurers.game.LiveLiteWatchBeatKind
+import com.ayoshy.badventurers.game.LiveLiteWatchModel
 import com.ayoshy.badventurers.game.LiveLiteStageTheme
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 internal data class LiveLitePalette(
     val sky: Color,
@@ -92,13 +110,31 @@ internal object LiveLiteArtCatalog {
 
 @Composable
 internal fun LiveLiteStageScene(
-    stage: LiveLiteStageTheme,
+    model: LiveLiteWatchModel,
     progress: Float,
-    heroCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    val spec = LiveLiteArtCatalog.stageSpec(stage)
+    val spec = LiveLiteArtCatalog.stageSpec(model.stage)
     val palette = spec.palette
+    val animationLoop = rememberInfiniteTransition(label = "live-lite-hero-loop")
+    val animationPhase by animationLoop.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 780, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "live-lite-hero-frame",
+    )
+    val heroDrawSpecs = model.heroPoses.take(4).map { poseSet ->
+        val state = heroAnimationStateFor(model = model, poseSet = poseSet, progress = progress)
+        val resources = heroAnimationResources(poseSet.heroId)
+        LiveLiteHeroDrawSpec(
+            poseSet = poseSet,
+            state = state,
+            image = resources?.let { ImageBitmap.imageResource(it.resourceId(state)) },
+        )
+    }
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -137,21 +173,46 @@ internal fun LiveLiteStageScene(
                 close()
             }
             drawPath(path, palette.accent.copy(alpha = 0.22f))
-            val markerX = size.width * (0.12f + 0.76f * progress.coerceIn(0f, 1f))
+            val clampedProgress = progress.coerceIn(0f, 1f)
+            val markerX = size.width * (0.12f + 0.76f * clampedProgress)
             drawCircle(palette.accent, radius = 7.dp.toPx(), center = Offset(markerX, size.height * 0.58f))
             drawCircle(palette.warning, radius = 3.dp.toPx(), center = Offset(markerX, size.height * 0.58f))
-            val visibleHeroes = heroCount.coerceIn(1, 4)
-            repeat(visibleHeroes) { index ->
-                val x = size.width * (0.22f + index * 0.16f)
-                val y = size.height * 0.79f
-                drawCircle(Color(0x66000000), radius = 11.dp.toPx(), center = Offset(x + 3.dp.toPx(), y + 7.dp.toPx()))
-                drawCircle(palette.accent, radius = 10.dp.toPx(), center = Offset(x, y))
-                drawRoundRect(
-                    color = Color(0xFF211F1A),
-                    topLeft = Offset(x - 7.dp.toPx(), y + 7.dp.toPx()),
-                    size = Size(14.dp.toPx(), 18.dp.toPx()),
-                    cornerRadius = CornerRadius(3.dp.toPx(), 3.dp.toPx()),
-                )
+            val visibleHeroes = heroDrawSpecs.ifEmpty {
+                List(1) {
+                    LiveLiteHeroDrawSpec(
+                        poseSet = LiveLiteHeroPoseSet(heroId = "fallback", heroName = "Fallback", heroClass = model.heroPoses.firstOrNull()?.heroClass ?: com.ayoshy.badventurers.game.HeroClass.Bruiser),
+                        state = LiveLiteHeroAnimationState.Walk,
+                        image = null,
+                    )
+                }
+            }
+            visibleHeroes.forEachIndexed { index, hero ->
+                val spreadBehindMarker = ((visibleHeroes.size - index - 1) * 0.055f)
+                val heroProgress = (clampedProgress - spreadBehindMarker).coerceIn(0.08f, 0.92f)
+                val x = size.width * (0.12f + 0.76f * heroProgress)
+                val y = size.height * (0.82f + ((index % 2) * 0.035f))
+                val heroSize = 64.dp.toPx()
+                drawCircle(Color(0x66000000), radius = heroSize * 0.22f, center = Offset(x + 4.dp.toPx(), y + heroSize * 0.18f))
+                if (hero.image == null) {
+                    drawCircle(palette.accent, radius = 10.dp.toPx(), center = Offset(x, y))
+                    drawRoundRect(
+                        color = Color(0xFF211F1A),
+                        topLeft = Offset(x - 7.dp.toPx(), y + 7.dp.toPx()),
+                        size = Size(14.dp.toPx(), 18.dp.toPx()),
+                        cornerRadius = CornerRadius(3.dp.toPx(), 3.dp.toPx()),
+                    )
+                } else {
+                    val image = hero.image
+                    val frameCount = (image.width / LiveLiteHeroAnimationFrameSize).coerceAtLeast(1)
+                    val frameIndex = ((animationPhase * frameCount).toInt()).coerceIn(0, frameCount - 1)
+                    drawImage(
+                        image = image,
+                        srcOffset = IntOffset(frameIndex * LiveLiteHeroAnimationFrameSize, 0),
+                        srcSize = IntSize(LiveLiteHeroAnimationFrameSize, LiveLiteHeroAnimationFrameSize),
+                        dstOffset = IntOffset((x - heroSize / 2f).roundToInt(), (y - heroSize * 0.82f).roundToInt()),
+                        dstSize = IntSize(heroSize.roundToInt(), heroSize.roundToInt()),
+                    )
+                }
             }
         }
     }
@@ -231,6 +292,100 @@ internal fun LiveLiteAssetGlyph(asset: LiveLiteAssetRef, modifier: Modifier = Mo
     }
 }
 
+private const val LiveLiteHeroAnimationFrameSize = 128
+
+private enum class LiveLiteHeroAnimationState {
+    Idle,
+    Walk,
+    Fight,
+    HurtDead,
+    Celebrate,
+    LootInteract,
+}
+
+private data class LiveLiteHeroAnimationResources(
+    val idle: Int,
+    val walk: Int,
+    val fight: Int,
+    val hurtDead: Int,
+    val celebrate: Int,
+    val lootInteract: Int,
+) {
+    fun resourceId(state: LiveLiteHeroAnimationState): Int = when (state) {
+        LiveLiteHeroAnimationState.Idle -> idle
+        LiveLiteHeroAnimationState.Walk -> walk
+        LiveLiteHeroAnimationState.Fight -> fight
+        LiveLiteHeroAnimationState.HurtDead -> hurtDead
+        LiveLiteHeroAnimationState.Celebrate -> celebrate
+        LiveLiteHeroAnimationState.LootInteract -> lootInteract
+    }
+}
+
+private data class LiveLiteHeroDrawSpec(
+    val poseSet: LiveLiteHeroPoseSet,
+    val state: LiveLiteHeroAnimationState,
+    val image: ImageBitmap?,
+)
+
+private fun heroAnimationResources(heroId: String): LiveLiteHeroAnimationResources? = when (heroId) {
+    "brugg" -> LiveLiteHeroAnimationResources(
+        idle = R.drawable.hero_anim_brugg_idle,
+        walk = R.drawable.hero_anim_brugg_walk,
+        fight = R.drawable.hero_anim_brugg_fight,
+        hurtDead = R.drawable.hero_anim_brugg_hurt_dead,
+        celebrate = R.drawable.hero_anim_brugg_celebrate,
+        lootInteract = R.drawable.hero_anim_brugg_loot_interact,
+    )
+    "mira" -> LiveLiteHeroAnimationResources(
+        idle = R.drawable.hero_anim_mira_idle,
+        walk = R.drawable.hero_anim_mira_walk,
+        fight = R.drawable.hero_anim_mira_fight,
+        hurtDead = R.drawable.hero_anim_mira_hurt_dead,
+        celebrate = R.drawable.hero_anim_mira_celebrate,
+        lootInteract = R.drawable.hero_anim_mira_loot_interact,
+    )
+    "nell" -> LiveLiteHeroAnimationResources(
+        idle = R.drawable.hero_anim_nell_idle,
+        walk = R.drawable.hero_anim_nell_walk,
+        fight = R.drawable.hero_anim_nell_fight,
+        hurtDead = R.drawable.hero_anim_nell_hurt_dead,
+        celebrate = R.drawable.hero_anim_nell_celebrate,
+        lootInteract = R.drawable.hero_anim_nell_loot_interact,
+    )
+    else -> null
+}
+
+private fun heroAnimationStateFor(
+    model: LiveLiteWatchModel,
+    poseSet: LiveLiteHeroPoseSet,
+    progress: Float,
+): LiveLiteHeroAnimationState {
+    val clampedProgress = progress.coerceIn(0f, 1f)
+    val currentSecond = model.estimate.durationSeconds.coerceAtLeast(1) * clampedProgress
+    val activeHeroBeat = model.beats
+        .filter { beat ->
+            beat.kind == LiveLiteWatchBeatKind.HeroAction &&
+                beat.heroId == poseSet.heroId &&
+                beat.pose != null
+        }
+        .minByOrNull { beat -> abs(beat.secondOffset - currentSecond) }
+    if (activeHeroBeat != null && abs(activeHeroBeat.secondOffset - currentSecond) <= 5f) {
+        return activeHeroBeat.pose?.toHeroAnimationState() ?: LiveLiteHeroAnimationState.Fight
+    }
+    return when {
+        clampedProgress < 0.04f -> LiveLiteHeroAnimationState.Idle
+        clampedProgress > 0.94f -> LiveLiteHeroAnimationState.Celebrate
+        else -> LiveLiteHeroAnimationState.Walk
+    }
+}
+
+private fun LiveLiteHeroPose.toHeroAnimationState(): LiveLiteHeroAnimationState = when (this) {
+    LiveLiteHeroPose.Idle -> LiveLiteHeroAnimationState.Idle
+    LiveLiteHeroPose.Effort -> LiveLiteHeroAnimationState.Fight
+    LiveLiteHeroPose.Success -> LiveLiteHeroAnimationState.Celebrate
+    LiveLiteHeroPose.Mistake -> LiveLiteHeroAnimationState.HurtDead
+    LiveLiteHeroPose.Loot -> LiveLiteHeroAnimationState.LootInteract
+}
 private val cavePalette = LiveLitePalette(Color(0xFF211D28), Color(0xFF5A5047), Color(0xFFE0B45E), Color(0xFFB85C5B))
 private val forestPalette = LiveLitePalette(Color(0xFF1E3324), Color(0xFF4F7141), Color(0xFFC9A35E), Color(0xFFB86D4A))
 private val swampPalette = LiveLitePalette(Color(0xFF173633), Color(0xFF3F6B4B), Color(0xFF9AD4A2), Color(0xFFB9A24A))
