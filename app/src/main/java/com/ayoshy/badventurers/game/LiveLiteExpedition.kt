@@ -126,6 +126,7 @@ data class LiveLiteInterventionEffect(
     val goldBonusPercent: Int = 0,
     val successLootBonus: Int = 0,
     val xpBonus: Int = 0,
+    val durationSecondsDelta: Int = 0,
 ) {
     operator fun plus(other: LiveLiteInterventionEffect): LiveLiteInterventionEffect = LiveLiteInterventionEffect(
         scoreBonus = scoreBonus + other.scoreBonus,
@@ -133,6 +134,7 @@ data class LiveLiteInterventionEffect(
         goldBonusPercent = goldBonusPercent + other.goldBonusPercent,
         successLootBonus = successLootBonus + other.successLootBonus,
         xpBonus = xpBonus + other.xpBonus,
+        durationSecondsDelta = durationSecondsDelta + other.durationSecondsDelta,
     )
 
     fun capped(): LiveLiteInterventionEffect = LiveLiteInterventionEffect(
@@ -144,26 +146,41 @@ data class LiveLiteInterventionEffect(
             -LiveLiteInterventionBounds.MAX_TOTAL_RISK_REDUCTION,
             LiveLiteInterventionBounds.MAX_TOTAL_RISK_INCREASE,
         ),
-        goldBonusPercent = goldBonusPercent.coerceIn(0, LiveLiteInterventionBounds.MAX_TOTAL_GOLD_BONUS_PERCENT),
+        goldBonusPercent = goldBonusPercent.coerceIn(
+            LiveLiteInterventionBounds.MIN_TOTAL_GOLD_DELTA_PERCENT,
+            LiveLiteInterventionBounds.MAX_TOTAL_GOLD_BONUS_PERCENT,
+        ),
         successLootBonus = successLootBonus.coerceIn(0, LiveLiteInterventionBounds.MAX_TOTAL_SUCCESS_LOOT_BONUS),
         xpBonus = xpBonus.coerceIn(0, LiveLiteInterventionBounds.MAX_TOTAL_XP_BONUS),
+        durationSecondsDelta = durationSecondsDelta.coerceIn(
+            LiveLiteInterventionBounds.MIN_TOTAL_DURATION_SECONDS_DELTA,
+            LiveLiteInterventionBounds.MAX_TOTAL_DURATION_SECONDS_DELTA,
+        ),
     )
 }
 
 object LiveLiteInterventionBounds {
+    const val MIN_SINGLE_SCORE_DELTA = -6
     const val MAX_SINGLE_SCORE_BONUS = 8
     const val MAX_SINGLE_RISK_REDUCTION = 6
+    const val MAX_SINGLE_RISK_INCREASE = 6
+    const val MIN_SINGLE_GOLD_DELTA_PERCENT = -6
     const val MAX_SINGLE_GOLD_BONUS_PERCENT = 8
     const val MAX_SINGLE_SUCCESS_LOOT_BONUS = 1
     const val MAX_SINGLE_XP_BONUS = 3
+    const val MAX_SINGLE_DURATION_SECONDS_DELTA = 30
 
     const val MIN_TOTAL_SCORE_DELTA = -6
     const val MAX_TOTAL_SCORE_BONUS = 12
     const val MAX_TOTAL_RISK_REDUCTION = 8
     const val MAX_TOTAL_RISK_INCREASE = 6
+    const val MIN_TOTAL_GOLD_DELTA_PERCENT = -10
     const val MAX_TOTAL_GOLD_BONUS_PERCENT = 10
     const val MAX_TOTAL_SUCCESS_LOOT_BONUS = 1
     const val MAX_TOTAL_XP_BONUS = 4
+    const val MIN_TOTAL_DURATION_SECONDS_DELTA = 0
+    const val MAX_TOTAL_DURATION_SECONDS_DELTA = 45
+    const val MAX_SELECTED_INTERVENTIONS = 1
 }
 
 data class LiveLiteInterventionDefinition(
@@ -173,8 +190,12 @@ data class LiveLiteInterventionDefinition(
     val targetHeroName: String? = null,
     val enabled: Boolean = true,
     val maxUses: Int = 1,
-    val effect: LiveLiteInterventionEffect,
-)
+    val upside: LiveLiteInterventionEffect,
+    val downside: LiveLiteInterventionEffect,
+) {
+    val effect: LiveLiteInterventionEffect = (upside + downside).capped()
+    val hasTradeoff: Boolean = upside != LiveLiteInterventionEffect() && downside != LiveLiteInterventionEffect()
+}
 
 data class LiveLiteInterventionPreview(
     val basePartyPower: Int,
@@ -183,6 +204,10 @@ data class LiveLiteInterventionPreview(
     val adjustedTargetPower: Int,
     val baseSuccessChancePercent: Int,
     val adjustedSuccessChancePercent: Int,
+    val baseDurationSeconds: Int,
+    val adjustedDurationSeconds: Int,
+    val selectedInterventionCount: Int,
+    val maxSelectedInterventions: Int,
     val effect: LiveLiteInterventionEffect,
 )
 
@@ -303,28 +328,37 @@ object LiveLiteExpedition {
     ): List<LiveLiteInterventionDefinition> {
         val encouragementTarget = party.minWithOrNull(compareBy<Hero> { PartyPowerCalculator.basePower(it) }.thenBy { it.id })
         val trickHero = HeroSpecialCatalog.activeHeroes(party, quest).firstOrNull()
+        val trickUpside = trickHero?.let { heroTrickUpside(it, quest) } ?: LiveLiteInterventionEffect()
         return listOf(
             LiveLiteInterventionDefinition(
                 kind = LiveLiteInterventionKind.SpendSupply,
-                effect = LiveLiteInterventionEffect(scoreBonus = 6, xpBonus = 1),
+                upside = LiveLiteInterventionEffect(scoreBonus = 6, xpBonus = 1),
+                downside = LiveLiteInterventionEffect(riskPenaltyDelta = 2, durationSecondsDelta = 10),
             ),
             LiveLiteInterventionDefinition(
                 kind = LiveLiteInterventionKind.SaferRoute,
-                effect = LiveLiteInterventionEffect(scoreBonus = -2, riskPenaltyDelta = -6),
+                upside = LiveLiteInterventionEffect(riskPenaltyDelta = -6),
+                downside = LiveLiteInterventionEffect(scoreBonus = -3, goldBonusPercent = -5, durationSecondsDelta = 15),
             ),
             LiveLiteInterventionDefinition(
                 kind = LiveLiteInterventionKind.PushForLoot,
-                effect = LiveLiteInterventionEffect(scoreBonus = -4, riskPenaltyDelta = 4, successLootBonus = 1),
+                upside = LiveLiteInterventionEffect(successLootBonus = 1),
+                downside = LiveLiteInterventionEffect(scoreBonus = -4, riskPenaltyDelta = 6, durationSecondsDelta = 12),
             ),
             LiveLiteInterventionDefinition(
                 kind = LiveLiteInterventionKind.EncourageHero,
                 targetHeroId = encouragementTarget?.id,
                 targetHeroName = encouragementTarget?.name,
                 enabled = encouragementTarget != null,
-                effect = if (encouragementTarget == null) {
+                upside = if (encouragementTarget == null) {
                     LiveLiteInterventionEffect()
                 } else {
-                    LiveLiteInterventionEffect(scoreBonus = 4, xpBonus = 2)
+                    LiveLiteInterventionEffect(scoreBonus = 5, xpBonus = 2)
+                },
+                downside = if (encouragementTarget == null) {
+                    LiveLiteInterventionEffect()
+                } else {
+                    LiveLiteInterventionEffect(scoreBonus = -2, durationSecondsDelta = 8)
                 },
             ),
             LiveLiteInterventionDefinition(
@@ -332,14 +366,23 @@ object LiveLiteExpedition {
                 targetHeroId = trickHero?.id,
                 targetHeroName = trickHero?.name,
                 enabled = trickHero != null,
-                effect = trickHero?.let { heroTrickEffect(it, quest) } ?: LiveLiteInterventionEffect(),
+                upside = trickUpside,
+                downside = heroTrickDownside(trickUpside),
             ),
         )
     }
 
+    fun selectedInterventions(
+        model: LiveLiteWatchModel,
+        selectedInterventionKeys: Set<String>,
+    ): List<LiveLiteInterventionDefinition> = model.interventions
+        .filter { it.enabled && it.kind.assetKey in selectedInterventionKeys }
+        .take(LiveLiteInterventionBounds.MAX_SELECTED_INTERVENTIONS)
+
     fun combinedInterventionEffect(definitions: List<LiveLiteInterventionDefinition>): LiveLiteInterventionEffect =
         definitions
             .filter { it.enabled }
+            .take(LiveLiteInterventionBounds.MAX_SELECTED_INTERVENTIONS)
             .fold(LiveLiteInterventionEffect()) { total, definition -> total + definition.effect }
             .capped()
 
@@ -347,10 +390,11 @@ object LiveLiteExpedition {
         model: LiveLiteWatchModel,
         selectedInterventionKeys: Set<String>,
     ): LiveLiteInterventionPreview {
-        val selected = model.interventions.filter { it.kind.assetKey in selectedInterventionKeys }
+        val selected = selectedInterventions(model, selectedInterventionKeys)
         val effect = combinedInterventionEffect(selected)
         val adjustedPartyPower = (model.estimate.partyPower + effect.scoreBonus).coerceAtLeast(0)
         val adjustedTargetPower = (model.estimate.targetPower + effect.riskPenaltyDelta).coerceAtLeast(0)
+        val adjustedDurationSeconds = (model.estimate.durationSeconds + effect.durationSecondsDelta).coerceAtLeast(0)
         val adjustedChance = successChancePercent(
             partyPower = adjustedPartyPower,
             targetPower = adjustedTargetPower,
@@ -363,6 +407,10 @@ object LiveLiteExpedition {
             adjustedTargetPower = adjustedTargetPower,
             baseSuccessChancePercent = model.estimate.successChancePercent,
             adjustedSuccessChancePercent = adjustedChance,
+            baseDurationSeconds = model.estimate.durationSeconds,
+            adjustedDurationSeconds = adjustedDurationSeconds,
+            selectedInterventionCount = selected.size,
+            maxSelectedInterventions = LiveLiteInterventionBounds.MAX_SELECTED_INTERVENTIONS,
             effect = effect,
         )
     }
@@ -443,7 +491,7 @@ object LiveLiteExpedition {
         }
     }
 
-    private fun heroTrickEffect(hero: Hero, quest: Quest): LiveLiteInterventionEffect {
+    private fun heroTrickUpside(hero: Hero, quest: Quest): LiveLiteInterventionEffect {
         val modifiers = HeroSpecialCatalog.modifiersFor(listOf(hero), quest)
         val effect = LiveLiteInterventionEffect(
             scoreBonus = when {
@@ -462,6 +510,17 @@ object LiveLiteExpedition {
             effect
         }
     }
+
+    private fun heroTrickDownside(upside: LiveLiteInterventionEffect): LiveLiteInterventionEffect =
+        if (upside == LiveLiteInterventionEffect()) {
+            LiveLiteInterventionEffect()
+        } else {
+            LiveLiteInterventionEffect(
+                riskPenaltyDelta = if (upside.riskPenaltyDelta < 0) 2 else 3,
+                goldBonusPercent = if (upside.goldBonusPercent > 0 || upside.successLootBonus > 0) -4 else 0,
+                durationSecondsDelta = 10,
+            )
+        }
 
     private fun themeFor(quest: Quest): String = when {
         quest.hasAny(QuestTag.Paperwork, QuestTag.Contract, QuestTag.Debt) -> "bureaucracy"

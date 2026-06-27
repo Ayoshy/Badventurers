@@ -9,6 +9,7 @@ These CSV files are spreadsheet-friendly mirrors of current runtime content. The
 | File | Mirrors | Runtime source |
 | --- | --- | --- |
 | `heroes.csv` | Hero catalog, stats, rarity, trait, special, animation coverage | `HeroGacha.kt`, `HeroSpecialCatalog.kt` |
+| `hero-animation-manifest.json` | Hero animation state coverage, statuses, and expected Android export paths | `tools/validate-hero-animations.ps1` |
 | `items.csv` | Loot definitions | `Loot.kt` |
 | `quests.csv` | Quest tuning, tags, unlocks | `SeedGame.kt` |
 | `expedition-plans.csv` | Generic and quest-specific contract clauses | `ExpeditionPlans.kt` |

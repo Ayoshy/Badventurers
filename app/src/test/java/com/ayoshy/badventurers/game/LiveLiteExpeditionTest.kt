@@ -53,56 +53,121 @@ class LiveLiteExpeditionTest {
         )
         assertTrue(definitions.all { it.maxUses == 1 })
         assertTrue(definitions.all { it.asset.category == LiveLiteAssetCategories.INTERVENTION })
+        assertTrue(definitions.filter { it.enabled }.all { it.hasTradeoff })
         assertTrue(definitions.first { it.kind == LiveLiteInterventionKind.EncourageHero }.targetHeroId != null)
         assertEquals("brugg", definitions.first { it.kind == LiveLiteInterventionKind.HeroTrick }.targetHeroId)
     }
 
     @Test
-    fun combinedInterventionBonusesStaySmallAndOptional() {
+    fun combinedInterventionEffectsAreBoundedAndLimitedToOneChoice() {
         val party = SeedGame.heroes.take(3)
         val definitions = LiveLiteExpedition.interventionDefinitions(party = party, quest = SeedGame.firstQuest)
         val noIntervention = LiveLiteExpedition.combinedInterventionEffect(emptyList())
-        val allInterventions = LiveLiteExpedition.combinedInterventionEffect(definitions)
+        val allPressed = LiveLiteExpedition.combinedInterventionEffect(definitions)
 
         assertEquals(LiveLiteInterventionEffect(), noIntervention)
-        assertTrue(allInterventions.scoreBonus <= LiveLiteInterventionBounds.MAX_TOTAL_SCORE_BONUS)
-        assertTrue(allInterventions.scoreBonus >= LiveLiteInterventionBounds.MIN_TOTAL_SCORE_DELTA)
-        assertTrue(allInterventions.riskPenaltyDelta <= LiveLiteInterventionBounds.MAX_TOTAL_RISK_INCREASE)
-        assertTrue(allInterventions.riskPenaltyDelta >= -LiveLiteInterventionBounds.MAX_TOTAL_RISK_REDUCTION)
-        assertTrue(allInterventions.goldBonusPercent <= LiveLiteInterventionBounds.MAX_TOTAL_GOLD_BONUS_PERCENT)
-        assertTrue(allInterventions.successLootBonus <= LiveLiteInterventionBounds.MAX_TOTAL_SUCCESS_LOOT_BONUS)
-        assertTrue(allInterventions.xpBonus <= LiveLiteInterventionBounds.MAX_TOTAL_XP_BONUS)
-        assertTrue(definitions.all { it.effect.scoreBonus <= LiveLiteInterventionBounds.MAX_SINGLE_SCORE_BONUS })
-        assertTrue(definitions.all { -it.effect.riskPenaltyDelta <= LiveLiteInterventionBounds.MAX_SINGLE_RISK_REDUCTION })
-        assertTrue(definitions.all { it.effect.goldBonusPercent <= LiveLiteInterventionBounds.MAX_SINGLE_GOLD_BONUS_PERCENT })
-        assertTrue(definitions.all { it.effect.successLootBonus <= LiveLiteInterventionBounds.MAX_SINGLE_SUCCESS_LOOT_BONUS })
-        assertTrue(definitions.all { it.effect.xpBonus <= LiveLiteInterventionBounds.MAX_SINGLE_XP_BONUS })
+        assertEquals(definitions.first().effect, allPressed)
+        definitions.filter { it.enabled }.forEach { definition ->
+            assertTrue(definition.upside != LiveLiteInterventionEffect())
+            assertTrue(definition.downside != LiveLiteInterventionEffect())
+            assertTrue(definition.effect.scoreBonus <= LiveLiteInterventionBounds.MAX_SINGLE_SCORE_BONUS)
+            assertTrue(definition.effect.scoreBonus >= LiveLiteInterventionBounds.MIN_SINGLE_SCORE_DELTA)
+            assertTrue(definition.effect.riskPenaltyDelta <= LiveLiteInterventionBounds.MAX_SINGLE_RISK_INCREASE)
+            assertTrue(definition.effect.riskPenaltyDelta >= -LiveLiteInterventionBounds.MAX_SINGLE_RISK_REDUCTION)
+            assertTrue(definition.effect.goldBonusPercent <= LiveLiteInterventionBounds.MAX_SINGLE_GOLD_BONUS_PERCENT)
+            assertTrue(definition.effect.goldBonusPercent >= LiveLiteInterventionBounds.MIN_SINGLE_GOLD_DELTA_PERCENT)
+            assertTrue(definition.effect.successLootBonus <= LiveLiteInterventionBounds.MAX_SINGLE_SUCCESS_LOOT_BONUS)
+            assertTrue(definition.effect.xpBonus <= LiveLiteInterventionBounds.MAX_SINGLE_XP_BONUS)
+            assertTrue(definition.effect.durationSecondsDelta <= LiveLiteInterventionBounds.MAX_SINGLE_DURATION_SECONDS_DELTA)
+        }
     }
 
     @Test
-    fun previewUsesEstimatorValuesWithoutResolvingOutcome() {
+    fun pushForLootTradesLootForHarderOddsAndMoreTime() {
         val party = SeedGame.heroes.take(3)
+        val baselinePower = ExpeditionEstimator.estimate(party = party, quest = SeedGame.firstQuest).partyPower
         val run = ExpeditionRun(
-            quest = SeedGame.firstQuest.copy(difficulty = 150),
+            quest = SeedGame.firstQuest.copy(difficulty = baselinePower + 20),
             partyHeroIds = party.map { it.id },
             startedAtMillis = 1_000L,
             endsAtMillis = 46_000L,
-            planId = ExpeditionPlanCatalog.safetyFirstId,
+            planId = ExpeditionPlanCatalog.defaultPlanId,
         )
         val model = LiveLiteExpedition.buildWatchModel(run = run, party = party)
         val preview = LiveLiteExpedition.previewInterventions(
             model = model,
-            selectedInterventionKeys = setOf(
-                LiveLiteInterventionKind.SpendSupply.assetKey,
-                LiveLiteInterventionKind.SaferRoute.assetKey,
-            ),
+            selectedInterventionKeys = setOf(LiveLiteInterventionKind.PushForLoot.assetKey),
         )
 
         assertEquals(model.estimate.partyPower, preview.basePartyPower)
         assertEquals(model.estimate.targetPower, preview.baseTargetPower)
-        assertTrue(preview.adjustedPartyPower > preview.basePartyPower)
+        assertEquals(1, preview.effect.successLootBonus)
+        assertTrue(preview.adjustedPartyPower < preview.basePartyPower)
+        assertTrue(preview.adjustedTargetPower > preview.baseTargetPower)
+        assertTrue(preview.adjustedDurationSeconds > preview.baseDurationSeconds)
+        assertTrue(preview.adjustedSuccessChancePercent < preview.baseSuccessChancePercent)
+    }
+
+    @Test
+    fun saferRouteTradesRiskForPowerRewardAndTime() {
+        val party = SeedGame.heroes.take(3)
+        val run = ExpeditionRun(
+            quest = SeedGame.firstQuest.copy(difficulty = 90),
+            partyHeroIds = party.map { it.id },
+            startedAtMillis = 1_000L,
+            endsAtMillis = 46_000L,
+            planId = ExpeditionPlanCatalog.defaultPlanId,
+        )
+        val model = LiveLiteExpedition.buildWatchModel(run = run, party = party)
+        val preview = LiveLiteExpedition.previewInterventions(
+            model = model,
+            selectedInterventionKeys = setOf(LiveLiteInterventionKind.SaferRoute.assetKey),
+        )
+
         assertTrue(preview.adjustedTargetPower < preview.baseTargetPower)
-        assertTrue(preview.adjustedSuccessChancePercent >= preview.baseSuccessChancePercent)
+        assertTrue(preview.adjustedPartyPower < preview.basePartyPower)
+        assertTrue(preview.effect.goldBonusPercent < 0)
+        assertTrue(preview.adjustedDurationSeconds > preview.baseDurationSeconds)
+    }
+
+    @Test
+    fun noInterventionPreviewKeepsBaselineUnchanged() {
+        val party = SeedGame.heroes.take(3)
+        val run = ExpeditionRun(
+            quest = SeedGame.firstQuest,
+            partyHeroIds = party.map { it.id },
+            startedAtMillis = 1_000L,
+            endsAtMillis = 46_000L,
+            planId = ExpeditionPlanCatalog.defaultPlanId,
+        )
+        val model = LiveLiteExpedition.buildWatchModel(run = run, party = party)
+        val preview = LiveLiteExpedition.previewInterventions(model = model, selectedInterventionKeys = emptySet())
+
+        assertEquals(0, preview.selectedInterventionCount)
+        assertEquals(LiveLiteInterventionEffect(), preview.effect)
+        assertEquals(model.estimate.partyPower, preview.adjustedPartyPower)
+        assertEquals(model.estimate.targetPower, preview.adjustedTargetPower)
+        assertEquals(model.estimate.successChancePercent, preview.adjustedSuccessChancePercent)
+        assertEquals(model.estimate.durationSeconds, preview.adjustedDurationSeconds)
+    }
+
+    @Test
+    fun previewIgnoresExtraSelectedButtonsAfterLimit() {
+        val party = SeedGame.heroes.take(3)
+        val run = ExpeditionRun(
+            quest = SeedGame.firstQuest,
+            partyHeroIds = party.map { it.id },
+            startedAtMillis = 1_000L,
+            endsAtMillis = 46_000L,
+            planId = ExpeditionPlanCatalog.defaultPlanId,
+        )
+        val model = LiveLiteExpedition.buildWatchModel(run = run, party = party)
+        val allKeys = model.interventions.map { it.kind.assetKey }.toSet()
+        val preview = LiveLiteExpedition.previewInterventions(model = model, selectedInterventionKeys = allKeys)
+
+        assertEquals(LiveLiteInterventionBounds.MAX_SELECTED_INTERVENTIONS, preview.maxSelectedInterventions)
+        assertEquals(1, preview.selectedInterventionCount)
+        assertEquals(model.interventions.first().effect, preview.effect)
     }
 
     @Test
@@ -115,6 +180,8 @@ class LiveLiteExpeditionTest {
         val trick = definitions.first { it.kind == LiveLiteInterventionKind.HeroTrick }
 
         assertFalse(trick.enabled)
+        assertEquals(LiveLiteInterventionEffect(), trick.upside)
+        assertEquals(LiveLiteInterventionEffect(), trick.downside)
         assertEquals(LiveLiteInterventionEffect(), trick.effect)
     }
 }

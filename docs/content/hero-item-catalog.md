@@ -48,7 +48,7 @@ Hero gacha rarity weights are currently Common `55`, Uncommon `25`, Rare `13`, E
 
 ## Hero Creation Rules
 
-A hero is no longer content-complete with only a portrait and catalog row. Any new hero, hero skin, or major hero artwork replacement must also plan and track a Live-Lite animation pack.
+A hero is no longer content-complete with only a portrait and catalog row. Any new hero, hero skin, or major hero artwork replacement must also plan and track a Live-Lite animation pack. Detailed production, naming, export, and review rules live in the [Hero Animation Spec](../design/hero-animation-spec.md).
 
 Minimum animation states for an accepted hero pack:
 

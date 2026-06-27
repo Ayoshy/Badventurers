@@ -1780,7 +1780,7 @@
     {
       "id": "BV-042",
       "title": "Hero animation creation rule and spec",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "area": "art",
       "track": "Hero Animation",
@@ -1796,7 +1796,7 @@
         },
         {
           "text": "Define naming, frame-size, loop, export, and phone-readability standards for hero animation sheets.",
-          "done": false
+          "done": true
         },
         {
           "text": "Document how animation status is tracked per hero until final assets are accepted.",
@@ -1810,13 +1810,14 @@
       ],
       "notes": [
         "2026-06-27: Created from Live-Lite screenshot review. The top vignette placeholder made it clear that Live-Lite needs real hero animation packs before more watch-mode implementation. Hero creation rule now requires animation coverage.",
-        "2026-06-27: Added an Animation Pack status column to the hero catalog and animation_pack_status to docs/data/heroes.csv. Starter heroes are planned for BV-044; the rest of the current roster is marked missing for BV-045."
+        "2026-06-27: Added an Animation Pack status column to the hero catalog and animation_pack_status to docs/data/heroes.csv. Starter heroes are planned for BV-044; the rest of the current roster is marked missing for BV-045.",
+        "2026-06-27: Added docs/design/hero-animation-spec.md and linked it from the hero catalog. The spec defines required states, naming, frame-size guidance, loop behavior, export locations, phone readability, Live-Lite mapping, and review evidence."
       ]
     },
     {
       "id": "BV-043",
       "title": "Hero animation manifest and validator pipeline",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "area": "art-tech",
       "track": "Hero Animation",
@@ -1824,23 +1825,23 @@
       "acceptance": [
         {
           "text": "Add a hero animation manifest keyed by hero id and animation state.",
-          "done": false
+          "done": true
         },
         {
           "text": "Define expected source/export locations for accepted animation sheets under Android resources.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add a validator that catches missing states, bad dimensions, non-integer scaling, and unknown hero ids.",
-          "done": false
+          "done": true
         },
         {
           "text": "Generate a contact sheet or audit output so animation batches can be reviewed quickly.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add focused tests or script checks that fail when accepted hero animation coverage is incomplete.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -1850,7 +1851,8 @@
         "tools/"
       ],
       "notes": [
-        "Do this before producing many hero animation assets; otherwise every batch will invent its own naming and verification rules."
+        "Do this before producing many hero animation assets; otherwise every batch will invent its own naming and verification rules.",
+        "2026-06-27: Added docs/data/hero-animation-manifest.json plus tools/validate-hero-animations.ps1. Validator checks current hero coverage, required states, valid statuses, duplicate keys, accepted asset files, and prints a text contact-sheet audit."
       ]
     },
     {
@@ -1976,7 +1978,7 @@
     {
       "id": "BV-047",
       "title": "Live-Lite interventions with real tradeoffs",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "area": "mode",
       "track": "Live-Lite",
@@ -1984,27 +1986,27 @@
       "acceptance": [
         {
           "text": "Replace free stacked nudges with intervention choices that include explicit tradeoffs.",
-          "done": false
+          "done": true
         },
         {
           "text": "Examples: +1 loot can add time, increase target difficulty, increase risk, or reduce success odds; safer route can lower risk but reduce loot/gold or add duration.",
-          "done": false
+          "done": true
         },
         {
           "text": "Limit stacking so the player cannot simply press every button for a net-positive bundle.",
-          "done": false
+          "done": true
         },
         {
           "text": "Preview both upside and downside clearly in the Watch Expedition UI before selection.",
-          "done": false
+          "done": true
         },
         {
           "text": "Keep offline/non-watch players unpunished relative to the base expedition result.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add unit tests proving tradeoff math, selection limits, and non-watch baseline behavior.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -2013,7 +2015,8 @@
         "app/src/test/java/com/ayoshy/badventurers/game/LiveLiteExpeditionTest.kt"
       ],
       "notes": [
-        "2026-06-27: Created from screenshot review. Current prototype communicates optional nudges but still reads like free buttons; this needs game-design cleanup before deeper Live-Lite work."
+        "2026-06-27: Created from screenshot review. Current prototype communicates optional nudges but still reads like free buttons; this needs game-design cleanup before deeper Live-Lite work.",
+        "2026-06-27: Live-Lite interventions now use explicit upside/cost effects, allow one selected intervention at a time, preview time/power/target/success changes, preserve no-watch baseline behavior, and have focused LiveLiteExpeditionTest coverage."
       ]
     }
   ]

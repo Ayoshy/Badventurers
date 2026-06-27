@@ -1,0 +1,729 @@
+{
+    "schemaVersion":  1,
+    "ownerTicket":  "BV-043",
+    "lastUpdated":  "2026-06-27",
+    "notes":  "Hero animation coverage manifest. States marked accepted must have exported Android resource files at the listed asset paths.",
+    "locations":  {
+                      "sourceRoot":  "docs/art/hero-animations",
+                      "androidExportRoot":  "app/src/main/res-heroes/drawable-nodpi",
+                      "androidExportPattern":  "hero_anim_{hero_id}_{state}.png",
+                      "reviewOutput":  "artifacts/hero-animation-audit.md"
+                  },
+    "sheetSpec":  {
+                      "frameWidthPx":  128,
+                      "frameHeightPx":  128,
+                      "background":  "transparent",
+                      "phoneReadability":  "Silhouette, pose, and prop should read on a portrait phone Live-Lite lane before runtime integration."
+                  },
+    "validStatuses":  {
+                          "accepted":  "Accepted for runtime use; exported asset must exist.",
+                          "planned_bv044":  "Starter hero animation pack planned for BV-044.",
+                          "missing_bv045":  "Current roster animation backlog planned for BV-045."
+                      },
+    "requiredStates":  {
+                           "idle":  {
+                                        "label":  "idle",
+                                        "loop":  true,
+                                        "description":  "Readable standing loop for roster, prep, and Live-Lite pauses."
+                                    },
+                           "walk":  {
+                                        "label":  "walk",
+                                        "loop":  true,
+                                        "description":  "Side-view expedition movement loop."
+                                    },
+                           "fight":  {
+                                         "label":  "fight",
+                                         "loop":  true,
+                                         "description":  "Short attack or effort loop for route hazards."
+                                     },
+                           "hurt_dead":  {
+                                             "label":  "hurt/dead",
+                                             "loop":  false,
+                                             "description":  "Failure or downed state for bad outcomes."
+                                         },
+                           "celebrate":  {
+                                             "label":  "celebrate",
+                                             "loop":  false,
+                                             "description":  "Success or great-success reaction."
+                                         },
+                           "loot_interact":  {
+                                                 "label":  "loot/interact",
+                                                 "loop":  false,
+                                                 "description":  "Reward, search, or paperwork interaction beat."
+                                             }
+                       },
+    "heroes":  {
+                   "brugg":  {
+                                 "name":  "Brugg",
+                                 "class":  "Bruiser",
+                                 "rarity":  "Common",
+                                 "packStatus":  "planned_bv044",
+                                 "states":  {
+                                                "idle":  {
+                                                             "status":  "planned_bv044",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_idle.png"
+                                                         },
+                                                "walk":  {
+                                                             "status":  "planned_bv044",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_walk.png"
+                                                         },
+                                                "fight":  {
+                                                              "status":  "planned_bv044",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_fight.png"
+                                                          },
+                                                "hurt_dead":  {
+                                                                  "status":  "planned_bv044",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_hurt_dead.png"
+                                                              },
+                                                "celebrate":  {
+                                                                  "status":  "planned_bv044",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_celebrate.png"
+                                                              },
+                                                "loot_interact":  {
+                                                                      "status":  "planned_bv044",
+                                                                      "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_loot_interact.png"
+                                                                  }
+                                            }
+                             },
+                   "darrik":  {
+                                  "name":  "Darrik",
+                                  "class":  "Bruiser",
+                                  "rarity":  "Common",
+                                  "packStatus":  "missing_bv045",
+                                  "states":  {
+                                                 "idle":  {
+                                                              "status":  "missing_bv045",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_darrik_idle.png"
+                                                          },
+                                                 "walk":  {
+                                                              "status":  "missing_bv045",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_darrik_walk.png"
+                                                          },
+                                                 "fight":  {
+                                                               "status":  "missing_bv045",
+                                                               "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_darrik_fight.png"
+                                                           },
+                                                 "hurt_dead":  {
+                                                                   "status":  "missing_bv045",
+                                                                   "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_darrik_hurt_dead.png"
+                                                               },
+                                                 "celebrate":  {
+                                                                   "status":  "missing_bv045",
+                                                                   "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_darrik_celebrate.png"
+                                                               },
+                                                 "loot_interact":  {
+                                                                       "status":  "missing_bv045",
+                                                                       "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_darrik_loot_interact.png"
+                                                                   }
+                                             }
+                              },
+                   "morrow":  {
+                                  "name":  "Morrow",
+                                  "class":  "Necromancer",
+                                  "rarity":  "Epic",
+                                  "packStatus":  "missing_bv045",
+                                  "states":  {
+                                                 "idle":  {
+                                                              "status":  "missing_bv045",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_morrow_idle.png"
+                                                          },
+                                                 "walk":  {
+                                                              "status":  "missing_bv045",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_morrow_walk.png"
+                                                          },
+                                                 "fight":  {
+                                                               "status":  "missing_bv045",
+                                                               "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_morrow_fight.png"
+                                                           },
+                                                 "hurt_dead":  {
+                                                                   "status":  "missing_bv045",
+                                                                   "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_morrow_hurt_dead.png"
+                                                               },
+                                                 "celebrate":  {
+                                                                   "status":  "missing_bv045",
+                                                                   "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_morrow_celebrate.png"
+                                                               },
+                                                 "loot_interact":  {
+                                                                       "status":  "missing_bv045",
+                                                                       "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_morrow_loot_interact.png"
+                                                                   }
+                                             }
+                              },
+                   "chevalier_de_la_mort":  {
+                                                "name":  "Grave Odo",
+                                                "class":  "DeathKnight",
+                                                "rarity":  "Epic",
+                                                "packStatus":  "missing_bv045",
+                                                "states":  {
+                                                               "idle":  {
+                                                                            "status":  "missing_bv045",
+                                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chevalier_de_la_mort_idle.png"
+                                                                        },
+                                                               "walk":  {
+                                                                            "status":  "missing_bv045",
+                                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chevalier_de_la_mort_walk.png"
+                                                                        },
+                                                               "fight":  {
+                                                                             "status":  "missing_bv045",
+                                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chevalier_de_la_mort_fight.png"
+                                                                         },
+                                                               "hurt_dead":  {
+                                                                                 "status":  "missing_bv045",
+                                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chevalier_de_la_mort_hurt_dead.png"
+                                                                             },
+                                                               "celebrate":  {
+                                                                                 "status":  "missing_bv045",
+                                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chevalier_de_la_mort_celebrate.png"
+                                                                             },
+                                                               "loot_interact":  {
+                                                                                     "status":  "missing_bv045",
+                                                                                     "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chevalier_de_la_mort_loot_interact.png"
+                                                                                 }
+                                                           }
+                                            },
+                   "expert_en_demolition":  {
+                                                "name":  "Nix Powderkeg",
+                                                "class":  "DemolitionExpert",
+                                                "rarity":  "Rare",
+                                                "packStatus":  "missing_bv045",
+                                                "states":  {
+                                                               "idle":  {
+                                                                            "status":  "missing_bv045",
+                                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_expert_en_demolition_idle.png"
+                                                                        },
+                                                               "walk":  {
+                                                                            "status":  "missing_bv045",
+                                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_expert_en_demolition_walk.png"
+                                                                        },
+                                                               "fight":  {
+                                                                             "status":  "missing_bv045",
+                                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_expert_en_demolition_fight.png"
+                                                                         },
+                                                               "hurt_dead":  {
+                                                                                 "status":  "missing_bv045",
+                                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_expert_en_demolition_hurt_dead.png"
+                                                                             },
+                                                               "celebrate":  {
+                                                                                 "status":  "missing_bv045",
+                                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_expert_en_demolition_celebrate.png"
+                                                                             },
+                                                               "loot_interact":  {
+                                                                                     "status":  "missing_bv045",
+                                                                                     "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_expert_en_demolition_loot_interact.png"
+                                                                                 }
+                                                           }
+                                            },
+                   "troll_stupide":  {
+                                         "name":  "Grum",
+                                         "class":  "StupidTroll",
+                                         "rarity":  "Common",
+                                         "packStatus":  "missing_bv045",
+                                         "states":  {
+                                                        "idle":  {
+                                                                     "status":  "missing_bv045",
+                                                                     "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_troll_stupide_idle.png"
+                                                                 },
+                                                        "walk":  {
+                                                                     "status":  "missing_bv045",
+                                                                     "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_troll_stupide_walk.png"
+                                                                 },
+                                                        "fight":  {
+                                                                      "status":  "missing_bv045",
+                                                                      "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_troll_stupide_fight.png"
+                                                                  },
+                                                        "hurt_dead":  {
+                                                                          "status":  "missing_bv045",
+                                                                          "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_troll_stupide_hurt_dead.png"
+                                                                      },
+                                                        "celebrate":  {
+                                                                          "status":  "missing_bv045",
+                                                                          "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_troll_stupide_celebrate.png"
+                                                                      },
+                                                        "loot_interact":  {
+                                                                              "status":  "missing_bv045",
+                                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_troll_stupide_loot_interact.png"
+                                                                          }
+                                                    }
+                                     },
+                   "quill":  {
+                                 "name":  "Quill",
+                                 "class":  "Bard",
+                                 "rarity":  "Rare",
+                                 "packStatus":  "missing_bv045",
+                                 "states":  {
+                                                "idle":  {
+                                                             "status":  "missing_bv045",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_quill_idle.png"
+                                                         },
+                                                "walk":  {
+                                                             "status":  "missing_bv045",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_quill_walk.png"
+                                                         },
+                                                "fight":  {
+                                                              "status":  "missing_bv045",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_quill_fight.png"
+                                                          },
+                                                "hurt_dead":  {
+                                                                  "status":  "missing_bv045",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_quill_hurt_dead.png"
+                                                              },
+                                                "celebrate":  {
+                                                                  "status":  "missing_bv045",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_quill_celebrate.png"
+                                                              },
+                                                "loot_interact":  {
+                                                                      "status":  "missing_bv045",
+                                                                      "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_quill_loot_interact.png"
+                                                                  }
+                                            }
+                             },
+                   "pax":  {
+                               "name":  "Pax",
+                               "class":  "Priest",
+                               "rarity":  "Uncommon",
+                               "packStatus":  "missing_bv045",
+                               "states":  {
+                                              "idle":  {
+                                                           "status":  "missing_bv045",
+                                                           "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pax_idle.png"
+                                                       },
+                                              "walk":  {
+                                                           "status":  "missing_bv045",
+                                                           "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pax_walk.png"
+                                                       },
+                                              "fight":  {
+                                                            "status":  "missing_bv045",
+                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pax_fight.png"
+                                                        },
+                                              "hurt_dead":  {
+                                                                "status":  "missing_bv045",
+                                                                "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pax_hurt_dead.png"
+                                                            },
+                                              "celebrate":  {
+                                                                "status":  "missing_bv045",
+                                                                "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pax_celebrate.png"
+                                                            },
+                                              "loot_interact":  {
+                                                                    "status":  "missing_bv045",
+                                                                    "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pax_loot_interact.png"
+                                                                }
+                                          }
+                           },
+                   "ledger":  {
+                                  "name":  "Sir Ledger",
+                                  "class":  "BardAccountant",
+                                  "rarity":  "Legendary",
+                                  "packStatus":  "missing_bv045",
+                                  "states":  {
+                                                 "idle":  {
+                                                              "status":  "missing_bv045",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_ledger_idle.png"
+                                                          },
+                                                 "walk":  {
+                                                              "status":  "missing_bv045",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_ledger_walk.png"
+                                                          },
+                                                 "fight":  {
+                                                               "status":  "missing_bv045",
+                                                               "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_ledger_fight.png"
+                                                           },
+                                                 "hurt_dead":  {
+                                                                   "status":  "missing_bv045",
+                                                                   "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_ledger_hurt_dead.png"
+                                                               },
+                                                 "celebrate":  {
+                                                                   "status":  "missing_bv045",
+                                                                   "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_ledger_celebrate.png"
+                                                               },
+                                                 "loot_interact":  {
+                                                                       "status":  "missing_bv045",
+                                                                       "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_ledger_loot_interact.png"
+                                                                   }
+                                             }
+                              },
+                   "comptable":  {
+                                     "name":  "Tally Noakes",
+                                     "class":  "Quartermaster",
+                                     "rarity":  "Rare",
+                                     "packStatus":  "missing_bv045",
+                                     "states":  {
+                                                    "idle":  {
+                                                                 "status":  "missing_bv045",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_comptable_idle.png"
+                                                             },
+                                                    "walk":  {
+                                                                 "status":  "missing_bv045",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_comptable_walk.png"
+                                                             },
+                                                    "fight":  {
+                                                                  "status":  "missing_bv045",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_comptable_fight.png"
+                                                              },
+                                                    "hurt_dead":  {
+                                                                      "status":  "missing_bv045",
+                                                                      "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_comptable_hurt_dead.png"
+                                                                  },
+                                                    "celebrate":  {
+                                                                      "status":  "missing_bv045",
+                                                                      "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_comptable_celebrate.png"
+                                                                  },
+                                                    "loot_interact":  {
+                                                                          "status":  "missing_bv045",
+                                                                          "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_comptable_loot_interact.png"
+                                                                      }
+                                                }
+                                 },
+                   "chef_cuistot":  {
+                                        "name":  "Basil Bouillon",
+                                        "class":  "Chef",
+                                        "rarity":  "Uncommon",
+                                        "packStatus":  "missing_bv045",
+                                        "states":  {
+                                                       "idle":  {
+                                                                    "status":  "missing_bv045",
+                                                                    "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chef_cuistot_idle.png"
+                                                                },
+                                                       "walk":  {
+                                                                    "status":  "missing_bv045",
+                                                                    "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chef_cuistot_walk.png"
+                                                                },
+                                                       "fight":  {
+                                                                     "status":  "missing_bv045",
+                                                                     "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chef_cuistot_fight.png"
+                                                                 },
+                                                       "hurt_dead":  {
+                                                                         "status":  "missing_bv045",
+                                                                         "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chef_cuistot_hurt_dead.png"
+                                                                     },
+                                                       "celebrate":  {
+                                                                         "status":  "missing_bv045",
+                                                                         "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chef_cuistot_celebrate.png"
+                                                                     },
+                                                       "loot_interact":  {
+                                                                             "status":  "missing_bv045",
+                                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_chef_cuistot_loot_interact.png"
+                                                                         }
+                                                   }
+                                    },
+                   "mira":  {
+                                "name":  "Mira",
+                                "class":  "ApprenticeMage",
+                                "rarity":  "Uncommon",
+                                "packStatus":  "planned_bv044",
+                                "states":  {
+                                               "idle":  {
+                                                            "status":  "planned_bv044",
+                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_idle.png"
+                                                        },
+                                               "walk":  {
+                                                            "status":  "planned_bv044",
+                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_walk.png"
+                                                        },
+                                               "fight":  {
+                                                             "status":  "planned_bv044",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_fight.png"
+                                                         },
+                                               "hurt_dead":  {
+                                                                 "status":  "planned_bv044",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_hurt_dead.png"
+                                                             },
+                                               "celebrate":  {
+                                                                 "status":  "planned_bv044",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_celebrate.png"
+                                                             },
+                                               "loot_interact":  {
+                                                                     "status":  "planned_bv044",
+                                                                     "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_loot_interact.png"
+                                                                 }
+                                           }
+                            },
+                   "orla":  {
+                                "name":  "Orla",
+                                "class":  "Bruiser",
+                                "rarity":  "Rare",
+                                "packStatus":  "missing_bv045",
+                                "states":  {
+                                               "idle":  {
+                                                            "status":  "missing_bv045",
+                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_orla_idle.png"
+                                                        },
+                                               "walk":  {
+                                                            "status":  "missing_bv045",
+                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_orla_walk.png"
+                                                        },
+                                               "fight":  {
+                                                             "status":  "missing_bv045",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_orla_fight.png"
+                                                         },
+                                               "hurt_dead":  {
+                                                                 "status":  "missing_bv045",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_orla_hurt_dead.png"
+                                                             },
+                                               "celebrate":  {
+                                                                 "status":  "missing_bv045",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_orla_celebrate.png"
+                                                             },
+                                               "loot_interact":  {
+                                                                     "status":  "missing_bv045",
+                                                                     "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_orla_loot_interact.png"
+                                                                 }
+                                           }
+                            },
+                   "bramble":  {
+                                   "name":  "Bramble",
+                                   "class":  "Hunter",
+                                   "rarity":  "Common",
+                                   "packStatus":  "missing_bv045",
+                                   "states":  {
+                                                  "idle":  {
+                                                               "status":  "missing_bv045",
+                                                               "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_bramble_idle.png"
+                                                           },
+                                                  "walk":  {
+                                                               "status":  "missing_bv045",
+                                                               "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_bramble_walk.png"
+                                                           },
+                                                  "fight":  {
+                                                                "status":  "missing_bv045",
+                                                                "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_bramble_fight.png"
+                                                            },
+                                                  "hurt_dead":  {
+                                                                    "status":  "missing_bv045",
+                                                                    "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_bramble_hurt_dead.png"
+                                                                },
+                                                  "celebrate":  {
+                                                                    "status":  "missing_bv045",
+                                                                    "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_bramble_celebrate.png"
+                                                                },
+                                                  "loot_interact":  {
+                                                                        "status":  "missing_bv045",
+                                                                        "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_bramble_loot_interact.png"
+                                                                    }
+                                              }
+                               },
+                   "paladin":  {
+                                   "name":  "Sir Brindle",
+                                   "class":  "Paladin",
+                                   "rarity":  "Legendary",
+                                   "packStatus":  "missing_bv045",
+                                   "states":  {
+                                                  "idle":  {
+                                                               "status":  "missing_bv045",
+                                                               "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_paladin_idle.png"
+                                                           },
+                                                  "walk":  {
+                                                               "status":  "missing_bv045",
+                                                               "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_paladin_walk.png"
+                                                           },
+                                                  "fight":  {
+                                                                "status":  "missing_bv045",
+                                                                "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_paladin_fight.png"
+                                                            },
+                                                  "hurt_dead":  {
+                                                                    "status":  "missing_bv045",
+                                                                    "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_paladin_hurt_dead.png"
+                                                                },
+                                                  "celebrate":  {
+                                                                    "status":  "missing_bv045",
+                                                                    "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_paladin_celebrate.png"
+                                                                },
+                                                  "loot_interact":  {
+                                                                        "status":  "missing_bv045",
+                                                                        "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_paladin_loot_interact.png"
+                                                                    }
+                                              }
+                               },
+                   "jardinier":  {
+                                     "name":  "Moss Fenlow",
+                                     "class":  "Gardener",
+                                     "rarity":  "Common",
+                                     "packStatus":  "missing_bv045",
+                                     "states":  {
+                                                    "idle":  {
+                                                                 "status":  "missing_bv045",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_jardinier_idle.png"
+                                                             },
+                                                    "walk":  {
+                                                                 "status":  "missing_bv045",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_jardinier_walk.png"
+                                                             },
+                                                    "fight":  {
+                                                                  "status":  "missing_bv045",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_jardinier_fight.png"
+                                                              },
+                                                    "hurt_dead":  {
+                                                                      "status":  "missing_bv045",
+                                                                      "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_jardinier_hurt_dead.png"
+                                                                  },
+                                                    "celebrate":  {
+                                                                      "status":  "missing_bv045",
+                                                                      "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_jardinier_celebrate.png"
+                                                                  },
+                                                    "loot_interact":  {
+                                                                          "status":  "missing_bv045",
+                                                                          "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_jardinier_loot_interact.png"
+                                                                      }
+                                                }
+                                 },
+                   "nell":  {
+                                "name":  "Nell",
+                                "class":  "Rogueish",
+                                "rarity":  "Uncommon",
+                                "packStatus":  "planned_bv044",
+                                "states":  {
+                                               "idle":  {
+                                                            "status":  "planned_bv044",
+                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_idle.png"
+                                                        },
+                                               "walk":  {
+                                                            "status":  "planned_bv044",
+                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_walk.png"
+                                                        },
+                                               "fight":  {
+                                                             "status":  "planned_bv044",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_fight.png"
+                                                         },
+                                               "hurt_dead":  {
+                                                                 "status":  "planned_bv044",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_hurt_dead.png"
+                                                             },
+                                               "celebrate":  {
+                                                                 "status":  "planned_bv044",
+                                                                 "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_celebrate.png"
+                                                             },
+                                               "loot_interact":  {
+                                                                     "status":  "planned_bv044",
+                                                                     "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_loot_interact.png"
+                                                                 }
+                                           }
+                            },
+                   "pippa":  {
+                                 "name":  "Pippa",
+                                 "class":  "ApprenticeMage",
+                                 "rarity":  "Epic",
+                                 "packStatus":  "missing_bv045",
+                                 "states":  {
+                                                "idle":  {
+                                                             "status":  "missing_bv045",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pippa_idle.png"
+                                                         },
+                                                "walk":  {
+                                                             "status":  "missing_bv045",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pippa_walk.png"
+                                                         },
+                                                "fight":  {
+                                                              "status":  "missing_bv045",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pippa_fight.png"
+                                                          },
+                                                "hurt_dead":  {
+                                                                  "status":  "missing_bv045",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pippa_hurt_dead.png"
+                                                              },
+                                                "celebrate":  {
+                                                                  "status":  "missing_bv045",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pippa_celebrate.png"
+                                                              },
+                                                "loot_interact":  {
+                                                                      "status":  "missing_bv045",
+                                                                      "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_pippa_loot_interact.png"
+                                                                  }
+                                            }
+                             },
+                   "vex":  {
+                               "name":  "Vex",
+                               "class":  "Rogueish",
+                               "rarity":  "Epic",
+                               "packStatus":  "missing_bv045",
+                               "states":  {
+                                              "idle":  {
+                                                           "status":  "missing_bv045",
+                                                           "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_vex_idle.png"
+                                                       },
+                                              "walk":  {
+                                                           "status":  "missing_bv045",
+                                                           "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_vex_walk.png"
+                                                       },
+                                              "fight":  {
+                                                            "status":  "missing_bv045",
+                                                            "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_vex_fight.png"
+                                                        },
+                                              "hurt_dead":  {
+                                                                "status":  "missing_bv045",
+                                                                "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_vex_hurt_dead.png"
+                                                            },
+                                              "celebrate":  {
+                                                                "status":  "missing_bv045",
+                                                                "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_vex_celebrate.png"
+                                                            },
+                                              "loot_interact":  {
+                                                                    "status":  "missing_bv045",
+                                                                    "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_vex_loot_interact.png"
+                                                                }
+                                          }
+                           },
+                   "sable":  {
+                                 "name":  "Sable",
+                                 "class":  "Ninja",
+                                 "rarity":  "Rare",
+                                 "packStatus":  "missing_bv045",
+                                 "states":  {
+                                                "idle":  {
+                                                             "status":  "missing_bv045",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_idle.png"
+                                                         },
+                                                "walk":  {
+                                                             "status":  "missing_bv045",
+                                                             "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_walk.png"
+                                                         },
+                                                "fight":  {
+                                                              "status":  "missing_bv045",
+                                                              "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_fight.png"
+                                                          },
+                                                "hurt_dead":  {
+                                                                  "status":  "missing_bv045",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_hurt_dead.png"
+                                                              },
+                                                "celebrate":  {
+                                                                  "status":  "missing_bv045",
+                                                                  "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_celebrate.png"
+                                                              },
+                                                "loot_interact":  {
+                                                                      "status":  "missing_bv045",
+                                                                      "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_loot_interact.png"
+                                                                  }
+                                            }
+                             },
+                   "elementaire_de_sel":  {
+                                              "name":  "Salina Brine",
+                                              "class":  "SaltElemental",
+                                              "rarity":  "Uncommon",
+                                              "packStatus":  "missing_bv045",
+                                              "states":  {
+                                                             "idle":  {
+                                                                          "status":  "missing_bv045",
+                                                                          "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_elementaire_de_sel_idle.png"
+                                                                      },
+                                                             "walk":  {
+                                                                          "status":  "missing_bv045",
+                                                                          "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_elementaire_de_sel_walk.png"
+                                                                      },
+                                                             "fight":  {
+                                                                           "status":  "missing_bv045",
+                                                                           "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_elementaire_de_sel_fight.png"
+                                                                       },
+                                                             "hurt_dead":  {
+                                                                               "status":  "missing_bv045",
+                                                                               "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_elementaire_de_sel_hurt_dead.png"
+                                                                           },
+                                                             "celebrate":  {
+                                                                               "status":  "missing_bv045",
+                                                                               "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_elementaire_de_sel_celebrate.png"
+                                                                           },
+                                                             "loot_interact":  {
+                                                                                   "status":  "missing_bv045",
+                                                                                   "asset":  "app/src/main/res-heroes/drawable-nodpi/hero_anim_elementaire_de_sel_loot_interact.png"
+                                                                               }
+                                                         }
+                                          }
+               }
+}

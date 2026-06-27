@@ -105,9 +105,9 @@ internal fun LiveLiteWatchScreen(
             selectedKeys = selectedKeySet,
             onToggle = { key ->
                 selectedInterventionKeys = if (key in selectedKeySet) {
-                    selectedInterventionKeys.filterNot { it == key }
+                    emptyList()
                 } else {
-                    selectedInterventionKeys + key
+                    listOf(key)
                 }
             },
         )
@@ -149,6 +149,8 @@ private fun LiveLiteForecastPanel(
                 preview.adjustedPartyPower,
                 preview.baseTargetPower,
                 preview.adjustedTargetPower,
+                preview.baseDurationSeconds,
+                preview.adjustedDurationSeconds,
             ),
             color = Color(0xFFFFE4A6),
             fontSize = 12.sp,
@@ -245,7 +247,7 @@ private fun LiveLiteInterventionRow(
                     color = Color(0xFFD9C99A),
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
-                    maxLines = 2,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -323,21 +325,24 @@ private fun liveLiteInterventionDetail(intervention: LiveLiteInterventionDefinit
     if (intervention.kind == LiveLiteInterventionKind.SpendSupply && supplies <= 0) {
         return stringResource(R.string.live_lite_intervention_need_supply)
     }
-    val effect = liveLiteEffectSummary(intervention.effect)
-    return if (effect.isBlank()) {
-        stringResource(R.string.live_lite_intervention_no_effect)
-    } else {
-        effect
+    if (!intervention.hasTradeoff) {
+        return stringResource(R.string.live_lite_intervention_no_effect)
     }
+    return stringResource(
+        R.string.live_lite_intervention_tradeoff,
+        liveLiteEffectSummary(intervention.upside),
+        liveLiteEffectSummary(intervention.downside),
+    )
 }
 
 @Composable
 private fun liveLiteEffectSummary(effect: LiveLiteInterventionEffect): String = listOfNotNull(
     stringResource(R.string.live_lite_effect_score, signedValue(effect.scoreBonus)).takeIf { effect.scoreBonus != 0 },
     stringResource(R.string.live_lite_effect_risk, signedValue(effect.riskPenaltyDelta)).takeIf { effect.riskPenaltyDelta != 0 },
-    stringResource(R.string.live_lite_effect_gold, effect.goldBonusPercent).takeIf { effect.goldBonusPercent > 0 },
+    stringResource(R.string.live_lite_effect_gold, signedPercent(effect.goldBonusPercent)).takeIf { effect.goldBonusPercent != 0 },
     stringResource(R.string.live_lite_effect_loot, effect.successLootBonus).takeIf { effect.successLootBonus > 0 },
     stringResource(R.string.live_lite_effect_xp, effect.xpBonus).takeIf { effect.xpBonus > 0 },
+    stringResource(R.string.live_lite_effect_time, signedSeconds(effect.durationSecondsDelta)).takeIf { effect.durationSecondsDelta != 0 },
 ).joinToString(separator = " / ")
 
 @Composable
@@ -372,3 +377,7 @@ private fun liveLitePoseLabel(pose: LiveLiteHeroPose?): String = when (pose) {
 }
 
 private fun signedValue(value: Int): String = if (value > 0) "+$value" else value.toString()
+
+private fun signedPercent(value: Int): String = "${signedValue(value)}%"
+
+private fun signedSeconds(value: Int): String = "${signedValue(value)}s"
