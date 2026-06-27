@@ -32,10 +32,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -152,6 +154,7 @@ internal fun GuildScreen(
     onResetProgress: () -> Unit,
 ) {
     var selectedHotspotName by rememberSaveable { mutableStateOf(defaultGuildHubHotspot(session.phase).name) }
+    var visitedHotspotNames by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var showCoreCrewDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(session.phase) {
@@ -161,15 +164,44 @@ internal fun GuildScreen(
     val selectedHotspot = GuildHubHotspot.values()
         .firstOrNull { it.name == selectedHotspotName }
         ?: defaultGuildHubHotspot(session.phase)
+    val visitedHotspots = visitedHotspotNames
+        .mapNotNull { name -> GuildHubHotspot.values().firstOrNull { it.name == name } }
+        .toSet()
+    val hintState = guildHubHintState(visitedHotspots, selectedHotspot)
+    val statusBadges = guildHubStatusBadges(
+        phase = session.phase,
+        pendingLootCount = session.pendingLootItems.size,
+        claimableAchievementCount = session.claimableAchievementCount(),
+        achievementSeals = session.achievementSeals(),
+        nextMilestoneSeals = session.nextAchievementMilestone()?.sealsRequired,
+        availableFacilityUpgradeCount = GuildFacility.values().count { facility -> session.canUpgradeFacility(facility) },
+        runningSecondsRemaining = if (session.phase == PlayPhase.Running) {
+            remainingSeconds(session, nowMillis).toInt().coerceAtLeast(0)
+        } else {
+            0
+        },
+    )
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF10110F)),
     ) {
+        val drawerLayout = guildHomeDrawerLayout(
+            contentWidthDp = maxWidth.value.roundToInt(),
+            contentHeightDp = maxHeight.value.roundToInt(),
+        )
+
         GuildHubArtwork(
             selectedHotspot = selectedHotspot,
-            onHotspotSelected = { selectedHotspotName = it.name },
+            hintState = hintState,
+            statusBadges = statusBadges,
+            onHotspotSelected = { hotspot ->
+                selectedHotspotName = hotspot.name
+                if (hotspot.name !in visitedHotspotNames) {
+                    visitedHotspotNames = visitedHotspotNames + hotspot.name
+                }
+            },
             modifier = Modifier.fillMaxSize(),
         )
         GuildHubSelectionDrawer(
@@ -184,11 +216,16 @@ internal fun GuildScreen(
             onFacilities = onFacilities,
             onManageCoreCrew = { showCoreCrewDialog = true },
             onFinishQuestNow = onFinishQuestNow,
+            bodyMaxLines = drawerLayout.bodyMaxLines,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(
+                    horizontal = drawerLayout.horizontalPaddingDp.dp,
+                    vertical = drawerLayout.bottomPaddingDp.dp,
+                )
+                .widthIn(max = drawerLayout.maxWidthDp.dp)
+                .heightIn(max = drawerLayout.maxHeightDp.dp),
         )
-
     }
 
     if (showCoreCrewDialog) {
@@ -210,6 +247,8 @@ private fun defaultGuildHubHotspot(phase: PlayPhase): GuildHubHotspot =
 @Composable
 private fun GuildHubArtwork(
     selectedHotspot: GuildHubHotspot,
+    hintState: GuildHubHintState,
+    statusBadges: List<GuildHubStatusBadge>,
     onHotspotSelected: (GuildHubHotspot) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -288,7 +327,142 @@ private fun GuildHubArtwork(
                     pressedHotspot = pressedHotspot,
                 )
             }
+            GuildHubStatusOverlay(statusBadges = statusBadges)
+            GuildHubHintOverlay(
+                hintState = hintState,
+                selectedHotspot = selectedHotspot,
+            )
         }
+    }
+}
+
+@Composable
+private fun GuildHubHintOverlay(
+    hintState: GuildHubHintState,
+    selectedHotspot: GuildHubHotspot,
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        if (hintState.showIntroHint) {
+            GuildHubHintChip(
+                text = stringResource(R.string.guild_hub_first_use_hint),
+                selected = true,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 12.dp, start = 16.dp, end = 16.dp),
+            )
+        }
+        hintState.labelledHotspots.forEach { hotspot ->
+            val anchor = guildHubHintAnchor(hotspot)
+            GuildHubHintChip(
+                text = guildHubHotspotHintLabel(hotspot),
+                selected = hotspot == selectedHotspot,
+                modifier = Modifier
+                    .offset(
+                        x = maxWidth * anchor.xFraction - 44.dp,
+                        y = maxHeight * anchor.yFraction,
+                    )
+                    .widthIn(min = 76.dp, max = 112.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun GuildHubStatusOverlay(statusBadges: List<GuildHubStatusBadge>) {
+    if (statusBadges.isEmpty()) return
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        statusBadges.forEach { badge ->
+            val anchor = guildHubStatusAnchor(badge.hotspot)
+            GuildHubStatusBadgeChip(
+                text = guildHubStatusBadgeText(badge),
+                tone = badge.tone,
+                modifier = Modifier
+                    .offset(
+                        x = maxWidth * anchor.xFraction - 34.dp,
+                        y = maxHeight * anchor.yFraction - 12.dp,
+                    )
+                    .widthIn(min = 40.dp, max = 104.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun GuildHubStatusBadgeChip(
+    text: String,
+    tone: GuildHubStatusTone,
+    modifier: Modifier = Modifier,
+) {
+    val colors = guildHubStatusBadgeColors(tone)
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(colors.first)
+            .border(BorderStroke(1.dp, colors.second), RoundedCornerShape(8.dp))
+            .padding(horizontal = 6.dp, vertical = 3.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            color = Color(0xFFFFF7D2),
+            fontSize = 9.sp,
+            lineHeight = 10.sp,
+            fontWeight = FontWeight.Black,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun guildHubStatusBadgeText(badge: GuildHubStatusBadge): String = when (badge.kind) {
+    GuildHubStatusBadgeKind.LootRecovery -> stringResource(R.string.guild_hub_badge_loot_pending, badge.value ?: 0)
+    GuildHubStatusBadgeKind.CharterClaim -> stringResource(R.string.guild_hub_badge_charter_claims, badge.value ?: 0)
+    GuildHubStatusBadgeKind.CharterProgress -> stringResource(
+        R.string.guild_hub_badge_charter_progress,
+        badge.value ?: 0,
+        badge.targetValue ?: 0,
+    )
+    GuildHubStatusBadgeKind.QuestReady -> stringResource(R.string.guild_hub_badge_quest_ready)
+    GuildHubStatusBadgeKind.QuestRunning -> stringResource(R.string.guild_hub_badge_quest_running, badge.value ?: 0)
+    GuildHubStatusBadgeKind.QuestReportReady -> stringResource(R.string.guild_hub_badge_quest_report)
+    GuildHubStatusBadgeKind.FacilityUpgradeReady -> stringResource(R.string.guild_hub_badge_facility_upgrades, badge.value ?: 0)
+}
+
+private fun guildHubStatusBadgeColors(tone: GuildHubStatusTone): Pair<Color, Color> = when (tone) {
+    GuildHubStatusTone.Attention -> Color(0xEAAE5D38) to Color(0xFFFFD66D)
+    GuildHubStatusTone.Progress -> Color(0xDA2F695C) to Color(0xFFBEE8A0)
+    GuildHubStatusTone.Calm -> Color(0xD1171813) to Color(0xFFD7C891)
+}
+
+@Composable
+private fun GuildHubHintChip(
+    text: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val borderColor = if (selected) Color(0xCCFFD36D) else Color(0x88FFF0BD)
+    val backgroundColor = if (selected) Color(0xD62F695C) else Color(0xBB171813)
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 5.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            color = Color(0xFFFFF0BD),
+            fontSize = 10.sp,
+            lineHeight = 11.sp,
+            fontWeight = FontWeight.Black,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -457,6 +631,7 @@ private fun GuildHubSelectionDrawer(
     onFacilities: () -> Unit,
     onManageCoreCrew: () -> Unit,
     onFinishQuestNow: () -> Unit,
+    bodyMaxLines: Int = 2,
     modifier: Modifier = Modifier,
 ) {
     val debugEnabled = booleanResource(R.bool.debug_tools_enabled)
@@ -527,7 +702,7 @@ private fun GuildHubSelectionDrawer(
                 color = Color(0xFFE6D8A6),
                 fontSize = 12.sp,
                 lineHeight = 15.sp,
-                maxLines = 2,
+                maxLines = bodyMaxLines,
                 overflow = TextOverflow.Ellipsis,
             )
             if (selectedHotspot == GuildHubHotspot.QuestTable && session.phase == PlayPhase.Running) {
@@ -592,6 +767,14 @@ private fun guildHubHotspotLabel(hotspot: GuildHubHotspot): String = when (hotsp
     GuildHubHotspot.QuestTable -> stringResource(R.string.guild_hub_quests_title)
     GuildHubHotspot.LootCache -> stringResource(R.string.guild_hub_loot_title)
     GuildHubHotspot.Facilities -> stringResource(R.string.guild_hub_facilities_title)
+}
+@Composable
+private fun guildHubHotspotHintLabel(hotspot: GuildHubHotspot): String = when (hotspot) {
+    GuildHubHotspot.Charter -> stringResource(R.string.guild_hub_hint_charter)
+    GuildHubHotspot.CoreCrew -> stringResource(R.string.guild_hub_hint_core_crew)
+    GuildHubHotspot.QuestTable -> stringResource(R.string.guild_hub_hint_quests)
+    GuildHubHotspot.LootCache -> stringResource(R.string.guild_hub_hint_loot)
+    GuildHubHotspot.Facilities -> stringResource(R.string.guild_hub_hint_facilities)
 }
 
 private fun guildHubHotspotColor(hotspot: GuildHubHotspot): Color = when (hotspot) {
@@ -932,6 +1115,8 @@ internal fun GuildFacilitiesPanel(session: PlaySessionState, selectedQuest: Ques
     val scoutBehavior = ScoutTableIntel.behavior(session.scoutTableLevel)
     val armoryState = session.facilityUpgradeState(GuildFacility.ArmoryForge)
     val tavernState = session.facilityUpgradeState(GuildFacility.TavernKitchen)
+    val infirmaryState = session.facilityUpgradeState(GuildFacility.Infirmary)
+    val accountantState = session.facilityUpgradeState(GuildFacility.AccountantOffice)
     PaperPanel(
         title = stringResource(R.string.guild_facilities_title),
         body = stringResource(R.string.guild_facilities_summary),
@@ -992,6 +1177,37 @@ internal fun GuildFacilitiesPanel(session: PlaySessionState, selectedQuest: Ques
                     stringResource(R.string.guild_facility_tavern_effect, (session.passiveIncomeCapBonusSeconds() / 60L).toInt())
                 } else {
                     stringResource(R.string.guild_facility_tavern_locked_effect)
+                },
+            ),
+        )
+        FacilityLine(
+            label = stringResource(R.string.guild_facility_infirmary),
+            value = facilityLevelEffect(
+                state = infirmaryState,
+                effect = if (infirmaryState.unlocked || infirmaryState.level > 0) {
+                    stringResource(
+                        R.string.guild_facility_infirmary_effect,
+                        session.infirmaryFailureRecoveryBonusPercent(),
+                        session.infirmarySafePlanPowerBonus(ExpeditionPlanCatalog.safetyFirstId),
+                    )
+                } else {
+                    stringResource(R.string.guild_facility_infirmary_locked_effect)
+                },
+            ),
+        )
+        FacilityLine(
+            label = stringResource(R.string.guild_facility_accountant_office),
+            value = facilityLevelEffect(
+                state = accountantState,
+                effect = if (accountantState.unlocked || accountantState.level > 0) {
+                    stringResource(
+                        R.string.guild_facility_accountant_effect,
+                        session.passiveGoldPerHour(),
+                        session.accountantOfficeQuestGoldBonusPercent(selectedQuest),
+                        session.accountantOfficeDuplicateReputationBonus(),
+                    )
+                } else {
+                    stringResource(R.string.guild_facility_accountant_locked_effect)
                 },
             ),
         )

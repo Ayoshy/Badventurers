@@ -177,7 +177,7 @@ object ProgressionAdvisor {
             party = selectedParty,
             quest = quest,
             equipment = state.equippedLoot,
-            facilityPowerBonus = state.trainingYardPowerBonus(),
+            facilityPowerBonus = state.expeditionFacilityPowerBonus(),
         )
         if (currentEstimate.successChancePercent >= LOW_SUCCESS_THRESHOLD) return null
 
@@ -186,7 +186,7 @@ object ProgressionAdvisor {
             quest = quest,
             selectedParty = selectedParty,
             equipment = state.equippedLoot,
-            facilityPowerBonus = state.trainingYardPowerBonus(),
+            facilityPowerBonus = state.expeditionFacilityPowerBonus(),
             partySlots = partySlots,
         )
             .map { it.hero }
@@ -195,7 +195,7 @@ object ProgressionAdvisor {
             party = recommendedParty,
             quest = quest,
             equipment = state.equippedLoot,
-            facilityPowerBonus = state.trainingYardPowerBonus(),
+            facilityPowerBonus = state.expeditionFacilityPowerBonus(),
         )
         val selectedIds = selectedParty.map { it.id }.toSet()
         val recommendedIds = recommendedParty.map { it.id }

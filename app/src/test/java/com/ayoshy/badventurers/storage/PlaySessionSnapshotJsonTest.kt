@@ -37,6 +37,8 @@ class PlaySessionSnapshotJsonTest {
             scoutTableLevel = 1,
             armoryForgeLevel = 2,
             tavernKitchenLevel = 1,
+            infirmaryLevel = 2,
+            accountantOfficeLevel = 1,
             lootRolls = 6,
         )
         val snapshot = PlaySessionSnapshot.fromState(state)
@@ -53,6 +55,8 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(1, restored?.scoutTableLevel)
         assertEquals(2, restored?.armoryForgeLevel)
         assertEquals(1, restored?.tavernKitchenLevel)
+        assertEquals(2, restored?.infirmaryLevel)
+        assertEquals(1, restored?.accountantOfficeLevel)
         assertEquals(state.gold, restored?.gold)
         assertEquals(state.specialContracts, restored?.specialContracts)
         assertEquals(state.reputation, restored?.reputation)
@@ -147,6 +151,8 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(1, restored?.bunkRoomLevel)
         assertEquals(0, restored?.armoryForgeLevel)
         assertEquals(0, restored?.tavernKitchenLevel)
+        assertEquals(0, restored?.infirmaryLevel)
+        assertEquals(0, restored?.accountantOfficeLevel)
         assertEquals(listOf(HeroCatalog.starterHeroes.first().id), restored?.normalizedCoreCrewHeroIds())
     }
 
@@ -163,6 +169,8 @@ class PlaySessionSnapshotJsonTest {
             .put("bunkRoomLevel", 99)
             .put("armoryForgeLevel", 99)
             .put("tavernKitchenLevel", 99)
+            .put("infirmaryLevel", 99)
+            .put("accountantOfficeLevel", 99)
             .put("lootRolls", 0)
             .put("heroIds", JSONArray())
             .toString()
@@ -185,6 +193,14 @@ class PlaySessionSnapshotJsonTest {
         assertEquals(
             GuildFacilityCatalog.definition(GuildFacility.TavernKitchen).maxLevel,
             restored?.tavernKitchenLevel,
+        )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.Infirmary).maxLevel,
+            restored?.infirmaryLevel,
+        )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.AccountantOffice).maxLevel,
+            restored?.accountantOfficeLevel,
         )
     }
 

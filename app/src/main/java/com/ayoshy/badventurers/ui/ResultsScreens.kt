@@ -164,7 +164,7 @@ internal fun QuestResultScreen(
         val partyNames = resultParty.joinToString { it.name }
         val resultCauses = ResultCauseGenerator.generate(session, run, resultParty)
         val levelUpPreviews = resultParty
-            .map { hero -> hero to HeroProgression.previewGrantXp(hero, session.collectableHeroXp(result)) }
+            .map { hero -> hero to HeroProgression.previewGrantXp(hero, session.collectableHeroXp(result, run.quest)) }
             .filter { (_, preview) -> preview.levelsGained > 0 }
         val postCollectSession = session.collectResult()
         val postCollectAdvice = ProgressionAdvisor.recommend(postCollectSession, selectedQuest = run.quest)
@@ -269,9 +269,10 @@ internal fun QuestResultScreen(
 
 @Composable
 internal fun resultRewardDetail(session: PlaySessionState, result: ExpeditionResult): String {
-    val totalXp = session.collectableHeroXp(result)
+    val quest = session.expedition?.quest
+    val totalXp = session.collectableHeroXp(result, quest)
     val baseXp = result.reward.xp.coerceAtLeast(0)
-    val bonusPercent = session.trainingYardQuestXpBonusPercent()
+    val bonusPercent = session.trainingYardQuestXpBonusPercent() + session.tavernKitchenQuestXpBonusPercent(quest)
     if (bonusPercent <= 0) return stringResource(R.string.result_reward_detail, totalXp)
 
     return stringResource(

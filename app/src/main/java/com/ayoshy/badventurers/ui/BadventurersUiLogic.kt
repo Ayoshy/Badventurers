@@ -170,8 +170,9 @@ internal fun remainingSeconds(session: PlaySessionState, nowMillis: Long): Long 
 
 
 internal fun rewardGoldWithNoticeBoard(session: PlaySessionState): Int {
-    val result = session.expedition?.result ?: return 0
-    return session.collectableRewardGold(result)
+    val run = session.expedition ?: return 0
+    val result = run.result ?: return 0
+    return session.collectableRewardGold(result, run.quest)
 }
 
 internal fun questBaseGoldWithNoticeBoard(session: PlaySessionState, quest: Quest, goldBonusPercent: Int = 0): Int {

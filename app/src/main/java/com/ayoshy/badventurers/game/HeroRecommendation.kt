@@ -22,6 +22,7 @@ object HeroRecommendationScorer {
         selectedParty: List<Hero> = emptyList(),
         equipment: List<EquippedLoot> = emptyList(),
         facilityPowerBonus: Int = 0,
+        planId: String = ExpeditionPlanCatalog.defaultPlanId,
         partySlots: Int = quest.partySlots,
     ): List<HeroRecommendation> {
         val normalizedSlots = partySlots.coerceAtLeast(1)
@@ -31,6 +32,7 @@ object HeroRecommendationScorer {
             quest = quest,
             equipment = equipment,
             facilityPowerBonus = facilityPowerBonus,
+            planId = planId,
         )
         val matchingStats = matchingStatsFor(quest)
 
@@ -44,6 +46,7 @@ object HeroRecommendationScorer {
                     matchingStats = matchingStats,
                     equipment = equipment,
                     facilityPowerBonus = facilityPowerBonus,
+                    planId = planId,
                     partySlots = normalizedSlots,
                 )
             }
@@ -62,6 +65,7 @@ object HeroRecommendationScorer {
         selectedParty: List<Hero> = emptyList(),
         equipment: List<EquippedLoot> = emptyList(),
         facilityPowerBonus: Int = 0,
+        planId: String = ExpeditionPlanCatalog.defaultPlanId,
         partySlots: Int = quest.partySlots,
         limit: Int = maxOf(3, partySlots),
     ): List<String> =
@@ -71,6 +75,7 @@ object HeroRecommendationScorer {
             selectedParty = selectedParty,
             equipment = equipment,
             facilityPowerBonus = facilityPowerBonus,
+            planId = planId,
             partySlots = partySlots,
         )
             .take(limit.coerceAtLeast(1))
@@ -84,6 +89,7 @@ object HeroRecommendationScorer {
         matchingStats: List<StatType>,
         equipment: List<EquippedLoot>,
         facilityPowerBonus: Int,
+        planId: String,
         partySlots: Int,
     ): HeroRecommendation {
         val selected = currentParty.any { it.id == hero.id }
@@ -93,6 +99,7 @@ object HeroRecommendationScorer {
                 quest = quest,
                 equipment = equipment,
                 facilityPowerBonus = facilityPowerBonus,
+                planId = planId,
             )
         } else {
             bestEstimateWithCandidate(
@@ -101,6 +108,7 @@ object HeroRecommendationScorer {
                 quest = quest,
                 equipment = equipment,
                 facilityPowerBonus = facilityPowerBonus,
+                planId = planId,
                 partySlots = partySlots,
             )
         }
@@ -110,6 +118,7 @@ object HeroRecommendationScorer {
                 quest = quest,
                 equipment = equipment,
                 facilityPowerBonus = facilityPowerBonus,
+                planId = planId,
             ).successChancePercent
         } else {
             baselineSuccessChance
@@ -149,6 +158,7 @@ object HeroRecommendationScorer {
         quest: Quest,
         equipment: List<EquippedLoot>,
         facilityPowerBonus: Int,
+        planId: String,
         partySlots: Int,
     ): ExpeditionEstimate {
         val candidateParties = when {
@@ -166,6 +176,7 @@ object HeroRecommendationScorer {
                     quest = quest,
                     equipment = equipment,
                     facilityPowerBonus = facilityPowerBonus,
+                    planId = planId,
                 )
             }
             .maxBy { it.successChancePercent }

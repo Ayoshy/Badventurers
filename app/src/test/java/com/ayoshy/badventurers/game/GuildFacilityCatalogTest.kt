@@ -17,7 +17,9 @@ class GuildFacilityCatalogTest {
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.BunkRoom).implemented)
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.ScoutTable).implemented)
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.ArmoryForge).implemented)
+        assertTrue(GuildFacilityCatalog.definition(GuildFacility.Infirmary).implemented)
         assertTrue(GuildFacilityCatalog.definition(GuildFacility.TavernKitchen).implemented)
+        assertTrue(GuildFacilityCatalog.definition(GuildFacility.AccountantOffice).implemented)
     }
 
     @Test
@@ -80,6 +82,8 @@ class GuildFacilityCatalogTest {
         val lootPlan = ExpeditionPlanCatalog.byId(ExpeditionPlanCatalog.lootPriorityId)
 
         assertEquals(emptyList<ScoutPlanWarning>(), ScoutTableIntel.planWarningsFor(0, rushPlan, quest))
+        assertFalse(ScoutTableIntel.behavior(1).revealsUnlockPreviews)
+        assertTrue(ScoutTableIntel.behavior(2).revealsUnlockPreviews)
 
         val firstWarning = ScoutTableIntel.planWarningsFor(1, rushPlan, quest).single()
         assertEquals(ScoutPlanWarningType.HigherRisk, firstWarning.type)
@@ -109,6 +113,11 @@ class GuildFacilityCatalogTest {
             completedQuestCount = 3,
             trainingYardLevel = 2,
         )
+        val infirmaryReady = locked.copy(completedQuestCount = 2)
+        val accountantReady = locked.copy(
+            reputation = 12,
+            noticeBoardLevel = 2,
+        )
 
         assertFalse(locked.facilityUpgradeState(GuildFacility.ArmoryForge).unlocked)
         assertTrue(armoryReady.facilityUpgradeState(GuildFacility.ArmoryForge).unlocked)
@@ -119,5 +128,15 @@ class GuildFacilityCatalogTest {
         assertTrue(tavernReady.facilityUpgradeState(GuildFacility.TavernKitchen).unlocked)
         assertTrue(tavernReady.canUpgradeFacility(GuildFacility.TavernKitchen))
         assertEquals(1, tavernReady.upgradeTavernKitchen().tavernKitchenLevel)
+
+        assertFalse(locked.facilityUpgradeState(GuildFacility.Infirmary).unlocked)
+        assertTrue(infirmaryReady.facilityUpgradeState(GuildFacility.Infirmary).unlocked)
+        assertTrue(infirmaryReady.canUpgradeFacility(GuildFacility.Infirmary))
+        assertEquals(1, infirmaryReady.upgradeInfirmary().infirmaryLevel)
+
+        assertFalse(locked.facilityUpgradeState(GuildFacility.AccountantOffice).unlocked)
+        assertTrue(accountantReady.facilityUpgradeState(GuildFacility.AccountantOffice).unlocked)
+        assertTrue(accountantReady.canUpgradeFacility(GuildFacility.AccountantOffice))
+        assertEquals(1, accountantReady.upgradeAccountantOffice().accountantOfficeLevel)
     }
 }

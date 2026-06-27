@@ -174,6 +174,7 @@ object GuildFacilityCatalog {
             cost = GuildFacilityCostCurve(base = 800, step = 400),
             unlockRequirement = GuildFacilityUnlockRequirement(minCompletedQuestCount = 2),
             effects = listOf(GuildFacilityEffect.RiskMitigation),
+            implemented = true,
         ),
         GuildFacilityDefinition(
             facility = GuildFacility.ScoutTable,
@@ -214,6 +215,7 @@ object GuildFacilityCatalog {
                 requiredFacilityLevels = mapOf(GuildFacility.NoticeBoard to 2),
             ),
             effects = listOf(GuildFacilityEffect.GoldReputationYield, GuildFacilityEffect.RecruitPoolQuality),
+            implemented = true,
         ),
     )
 

@@ -139,6 +139,8 @@ internal fun UpgradesScreen(
     onBuyScoutTable: () -> Unit,
     onBuyArmoryForge: () -> Unit,
     onBuyTavernKitchen: () -> Unit,
+    onBuyInfirmary: () -> Unit,
+    onBuyAccountantOffice: () -> Unit,
 ) {
     val noticeBoardCost = session.noticeBoardUpgradeCost()
     val trainingYardCost = session.trainingYardUpgradeCost()
@@ -149,6 +151,10 @@ internal fun UpgradesScreen(
     val armoryForgeCost = session.armoryForgeUpgradeCost()
     val tavernKitchenState = session.facilityUpgradeState(GuildFacility.TavernKitchen)
     val tavernKitchenCost = session.tavernKitchenUpgradeCost()
+    val infirmaryState = session.facilityUpgradeState(GuildFacility.Infirmary)
+    val infirmaryCost = session.infirmaryUpgradeCost()
+    val accountantOfficeState = session.facilityUpgradeState(GuildFacility.AccountantOffice)
+    val accountantOfficeCost = session.accountantOfficeUpgradeCost()
 
     ScreenScaffold(title = stringResource(R.string.upgrades_title), status = stringResource(R.string.guild_upgrade_status)) {
         InfoRow(
@@ -224,6 +230,26 @@ internal fun UpgradesScreen(
             enabled = session.canUpgradeFacility(GuildFacility.TavernKitchen),
             disabledLabel = facilityDisabledLabel(tavernKitchenState),
             onBuy = onBuyTavernKitchen,
+        )
+        UpgradeRow(
+            title = stringResource(R.string.infirmary_upgrade_title, session.infirmaryLevel),
+            detail = stringResource(R.string.infirmary_upgrade_detail),
+            preview = infirmaryUpgradePreviewText(session),
+            cost = infirmaryCost,
+            currentGold = session.gold,
+            enabled = session.canUpgradeFacility(GuildFacility.Infirmary),
+            disabledLabel = facilityDisabledLabel(infirmaryState),
+            onBuy = onBuyInfirmary,
+        )
+        UpgradeRow(
+            title = stringResource(R.string.accountant_office_upgrade_title, session.accountantOfficeLevel),
+            detail = stringResource(R.string.accountant_office_upgrade_detail),
+            preview = accountantOfficeUpgradePreviewText(session),
+            cost = accountantOfficeCost,
+            currentGold = session.gold,
+            enabled = session.canUpgradeFacility(GuildFacility.AccountantOffice),
+            disabledLabel = facilityDisabledLabel(accountantOfficeState),
+            onBuy = onBuyAccountantOffice,
         )
         DarkPanel(title = stringResource(R.string.next_unlock_title), body = stringResource(R.string.next_unlock_summary))
         AchievementLedgerPanel(session = session, onOpen = onAchievements)
@@ -583,6 +609,36 @@ internal fun tavernKitchenUpgradePreviewText(session: PlaySessionState): String 
         stringResource(R.string.tavern_kitchen_upgrade_maxed, currentBonusMinutes)
     } else {
         stringResource(R.string.tavern_kitchen_upgrade_preview, currentBonusMinutes, nextBonusMinutes)
+    }
+}
+
+@Composable
+internal fun infirmaryUpgradePreviewText(session: PlaySessionState): String {
+    val state = session.facilityUpgradeState(GuildFacility.Infirmary)
+    val nextLevel = (session.infirmaryLevel + 1).coerceAtMost(state.definition.maxLevel)
+    val currentRecovery = session.infirmaryFailureRecoveryBonusPercent()
+    val nextRecovery = session.copy(infirmaryLevel = nextLevel).infirmaryFailureRecoveryBonusPercent()
+    val currentSafePower = session.infirmarySafePlanPowerBonus(ExpeditionPlanCatalog.safetyFirstId)
+    val nextSafePower = session.copy(infirmaryLevel = nextLevel).infirmarySafePlanPowerBonus(ExpeditionPlanCatalog.safetyFirstId)
+    return if (state.maxed) {
+        stringResource(R.string.infirmary_upgrade_maxed, currentRecovery, currentSafePower)
+    } else {
+        stringResource(R.string.infirmary_upgrade_preview, currentRecovery, currentSafePower, nextRecovery, nextSafePower)
+    }
+}
+
+@Composable
+internal fun accountantOfficeUpgradePreviewText(session: PlaySessionState): String {
+    val state = session.facilityUpgradeState(GuildFacility.AccountantOffice)
+    val nextLevel = (session.accountantOfficeLevel + 1).coerceAtMost(state.definition.maxLevel)
+    val currentGold = session.accountantOfficeQuestGoldBonusPercent(SeedGame.firstQuest)
+    val nextGold = session.copy(accountantOfficeLevel = nextLevel).accountantOfficeQuestGoldBonusPercent(SeedGame.firstQuest)
+    val currentDuplicate = session.accountantOfficeDuplicateReputationBonus()
+    val nextDuplicate = session.copy(accountantOfficeLevel = nextLevel).accountantOfficeDuplicateReputationBonus()
+    return if (state.maxed) {
+        stringResource(R.string.accountant_office_upgrade_maxed, currentGold, currentDuplicate)
+    } else {
+        stringResource(R.string.accountant_office_upgrade_preview, currentGold, currentDuplicate, nextGold, nextDuplicate)
     }
 }
 

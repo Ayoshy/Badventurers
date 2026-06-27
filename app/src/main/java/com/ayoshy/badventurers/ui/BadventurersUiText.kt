@@ -269,7 +269,7 @@ internal fun heroRosterDetail(hero: Hero): String =
         R.string.hero_roster_detail,
         heroRarityLabel(hero.rarity),
         heroClassLabel(hero.heroClass),
-        heroTraitLabel(hero.trait),
+        heroSpecialLabel(hero.special),
     )
 
 @Composable
@@ -313,6 +313,17 @@ internal fun heroTraitLabel(trait: Trait): String =
     }
 
 @Composable
+internal fun traitGrowthStatLabel(trait: Trait): String =
+    statTypeLabel(
+        when (trait) {
+            Trait.Overconfident -> StatType.Ego
+            Trait.ReadsManual -> StatType.Paperwork
+            Trait.SuspiciouslyLucky -> StatType.Luck
+            Trait.PainfullyOrganized -> StatType.Paperwork
+        },
+    )
+
+@Composable
 internal fun statBonusSummary(bonuses: List<StatBonus>, maxItems: Int = 3): String {
     val visibleBonuses = bonuses.filter { it.value > 0 }.take(maxItems)
     if (visibleBonuses.isEmpty()) return stringResource(R.string.hero_stat_gain_none)
@@ -330,6 +341,32 @@ internal fun statBonusSummary(bonuses: List<StatBonus>, maxItems: Int = 3): Stri
         joined
     }
 }
+
+@Composable
+internal fun heroSpecialLabel(special: HeroSpecial): String =
+    when (special) {
+        HeroSpecial.RamshackleCharge -> stringResource(R.string.hero_special_label_ramshackle_charge)
+        HeroSpecial.GlyphReader -> stringResource(R.string.hero_special_label_glyph_reader)
+        HeroSpecial.LightFingers -> stringResource(R.string.hero_special_label_light_fingers)
+        HeroSpecial.HumanWall -> stringResource(R.string.hero_special_label_human_wall)
+        HeroSpecial.AggressiveMinutes -> stringResource(R.string.hero_special_label_aggressive_minutes)
+        HeroSpecial.TerrainManual -> stringResource(R.string.hero_special_label_terrain_manual)
+        HeroSpecial.UnstableLuck -> stringResource(R.string.hero_special_label_unstable_luck)
+        HeroSpecial.DirtyJackpot -> stringResource(R.string.hero_special_label_dirty_jackpot)
+        HeroSpecial.FreshTrail -> stringResource(R.string.hero_special_label_fresh_trail)
+        HeroSpecial.CleanBlessing -> stringResource(R.string.hero_special_label_clean_blessing)
+        HeroSpecial.NoTrace -> stringResource(R.string.hero_special_label_no_trace)
+        HeroSpecial.NecroLever -> stringResource(R.string.hero_special_label_necro_lever)
+        HeroSpecial.HostileAudit -> stringResource(R.string.hero_special_label_hostile_audit)
+        HeroSpecial.UnbreakableOath -> stringResource(R.string.hero_special_label_unbreakable_oath)
+        HeroSpecial.BalancedBooks -> stringResource(R.string.hero_special_label_balanced_books)
+        HeroSpecial.GreenThumb -> stringResource(R.string.hero_special_label_green_thumb)
+        HeroSpecial.DeathDiscount -> stringResource(R.string.hero_special_label_death_discount)
+        HeroSpecial.MoraleRations -> stringResource(R.string.hero_special_label_morale_rations)
+        HeroSpecial.PlanBExplosives -> stringResource(R.string.hero_special_label_plan_b_explosives)
+        HeroSpecial.PreservationSalt -> stringResource(R.string.hero_special_label_preservation_salt)
+        HeroSpecial.CreativeMisunderstanding -> stringResource(R.string.hero_special_label_creative_misunderstanding)
+    }
 
 @Composable
 internal fun heroSpecialSummary(special: HeroSpecial): String =

@@ -1,6 +1,7 @@
 package com.ayoshy.badventurers.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,8 +46,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -354,6 +362,7 @@ fun BadventurersApp(
                             session = session,
                             onSellInventory = { item -> updateSession(session.sellLoot(item)) },
                             onEquip = { heroId, item -> updateSession(session.equipLoot(heroId, item)) },
+                            onReroll = { item -> updateSession(session.rerollLoot(item, seed = System.currentTimeMillis().toInt())) },
                         )
                         GameTab.Upgrades -> UpgradesScreen(
                             session = session,
@@ -364,6 +373,8 @@ fun BadventurersApp(
                             onBuyScoutTable = { updateSession(session.upgradeScoutTable()) },
                             onBuyArmoryForge = { updateSession(session.upgradeArmoryForge()) },
                             onBuyTavernKitchen = { updateSession(session.upgradeTavernKitchen()) },
+                            onBuyInfirmary = { updateSession(session.upgradeInfirmary()) },
+                            onBuyAccountantOffice = { updateSession(session.upgradeAccountantOffice()) },
                         )
                         GameTab.Achievements -> AchievementsScreen(
                             session = session,
@@ -447,61 +458,202 @@ private fun ResourceChip(
 
 @Composable
 private fun BottomBar(selectedTab: GameTab, onTabSelected: (GameTab) -> Unit) {
+    val activeTab = selectedTab.bottomNavigationTab()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .background(Color(0xEE151612))
-            .padding(horizontal = 4.dp, vertical = 5.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+            .height(GuildHomeBottomNavigationHeightDp.dp)
+            .background(Color(0xF0141512))
+            .padding(horizontal = 6.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        BottomTab(GameTab.Guild, selectedTab, "G", stringResource(R.string.guild_home_title), onTabSelected)
-        BottomTab(GameTab.Quests, selectedTab, "Q", stringResource(R.string.quests_title), onTabSelected)
-        BottomTab(GameTab.Heroes, selectedTab, "H", stringResource(R.string.heroes_title), onTabSelected)
-        BottomTab(GameTab.Loot, selectedTab, "L", stringResource(R.string.loot_title), onTabSelected)
-        BottomTab(GameTab.Upgrades, selectedTab, "U", stringResource(R.string.upgrades_title), onTabSelected)
+        BottomTab(GameTab.Guild, activeTab, stringResource(R.string.guild_home_title), onTabSelected)
+        BottomTab(GameTab.Quests, activeTab, stringResource(R.string.quests_title), onTabSelected)
+        BottomTab(GameTab.Heroes, activeTab, stringResource(R.string.heroes_title), onTabSelected)
+        BottomTab(GameTab.Loot, activeTab, stringResource(R.string.loot_title), onTabSelected)
+        BottomTab(GameTab.Upgrades, activeTab, stringResource(R.string.upgrades_title), onTabSelected)
     }
+}
+
+private fun GameTab.bottomNavigationTab(): GameTab = when (this) {
+    GameTab.ExpeditionPrep -> GameTab.Quests
+    GameTab.OfflineSummary,
+    GameTab.QuestResult -> GameTab.Guild
+    GameTab.RewardLoot -> GameTab.Loot
+    GameTab.Achievements -> GameTab.Upgrades
+    else -> this
 }
 
 @Composable
 private fun RowScope.BottomTab(
     tab: GameTab,
     selectedTab: GameTab,
-    icon: String,
     label: String,
     onTabSelected: (GameTab) -> Unit,
 ) {
     val selected = tab == selectedTab
+    val tabShape = RoundedCornerShape(8.dp)
+    val iconShape = RoundedCornerShape(7.dp)
     Column(
         modifier = Modifier
             .weight(1f)
             .fillMaxHeight()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(tabShape)
+            .background(if (selected) Color(0x3A2F695C) else Color.Transparent)
+            .border(
+                BorderStroke(1.dp, if (selected) Color(0x66FFD36D) else Color(0x14FFF1BF)),
+                tabShape,
+            )
             .clickable { onTabSelected(tab) }
-            .background(if (selected) Color(0x552F695C) else Color.Transparent)
-            .padding(vertical = 4.dp),
+            .padding(horizontal = 2.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
-                .size(24.dp)
-                .clip(RoundedCornerShape(7.dp))
-                .background(if (selected) Color(0xFF2F695C) else Color(0x2AFFF1BF)),
+                .size(26.dp)
+                .clip(iconShape)
+                .background(if (selected) Color(0xFF2F695C) else Color(0x252F695C))
+                .border(
+                    BorderStroke(1.dp, if (selected) Color(0xAAFFD36D) else Color(0x36FFF1BF)),
+                    iconShape,
+                )
+                .padding(3.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = icon, color = Color(0xFFFFF0BD), fontSize = 11.sp, fontWeight = FontWeight.Black)
+            BottomTabIcon(tab = tab, selected = selected)
         }
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(3.dp))
         Text(
             text = label,
             color = if (selected) Color(0xFFFFF0BD) else Color(0xFFD7C891),
-            fontSize = 10.sp,
+            fontSize = 9.sp,
             fontWeight = FontWeight.Black,
+            lineHeight = 10.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
     }
+}
+
+@Composable
+private fun BottomTabIcon(tab: GameTab, selected: Boolean) {
+    val iconColor = if (selected) Color(0xFFFFE5A3) else Color(0xFFD7C891)
+    val shadowColor = if (selected) Color(0x80301916) else Color(0x5510110D)
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        when (tab) {
+            GameTab.Guild -> drawGuildTabIcon(iconColor, shadowColor)
+            GameTab.Quests,
+            GameTab.ExpeditionPrep,
+            GameTab.OfflineSummary,
+            GameTab.QuestResult -> drawQuestTabIcon(iconColor, shadowColor)
+            GameTab.Heroes -> drawHeroTabIcon(iconColor, shadowColor)
+            GameTab.Loot,
+            GameTab.RewardLoot -> drawLootTabIcon(iconColor, shadowColor)
+            GameTab.Upgrades,
+            GameTab.Achievements -> drawUpgradeTabIcon(iconColor, shadowColor)
+        }
+    }
+}
+
+private fun DrawScope.drawGuildTabIcon(color: Color, shadow: Color) {
+    val stroke = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round)
+    drawRoundRect(
+        color = shadow,
+        topLeft = Offset(size.width * 0.22f, size.height * 0.47f),
+        size = Size(size.width * 0.56f, size.height * 0.42f),
+        cornerRadius = CornerRadius(1.8.dp.toPx(), 1.8.dp.toPx()),
+    )
+    drawLine(color, Offset(size.width * 0.18f, size.height * 0.48f), Offset(size.width * 0.50f, size.height * 0.18f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+    drawLine(color, Offset(size.width * 0.50f, size.height * 0.18f), Offset(size.width * 0.82f, size.height * 0.48f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(size.width * 0.27f, size.height * 0.50f),
+        size = Size(size.width * 0.46f, size.height * 0.36f),
+        cornerRadius = CornerRadius(1.4.dp.toPx(), 1.4.dp.toPx()),
+        style = stroke,
+    )
+    drawLine(color, Offset(size.width * 0.50f, size.height * 0.64f), Offset(size.width * 0.50f, size.height * 0.86f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+}
+
+private fun DrawScope.drawQuestTabIcon(color: Color, shadow: Color) {
+    val stroke = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round)
+    drawRoundRect(
+        color = shadow,
+        topLeft = Offset(size.width * 0.18f, size.height * 0.22f),
+        size = Size(size.width * 0.64f, size.height * 0.58f),
+        cornerRadius = CornerRadius(2.2.dp.toPx(), 2.2.dp.toPx()),
+    )
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(size.width * 0.20f, size.height * 0.18f),
+        size = Size(size.width * 0.60f, size.height * 0.58f),
+        cornerRadius = CornerRadius(2.2.dp.toPx(), 2.2.dp.toPx()),
+        style = stroke,
+    )
+    drawLine(color, Offset(size.width * 0.35f, size.height * 0.22f), Offset(size.width * 0.30f, size.height * 0.74f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+    drawLine(color, Offset(size.width * 0.60f, size.height * 0.20f), Offset(size.width * 0.66f, size.height * 0.72f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+    drawCircle(color, radius = size.minDimension * 0.055f, center = Offset(size.width * 0.55f, size.height * 0.46f))
+}
+
+private fun DrawScope.drawHeroTabIcon(color: Color, shadow: Color) {
+    val shield = Path().apply {
+        moveTo(size.width * 0.50f, size.height * 0.16f)
+        lineTo(size.width * 0.78f, size.height * 0.28f)
+        lineTo(size.width * 0.70f, size.height * 0.66f)
+        lineTo(size.width * 0.50f, size.height * 0.86f)
+        lineTo(size.width * 0.30f, size.height * 0.66f)
+        lineTo(size.width * 0.22f, size.height * 0.28f)
+        close()
+    }
+    val stroke = Stroke(width = 1.7.dp.toPx(), cap = StrokeCap.Round)
+    drawCircle(shadow, radius = size.minDimension * 0.24f, center = Offset(size.width * 0.53f, size.height * 0.47f))
+    drawPath(shield, color, style = stroke)
+    drawLine(color, Offset(size.width * 0.50f, size.height * 0.30f), Offset(size.width * 0.50f, size.height * 0.75f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+    drawLine(color, Offset(size.width * 0.36f, size.height * 0.48f), Offset(size.width * 0.64f, size.height * 0.48f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+}
+
+private fun DrawScope.drawLootTabIcon(color: Color, shadow: Color) {
+    val stroke = Stroke(width = 1.7.dp.toPx(), cap = StrokeCap.Round)
+    drawRoundRect(
+        color = shadow,
+        topLeft = Offset(size.width * 0.20f, size.height * 0.38f),
+        size = Size(size.width * 0.62f, size.height * 0.42f),
+        cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx()),
+    )
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(size.width * 0.22f, size.height * 0.40f),
+        size = Size(size.width * 0.56f, size.height * 0.36f),
+        cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx()),
+        style = stroke,
+    )
+    drawLine(color, Offset(size.width * 0.24f, size.height * 0.53f), Offset(size.width * 0.76f, size.height * 0.53f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+    drawLine(color, Offset(size.width * 0.50f, size.height * 0.40f), Offset(size.width * 0.50f, size.height * 0.76f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(size.width * 0.37f, size.height * 0.25f),
+        size = Size(size.width * 0.26f, size.height * 0.15f),
+        cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx()),
+        style = stroke,
+    )
+}
+
+private fun DrawScope.drawUpgradeTabIcon(color: Color, shadow: Color) {
+    val stroke = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round)
+    drawLine(shadow, Offset(size.width * 0.35f, size.height * 0.80f), Offset(size.width * 0.80f, size.height * 0.35f), strokeWidth = 3.2.dp.toPx(), cap = StrokeCap.Round)
+    drawLine(color, Offset(size.width * 0.30f, size.height * 0.76f), Offset(size.width * 0.76f, size.height * 0.30f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(size.width * 0.56f, size.height * 0.18f),
+        size = Size(size.width * 0.25f, size.height * 0.18f),
+        cornerRadius = CornerRadius(1.5.dp.toPx(), 1.5.dp.toPx()),
+        style = stroke,
+    )
+    drawLine(color, Offset(size.width * 0.18f, size.height * 0.78f), Offset(size.width * 0.40f, size.height * 0.78f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+    drawLine(color, Offset(size.width * 0.22f, size.height * 0.65f), Offset(size.width * 0.48f, size.height * 0.65f), strokeWidth = stroke.width, cap = StrokeCap.Round)
 }
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 844)

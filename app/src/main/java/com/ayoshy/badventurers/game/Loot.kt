@@ -144,6 +144,12 @@ object LootEconomy {
         }
         return rarityValue + item.bonus * 20
     }
+
+    fun rerollCost(item: LootItem, armoryForgeLevel: Int): Int {
+        val forgeDiscountPercent = (armoryForgeLevel.coerceAtLeast(0) * 8).coerceAtMost(32)
+        val discounted = sellValue(item) * (100 - forgeDiscountPercent) / 100
+        return discounted.coerceAtLeast(20)
+    }
 }
 
 object LootGenerator {
@@ -210,6 +216,30 @@ object LootGenerator {
             else -> baseLootProfile
         }
 
+    fun lootProfileWithArmoryForgeBonus(
+        profile: LootRarityProfile,
+        armoryForgeLevel: Int,
+    ): LootRarityProfile {
+        val level = armoryForgeLevel.coerceAtLeast(0)
+        if (level <= 0) return profile
+
+        val highestUnlockedRarity = profile.rarityWeights.maxBy { (rarity, _) -> rarity }.first
+        val bump = level * 5
+        val commonWeight = profile.rarityWeights.firstOrNull { (rarity, _) -> rarity == LootRarity.Common }?.second ?: 0
+        val actualBump = bump.coerceAtMost((commonWeight - 1).coerceAtLeast(0))
+        if (actualBump <= 0) return profile
+
+        return LootRarityProfile(
+            profile.rarityWeights.map { (rarity, weight) ->
+                when (rarity) {
+                    LootRarity.Common -> rarity to weight - actualBump
+                    highestUnlockedRarity -> rarity to weight + actualBump
+                    else -> rarity to weight
+                }
+            },
+        )
+    }
+
     private val statValueWeights = listOf(
         1 to 22,
         2 to 19,
@@ -222,6 +252,17 @@ object LootGenerator {
         9 to 2,
         10 to 1,
     )
+
+    fun rerollItem(item: LootItem, seed: Int): LootItem =
+        rerollItem(item, Random(seed))
+
+    fun rerollItem(item: LootItem, random: Random): LootItem {
+        val stats = rerolledStats(item.rarity, item.stats, random)
+        return item.copy(
+            stats = stats,
+            bonus = stats.sumOf { it.value },
+        )
+    }
 
     fun generate(rolls: Int, seed: Int = 0): List<LootItem> =
         generate(rolls, Random(seed), baseLootProfile)
@@ -254,6 +295,16 @@ object LootGenerator {
                 icon = definition.icon,
             )
         }
+    }
+
+    private fun rerolledStats(rarity: LootRarity, previousStats: List<StatBonus>, random: Random): List<StatBonus> {
+        var stats = rollStats(rarity, random)
+        var attempts = 0
+        while (stats == previousStats && attempts < 3) {
+            stats = rollStats(rarity, random)
+            attempts += 1
+        }
+        return stats
     }
 
     private fun rollStats(rarity: LootRarity, random: Random): List<StatBonus> {

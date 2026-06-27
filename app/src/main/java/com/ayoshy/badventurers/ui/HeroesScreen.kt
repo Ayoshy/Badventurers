@@ -597,7 +597,7 @@ internal fun HeroDetailHeader(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "${heroRarityLabel(hero.rarity)} - ${heroClassLabel(hero.heroClass)} - ${heroTraitLabel(hero.trait)}",
+                    text = heroRosterDetail(hero),
                     color = Color(0xFFDED0A2),
                     fontSize = 12.sp,
                     maxLines = 1,
@@ -727,11 +727,23 @@ internal fun HeroProgressionPanel(hero: Hero, modifier: Modifier = Modifier) {
             )
         }
         Text(
-            text = stringResource(R.string.hero_special_detail, heroSpecialSummary(hero.special)),
+            text = stringResource(
+                R.string.hero_quirk_detail,
+                heroTraitLabel(hero.trait),
+                traitGrowthStatLabel(hero.trait),
+            ),
             color = Color(0xFFDED0A2),
             fontSize = 11.sp,
             lineHeight = 14.sp,
             maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = stringResource(R.string.hero_special_detail, heroSpecialSummary(hero.special)),
+            color = Color(0xFFDED0A2),
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
     }
@@ -1438,7 +1450,7 @@ internal fun RecruitReveal(recruitment: HeroRecruitmentResult) {
             hero.name,
             heroRarityLabel(hero.rarity),
             heroClassLabel(hero.heroClass),
-            heroTraitLabel(hero.trait),
+            heroSpecialLabel(hero.special),
         )
     }
     val visibleState = remember(recruitment) {

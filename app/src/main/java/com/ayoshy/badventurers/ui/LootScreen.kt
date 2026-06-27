@@ -132,6 +132,7 @@ internal fun LootScreen(
     session: PlaySessionState,
     onSellInventory: (LootItem) -> Unit,
     onEquip: (String, LootItem) -> Unit,
+    onReroll: (LootItem) -> Unit,
 ) {
     val inventory = session.lootItems.asReversed()
     var selectedItem by remember { mutableStateOf<LootItem?>(inventory.firstOrNull()) }
@@ -154,6 +155,13 @@ internal fun LootScreen(
         val currentItem = selectedItem!!
         val selectedItemName = lootItemName(currentItem)
         val sellValue = LootEconomy.sellValue(currentItem)
+        val rerollCost = session.lootRerollCost(currentItem)
+        val canReroll = session.canRerollLoot(currentItem)
+        val rerollDetail = if (session.armoryForgeLevel > 0) {
+            stringResource(R.string.loot_reroll_detail)
+        } else {
+            stringResource(R.string.loot_reroll_detail_locked)
+        }
         val suggestedTarget = bestEquipSuggestion(session, currentItem)
         val equipTargetDetail = suggestedTarget?.let {
             stringResource(
@@ -174,6 +182,11 @@ internal fun LootScreen(
             title = stringResource(R.string.equip_target_title),
             detail = equipTargetDetail,
             value = suggestedTarget?.let { formatSignedCount(it.gain) } ?: "-",
+        )
+        InfoRow(
+            title = stringResource(R.string.loot_reroll_title),
+            detail = rerollDetail,
+            value = if (session.armoryForgeLevel > 0) stringResource(R.string.gold_value, rerollCost) else "-",
         )
         DarkPanel(
             title = selectedItemName,
@@ -203,6 +216,22 @@ internal fun LootScreen(
                 shape = RoundedCornerShape(8.dp),
             ) {
                 Text(stringResource(R.string.equip_action), fontWeight = FontWeight.Black)
+            }
+            Button(
+                onClick = { onReroll(currentItem) },
+                enabled = canReroll,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF8B6230),
+                    contentColor = Color(0xFFF8F1D8),
+                    disabledContainerColor = Color(0xFF6B5E3C),
+                    disabledContentColor = Color(0xFFFFF1C0),
+                ),
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(stringResource(R.string.reroll_action), fontWeight = FontWeight.Black)
             }
         }
 

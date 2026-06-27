@@ -27,6 +27,8 @@ class PlaySessionSnapshotTest {
             bunkRoomLevel = 3,
             armoryForgeLevel = 2,
             tavernKitchenLevel = 1,
+            infirmaryLevel = 2,
+            accountantOfficeLevel = 1,
             heroes = HeroCatalog.starterHeroes + extraHero,
             coreCrewHeroIds = (HeroCatalog.starterHeroes.take(2) + extraHero).map { it.id },
             lootRolls = 7,
@@ -153,6 +155,8 @@ class PlaySessionSnapshotTest {
             scoutTableLevel = 99,
             armoryForgeLevel = 99,
             tavernKitchenLevel = 99,
+            infirmaryLevel = 99,
+            accountantOfficeLevel = 99,
         )
 
         val restored = snapshot.toState()
@@ -178,9 +182,19 @@ class PlaySessionSnapshotTest {
             GuildFacilityCatalog.definition(GuildFacility.TavernKitchen).maxLevel,
             restored.tavernKitchenLevel,
         )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.Infirmary).maxLevel,
+            restored.infirmaryLevel,
+        )
+        assertEquals(
+            GuildFacilityCatalog.definition(GuildFacility.AccountantOffice).maxLevel,
+            restored.accountantOfficeLevel,
+        )
         assertEquals(0, snapshot.copy(scoutTableLevel = -1).toState().scoutTableLevel)
         assertEquals(0, snapshot.copy(armoryForgeLevel = -1).toState().armoryForgeLevel)
         assertEquals(0, snapshot.copy(tavernKitchenLevel = -1).toState().tavernKitchenLevel)
+        assertEquals(0, snapshot.copy(infirmaryLevel = -1).toState().infirmaryLevel)
+        assertEquals(0, snapshot.copy(accountantOfficeLevel = -1).toState().accountantOfficeLevel)
     }
 
     @Test

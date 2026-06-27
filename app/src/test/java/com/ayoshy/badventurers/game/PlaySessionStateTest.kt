@@ -361,6 +361,69 @@ class PlaySessionStateTest {
 
 
     @Test
+    fun facilitiesChangeExpeditionRewardsAndPlanDecisions() {
+        val quest = SeedGame.firstQuest.copy(
+            durationSeconds = 300,
+            tags = SeedGame.firstQuest.tags + QuestTag.Paperwork + QuestTag.Contract + QuestTag.LongQuest,
+        )
+        val success = ExpeditionResult(
+            outcome = ExpeditionOutcome.Success,
+            reward = Reward(gold = 100, xp = 20, lootRolls = 1),
+            scoreMargin = 10,
+        )
+        val failure = success.copy(outcome = ExpeditionOutcome.Failure)
+        val base = PlaySessionState.initial().copy(completedQuestCount = LootGenerator.RARE_LOOT_COMPLETED_QUEST_THRESHOLD)
+        val built = base.copy(
+            scoutTableLevel = 2,
+            armoryForgeLevel = 3,
+            infirmaryLevel = 2,
+            tavernKitchenLevel = 2,
+            accountantOfficeLevel = 2,
+        )
+        val baseSafety = ExpeditionEstimator.estimate(
+            party = listOf(party.first()),
+            quest = quest,
+            facilityPowerBonus = base.expeditionFacilityPowerBonus(ExpeditionPlanCatalog.safetyFirstId),
+            planId = ExpeditionPlanCatalog.safetyFirstId,
+        )
+        val builtSafety = ExpeditionEstimator.estimate(
+            party = listOf(party.first()),
+            quest = quest,
+            facilityPowerBonus = built.expeditionFacilityPowerBonus(ExpeditionPlanCatalog.safetyFirstId),
+            planId = ExpeditionPlanCatalog.safetyFirstId,
+        )
+
+        assertTrue(ScoutTableIntel.behavior(built.scoutTableLevel).revealsUnlockPreviews)
+        assertTrue(ScoutTableIntel.planWarningsFor(built.scoutTableLevel, ExpeditionPlanCatalog.byId(ExpeditionPlanCatalog.rushTheJobId), quest).isNotEmpty())
+        assertTrue(built.rewardLootProfile().rareOrBetterWeight > base.rewardLootProfile().rareOrBetterWeight)
+        assertTrue(builtSafety.partyPower > baseSafety.partyPower)
+        assertTrue(built.collectableRewardGold(failure, quest) > base.collectableRewardGold(failure, quest))
+        assertTrue(built.collectableRewardGold(success, quest) > base.collectableRewardGold(success, quest))
+        assertTrue(built.collectableHeroXp(success, quest) > base.collectableHeroXp(success, quest))
+        assertTrue(built.passiveGoldPerHour() > base.passiveGoldPerHour())
+    }
+
+    @Test
+    fun armoryForgeEnablesPaidLootRerolls() {
+        val item = testLoot(id = "weapon_reroll_spoon", bonus = 2)
+        val locked = PlaySessionState.initial().copy(gold = 1_000, lootItems = listOf(item))
+        val ready = locked.copy(armoryForgeLevel = 1)
+        val cost = ready.lootRerollCost(item)
+
+        val blocked = locked.rerollLoot(item, seed = 7)
+        val rerolled = ready.rerollLoot(item, seed = 7)
+        val rerolledItem = rerolled.lootItems.single()
+
+        assertEquals(locked, blocked)
+        assertEquals(ready.gold - cost, rerolled.gold)
+        assertEquals(item.id, rerolledItem.id)
+        assertEquals(item.rarity, rerolledItem.rarity)
+        assertEquals(item.slot, rerolledItem.slot)
+        assertTrue(rerolledItem.stats.isNotEmpty())
+        assertTrue(rerolledItem != item)
+    }
+
+    @Test
     fun collectResultAppliesFakeRewardedAdBonus() {
         val ready = PlaySessionState.initial().copy(
             expedition = ExpeditionRun(
@@ -972,7 +1035,7 @@ class PlaySessionStateTest {
     @Test
     fun passiveIncomeAddsSuppliesAndFacilityCapBonuses() {
         val base = PlaySessionState.initial()
-        val upgraded = base.copy(bunkRoomLevel = 3, tavernKitchenLevel = 2, scoutTableLevel = 1)
+        val upgraded = base.copy(bunkRoomLevel = 3, tavernKitchenLevel = 2, scoutTableLevel = 1, accountantOfficeLevel = 2)
 
         val baseReport = base.passiveIncomeReport(
             sinceMillis = 0L,
@@ -989,6 +1052,7 @@ class PlaySessionStateTest {
         assertEquals(base.passiveIncomeCapSeconds(), baseReport.cappedSeconds)
         assertEquals(upgraded.passiveIncomeCapSeconds(), upgradedReport.cappedSeconds)
         assertTrue(upgradedReport.supplies > baseReport.supplies)
+        assertTrue(upgradedReport.gold > baseReport.gold)
     }
 
     @Test
@@ -1118,7 +1182,8 @@ class PlaySessionStateTest {
             ready.copy(trainingYardLevel = 2),
             ready.copy(bunkRoomLevel = 2),
             ready.copy(scoutTableLevel = 1),
-            ready.copy(noticeBoardLevel = 3, trainingYardLevel = 3, bunkRoomLevel = 2, scoutTableLevel = 2),
+            ready.copy(accountantOfficeLevel = 1),
+            ready.copy(noticeBoardLevel = 3, trainingYardLevel = 3, bunkRoomLevel = 2, scoutTableLevel = 2, infirmaryLevel = 1, accountantOfficeLevel = 2),
         )
 
         facilityStates.forEach { state ->
@@ -1174,6 +1239,8 @@ class PlaySessionStateTest {
                 scoutTableLevel = 2,
                 armoryForgeLevel = 2,
                 tavernKitchenLevel = 1,
+                infirmaryLevel = 2,
+                accountantOfficeLevel = 1,
                 heroes = emptyList(),
                 coreCrewHeroIds = listOf("brugg"),
                 recruitmentTickets = RecruitmentTicketCatalog.normalizedInventory(
@@ -1204,6 +1271,8 @@ class PlaySessionStateTest {
         assertEquals(0, reset.scoutTableLevel)
         assertEquals(0, reset.armoryForgeLevel)
         assertEquals(0, reset.tavernKitchenLevel)
+        assertEquals(0, reset.infirmaryLevel)
+        assertEquals(0, reset.accountantOfficeLevel)
         assertEquals(HeroCatalog.starterHeroes, reset.heroes)
         assertEquals(HeroCatalog.starterHeroes.map { it.id }, reset.normalizedCoreCrewHeroIds())
         assertEquals(RecruitmentTicketCatalog.normalizedInventory(), reset.recruitmentTickets)

@@ -436,7 +436,8 @@ internal fun ExpeditionPrepScreen(
         quest = quest,
         selectedParty = partyHeroes,
         equipment = session.equippedLoot,
-        facilityPowerBonus = session.trainingYardPowerBonus(),
+        facilityPowerBonus = session.expeditionFacilityPowerBonus(selectedPlan.id),
+        planId = selectedPlan.id,
         partySlots = partySlots,
     )
     val heroRecommendationById = heroRecommendations.associateBy { it.hero.id }
@@ -448,7 +449,7 @@ internal fun ExpeditionPrepScreen(
         party = partyHeroes,
         quest = quest,
         equipment = session.equippedLoot,
-        facilityPowerBonus = session.trainingYardPowerBonus(),
+        facilityPowerBonus = session.expeditionFacilityPowerBonus(selectedPlan.id),
         planId = selectedPlan.id,
     )
     val activeSpecials = HeroSpecialCatalog.activeHeroes(partyHeroes, quest)
@@ -635,7 +636,7 @@ internal fun recommendedHeroNames(
             quest = quest,
             selectedParty = selectedParty,
             equipment = session.equippedLoot,
-            facilityPowerBonus = session.trainingYardPowerBonus(),
+            facilityPowerBonus = session.expeditionFacilityPowerBonus(),
             partySlots = session.effectivePartySlots(quest),
         ).take(maxOf(3, session.effectivePartySlots(quest))),
     )

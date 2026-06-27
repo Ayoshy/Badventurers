@@ -449,7 +449,7 @@
     {
       "id": "BV-010",
       "title": "Facilities: make each catalog facility change gameplay",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "area": "facilities",
       "track": "Facilities",
@@ -457,27 +457,27 @@
       "acceptance": [
         {
           "text": "Scout Table reveals plan warnings, unlock previews, and passive scouting incidents.",
-          "done": false
+          "done": true
         },
         {
           "text": "Armory/Forge improves loot quality, enables item rerolls, and supports passive loot finds.",
-          "done": false
+          "done": true
         },
         {
           "text": "Infirmary improves failure recovery and unlocks safe plan variants.",
-          "done": false
+          "done": true
         },
         {
           "text": "Tavern/Kitchen improves morale, hero XP, and long expedition support.",
-          "done": false
+          "done": true
         },
         {
           "text": "Accountant Office improves passive gold, paperwork bonuses, and duplicate/contract UX.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add tests proving each implemented facility changes a real decision.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -486,7 +486,8 @@
         "app/src/test/java/com/ayoshy/badventurers/game/GuildFacilityCatalogTest.kt"
       ],
       "notes": [
-        "BV-004 can be the first slice of this larger pass."
+        "BV-004 can be the first slice of this larger pass.",
+        "2026-06-26: Implemented gameplay-affecting facilities: Scout Table warnings/previews/passive scouting, Armory Forge loot quality/rerolls/passive finds, Infirmary failure recovery plus Safety First power, Tavern Kitchen XP/long-run support, and Accountant Office passive/paperwork/duplicate bonuses. Verified test, assembleDebug, and lintDebug."
       ]
     },
     {
@@ -1440,7 +1441,7 @@
     {
       "id": "BV-036",
       "title": "Guild Home: hotspot discoverability and first-use guidance",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "polish",
       "track": "Guild Polish",
@@ -1448,35 +1449,37 @@
       "acceptance": [
         {
           "text": "Add a restrained first-use hint or pulse that teaches the player to tap guild landmarks.",
-          "done": false
+          "done": true
         },
         {
           "text": "Show short landmark labels or hints only when helpful, then reduce them after the player successfully taps hotspots.",
-          "done": false
+          "done": true
         },
         {
           "text": "Persist or derive whether the hint has already been satisfied without creating noisy save-state risk.",
-          "done": false
+          "done": true
         },
         {
           "text": "Localize visible hint copy in EN and FR.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
         "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
-        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildHomeLayout.kt",
+        "app/src/test/java/com/ayoshy/badventurers/ui/GuildHomeLayoutTest.kt",
         "app/src/main/res/values/strings.xml",
         "app/src/main/res/values-fr/strings.xml"
       ],
       "notes": [
-        "2026-06-26: Created from screenshot review. The art has readable landmarks, but the interaction model needs a gentle onboarding affordance."
+        "2026-06-26: Created from screenshot review. The art has readable landmarks, but the interaction model needs a gentle onboarding affordance.",
+        "2026-06-26: Added saveable first-use guidance on the guild hub: the intro hint and short EN/FR landmark chips appear before the first successful hotspot tap, then collapse to the selected landmark without a snapshot migration. Emulator evidence captured at artifacts/screenshots/bv036-guild-first-use-hints.png and artifacts/screenshots/bv036-guild-after-hotspot-tap.png. Verified .\\gradlew.bat test, .\\gradlew.bat assembleDebug, .\\gradlew.bat installDebug, and .\\gradlew.bat lintDebug."
       ]
     },
     {
       "id": "BV-037",
       "title": "Guild Home: bottom navigation icon polish",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "polish",
       "track": "Guild Polish",
@@ -1484,19 +1487,19 @@
       "acceptance": [
         {
           "text": "Replace G/Q/H/L/U letter placeholders with readable themed icons or pixel assets for Guild, Quests, Heroes, Loot, and Upgrades.",
-          "done": false
+          "done": true
         },
         {
           "text": "Tune selected/unselected tab states so the active tab is clear without adding bulky cards over the hub.",
-          "done": false
+          "done": true
         },
         {
           "text": "Verify EN/FR labels do not clip and the nav clears the Android navigation bar/home indicator area.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add screenshot evidence for the Guild tab and at least one non-Guild tab after the icon pass.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -1507,13 +1510,14 @@
         "app/src/main/res/values-fr/strings.xml"
       ],
       "notes": [
-        "2026-06-26: Created from screenshot review. The bottom nav typography and letter chips read like placeholders next to the hub art."
+        "2026-06-26: Created from screenshot review. The bottom nav typography and letter chips read like placeholders next to the hub art.",
+        "2026-06-26: Replaced bottom-nav letter chips with themed Compose icons, mapped internal screens to their parent active tab, verified test/assembleDebug/lintDebug, and captured artifacts/screenshots/bv037-guild-nav.png plus artifacts/screenshots/bv037-heroes-nav.png."
       ]
     },
     {
       "id": "BV-038",
       "title": "Guild Home: responsive safe-area and device-frame QA",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "area": "polish",
       "track": "Guild Polish",
@@ -1521,19 +1525,19 @@
       "acceptance": [
         {
           "text": "Define minimum layout constraints for the Guild Home at small, standard, and tall portrait sizes.",
-          "done": false
+          "done": true
         },
         {
           "text": "Verify status bar, cutout/camera area, bottom navigation, home indicator, HUD, and drawer do not overlap content incoherently.",
-          "done": false
+          "done": true
         },
         {
           "text": "Capture emulator screenshots for at least two portrait resolutions and include them under artifacts/screenshots.",
-          "done": false
+          "done": true
         },
         {
           "text": "Add focused layout or mapping tests where feasible so future hub changes do not regress safe-area behavior.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
@@ -1543,13 +1547,14 @@
         "artifacts/screenshots/"
       ],
       "notes": [
-        "2026-06-26: Created from screenshot review. The Guild Home needs explicit portrait-device QA now that it is becoming the main visual surface."
+        "2026-06-26: Created from screenshot review. The Guild Home needs explicit portrait-device QA now that it is becoming the main visual surface.",
+        "2026-06-26: Added GuildHomeLayout policy for small/standard/tall portrait constraints, wired the Guild drawer to responsive padding/width/height/body-line limits, reused the bottom-nav height constant, added unit coverage, and captured artifacts/screenshots/bv038-guild-compact-720x1280.png plus artifacts/screenshots/bv038-guild-tall-1080x2400.png. Verified test, assembleDebug, installDebug, and lintDebug."
       ]
     },
     {
       "id": "BV-039",
       "title": "Guild Home: stateful landmark storytelling",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "polish",
       "track": "Guild Polish",
@@ -1557,33 +1562,116 @@
       "acceptance": [
         {
           "text": "Show pending loot or recovery attention on the Loot Cache landmark without relying only on drawer text.",
-          "done": false
+          "done": true
         },
         {
           "text": "Show claimable achievements or charter progress on the Guild Charter landmark.",
-          "done": false
+          "done": true
         },
         {
           "text": "Show active/running/result-ready quest state on the Quest Table landmark.",
-          "done": false
+          "done": true
         },
         {
           "text": "Show upgrade availability or facility attention on the Facilities landmark.",
-          "done": false
+          "done": true
         },
         {
           "text": "Keep state indicators subtle, localized where text is visible, and aligned to the mask-defined landmarks.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
         "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
         "app/src/main/java/com/ayoshy/badventurers/game/ProgressionAdvisor.kt",
         "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
-        "app/src/main/res-guild/drawable-nodpi/guild_hub_hotspot_mask.png"
+        "app/src/main/res-guild/drawable-nodpi/guild_hub_hotspot_mask.png",
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildHomeLayout.kt",
+        "app/src/test/java/com/ayoshy/badventurers/ui/GuildHomeLayoutTest.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml"
       ],
       "notes": [
-        "2026-06-26: Created from screenshot review. The hub should eventually answer what needs attention at a glance, not only after the player taps a hotspot."
+        "2026-06-26: Created from screenshot review. The hub should eventually answer what needs attention at a glance, not only after the player taps a hotspot.",
+        "2026-06-27: Added localized guild-home landmark status badges for pending loot, claimable/next charter progress, quest idle/running/report-ready state, and available facility upgrades. Badge state is covered by GuildHomeLayoutTest and aligned to hotspot anchors. Verified focused GuildHomeLayoutTest, .\\gradlew.bat test, .\\gradlew.bat assembleDebug, and .\\gradlew.bat lintDebug."
+      ]
+    },
+    {
+      "id": "BV-040",
+      "title": "Heroes: clarify quirk vs quest passive",
+      "status": "done",
+      "priority": "P1",
+      "area": "heroes",
+      "track": "Hero UX",
+      "summary": "The hero cards made personality traits look like the main passive, while the real quest special was buried in the detail panel. Clarify the player-facing labels so traits read as quirks/progression flavor and quest specials read as the actual passive.",
+      "acceptance": [
+        {
+          "text": "Hero roster cards and prep recommendation rows highlight the quest passive name instead of the trait label.",
+          "done": true
+        },
+        {
+          "text": "Hero detail explains the quirk separately from the quest passive and keeps both EN and FR strings localized.",
+          "done": true
+        },
+        {
+          "text": "Recruit reveal copy uses passive terminology so new heroes do not introduce the same ambiguity.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/HeroesScreen.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiText.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml"
+      ],
+      "notes": [
+        "2026-06-26: Created and completed from the Pippa/Suspiciously lucky UX review. Domain passives are unchanged; this is a player-facing clarity pass."
+      ]
+    },
+    {
+      "id": "BV-041",
+      "title": "Git debt: publish accumulated completed tranche",
+      "status": "done",
+      "priority": "P1",
+      "area": "release",
+      "track": "Git Debt",
+      "summary": "main is aligned with origin/main, but the checkout has a large verified dirty tranche from completed facility, guild-home, and hero-UX work. Clear this before starting another feature ticket so rollback and ownership stay sane.",
+      "acceptance": [
+        {
+          "text": "Audit the dirty tree against completed Workboard items BV-010, BV-036, BV-037, BV-038, BV-039, and BV-040 before staging.",
+          "done": true
+        },
+        {
+          "text": "Decide the publish shape explicitly: partition by ticket where practical, or make one labelled tranche commit only with user approval.",
+          "done": true
+        },
+        {
+          "text": "Include the untracked GuildHomeLayout.kt and GuildHomeLayoutTest.kt files if publishing the guild-home tranche.",
+          "done": true
+        },
+        {
+          "text": "Run or refresh .\\gradlew.bat test, .\\gradlew.bat assembleDebug, and .\\gradlew.bat lintDebug for the final staged scope.",
+          "done": true
+        },
+        {
+          "text": "Commit and push only the approved completed scope; leave BV-017, BV-019, BV-020, and BV-031 untouched.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "docs/work/tasks.json",
+        "app/src/main/java/com/ayoshy/badventurers/game/GuildFacilities.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersApp.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildScreen.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/GuildHomeLayout.kt",
+        "app/src/test/java/com/ayoshy/badventurers/ui/GuildHomeLayoutTest.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml"
+      ],
+      "notes": [
+        "2026-06-27: Git audit found main aligned with origin/main at 2a31df8, with 23 tracked modified files and 2 untracked guild-home layout files. The dirty tree corresponds to completed Workboard items BV-010, BV-036, BV-037, BV-038, BV-039, and BV-040. Latest verification in this checkout: focused GuildHomeLayoutTest, test, assembleDebug, lintDebug, and git diff --check passed with only LF/CRLF warnings.",
+        "2026-06-27: Published as one tranche because the completed facility, guild-home, and hero-UX changes overlap in GuildScreen.kt, resources, and Workboard metadata. Refreshed verification before staging: git fetch origin, git diff --check, .\\gradlew.bat test, .\\gradlew.bat assembleDebug, and .\\gradlew.bat lintDebug all passed; diff-check only reported LF/CRLF warnings."
       ]
     }
   ]

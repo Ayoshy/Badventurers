@@ -15,6 +15,8 @@ data class PlaySessionState(
     val scoutTableLevel: Int = 0,
     val armoryForgeLevel: Int = 0,
     val tavernKitchenLevel: Int = 0,
+    val infirmaryLevel: Int = 0,
+    val accountantOfficeLevel: Int = 0,
     val heroes: List<Hero> = HeroCatalog.starterHeroes,
     val coreCrewHeroIds: List<String> = defaultCoreCrewHeroIds(),
     val lootRolls: Int = 0,
@@ -87,7 +89,7 @@ data class PlaySessionState(
                     party = partyForRun(run, party),
                     quest = run.quest,
                     equipment = equippedLoot,
-                    facilityPowerBonus = trainingYardPowerBonus(),
+                    facilityPowerBonus = expeditionFacilityPowerBonus(run.planId),
                     planId = run.planId,
                 ),
             ),
@@ -106,7 +108,7 @@ data class PlaySessionState(
                 party = partyForRun(run, party),
                 quest = run.quest,
                 equipment = equippedLoot,
-                facilityPowerBonus = trainingYardPowerBonus(),
+                facilityPowerBonus = expeditionFacilityPowerBonus(run.planId),
                 planId = run.planId,
             )
         } else {
@@ -115,7 +117,7 @@ data class PlaySessionState(
                 quest = run.quest,
                 roll = roll,
                 equipment = equippedLoot,
-                facilityPowerBonus = trainingYardPowerBonus(),
+                facilityPowerBonus = expeditionFacilityPowerBonus(run.planId),
                 planId = run.planId,
             )
         }
@@ -128,7 +130,7 @@ data class PlaySessionState(
     ): PlaySessionState {
         val run = expedition ?: return this
         val result = run.result ?: return this
-        val baseGold = collectableRewardGold(result)
+        val baseGold = collectableRewardGold(result, run.quest)
         val earnedSpecialContracts = collectableSpecialContracts(result, run.quest)
         val firstClearTicketRewards = if (result.isFirstClearSuccess() && run.quest.id !in clearedQuestIds) {
             run.quest.firstClearTicketRewards
@@ -143,10 +145,10 @@ data class PlaySessionState(
         val generatedLoot = LootGenerator.generate(
             totalLootRolls,
             seed = lootSeed(result) + extraLootRolls * 17,
-            lootProfile = LootGenerator.lootProfileForProgress(completedQuestCount),
+            lootProfile = rewardLootProfile(),
         )
         val generatedJournal = JournalGenerator.generate(result, participatingParty, run.quest)
-        val advancedHeroes = heroesWithQuestXp(participatingParty, collectableHeroXp(result))
+        val advancedHeroes = heroesWithQuestXp(participatingParty, collectableHeroXp(result, run.quest))
         val advancedParty = participatingParty.map { hero ->
             advancedHeroes.firstOrNull { it.id == hero.id } ?: hero
         }
@@ -246,15 +248,69 @@ data class PlaySessionState(
     fun trainingYardPowerBonus(): Int =
         (trainingYardLevel - 1).coerceAtLeast(0) * TRAINING_YARD_POWER_PER_LEVEL + achievementTrainingPowerBonus()
 
+    fun expeditionFacilityPowerBonus(planId: String? = null): Int =
+        trainingYardPowerBonus() + infirmarySafePlanPowerBonus(planId)
+
+    fun infirmarySafePlanPowerBonus(planId: String?): Int =
+        if (ExpeditionPlanCatalog.coercePlanId(planId) == ExpeditionPlanCatalog.safetyFirstId) {
+            infirmaryLevel * INFIRMARY_SAFE_PLAN_POWER_PER_LEVEL
+        } else {
+            0
+        }
+
+    fun infirmaryFailureRecoveryBonusPercent(): Int =
+        infirmaryLevel * INFIRMARY_FAILURE_RECOVERY_PERCENT_PER_LEVEL
+
     fun trainingYardQuestXpBonusPercent(): Int =
         (trainingYardLevel - 1).coerceAtLeast(0) * TRAINING_YARD_XP_BONUS_PERCENT_PER_LEVEL
 
-    fun collectableRewardGold(result: ExpeditionResult): Int =
-        questGoldWithNoticeBoard(achievementAdjustedRewardGold(result))
+    fun tavernKitchenQuestXpBonusPercent(quest: Quest? = null): Int {
+        val baseBonus = tavernKitchenLevel * TAVERN_KITCHEN_XP_BONUS_PERCENT_PER_LEVEL
+        val longQuestBonus = if (quest?.let { it.durationSeconds >= LONG_EXPEDITION_SECONDS || it.hasAny(QuestTag.LongQuest) } == true) {
+            tavernKitchenLevel * TAVERN_KITCHEN_LONG_QUEST_XP_BONUS_PERCENT_PER_LEVEL
+        } else {
+            0
+        }
+        return baseBonus + longQuestBonus
+    }
 
-    fun collectableHeroXp(result: ExpeditionResult): Int {
+    fun accountantOfficeQuestGoldBonusPercent(quest: Quest? = null): Int =
+        if (quest?.hasAny(QuestTag.Paperwork, QuestTag.Contract) == true) {
+            accountantOfficeLevel * ACCOUNTANT_PAPERWORK_GOLD_BONUS_PERCENT_PER_LEVEL
+        } else {
+            0
+        }
+
+    fun accountantOfficeDuplicateReputationBonus(): Int =
+        accountantOfficeLevel * ACCOUNTANT_DUPLICATE_REPUTATION_PER_LEVEL
+
+    fun duplicateReputationReward(): Int =
+        HeroGacha.DUPLICATE_REPUTATION_REWARD + accountantOfficeDuplicateReputationBonus()
+
+    fun rewardLootProfile(): LootGenerator.LootRarityProfile = LootGenerator.lootProfileWithArmoryForgeBonus(
+        profile = LootGenerator.lootProfileForProgress(completedQuestCount),
+        armoryForgeLevel = armoryForgeLevel,
+    )
+
+    fun collectableRewardGold(result: ExpeditionResult, quest: Quest? = null): Int {
+        val baseGold = questGoldWithNoticeBoard(achievementAdjustedRewardGold(result))
+        val failureRecoveryGold = if (result.outcome.isFailure()) {
+            baseGold * infirmaryFailureRecoveryBonusPercent() / 100
+        } else {
+            0
+        }
+        val paperworkGold = if (result.outcome.isAtLeastSuccess()) {
+            baseGold * accountantOfficeQuestGoldBonusPercent(quest) / 100
+        } else {
+            0
+        }
+        return baseGold + failureRecoveryGold + paperworkGold
+    }
+
+    fun collectableHeroXp(result: ExpeditionResult, quest: Quest? = null): Int {
         val baseXp = result.reward.xp.coerceAtLeast(0)
-        return baseXp + baseXp * trainingYardQuestXpBonusPercent() / 100
+        val bonusPercent = trainingYardQuestXpBonusPercent() + tavernKitchenQuestXpBonusPercent(quest)
+        return baseXp + baseXp * bonusPercent / 100
     }
 
     fun collectableLootRolls(result: ExpeditionResult): Int =
@@ -561,6 +617,8 @@ data class PlaySessionState(
             scoutTableLevel = 0,
             armoryForgeLevel = 0,
             tavernKitchenLevel = 0,
+            infirmaryLevel = 0,
+            accountantOfficeLevel = 0,
             heroes = HeroCatalog.starterHeroes,
             coreCrewHeroIds = defaultCoreCrewHeroIds(),
             lootRolls = 0,
@@ -588,8 +646,8 @@ data class PlaySessionState(
             GuildFacility.ScoutTable -> scoutTableLevel
             GuildFacility.ArmoryForge -> armoryForgeLevel
             GuildFacility.TavernKitchen -> tavernKitchenLevel
-            GuildFacility.Infirmary,
-            GuildFacility.AccountantOffice -> 0
+            GuildFacility.Infirmary -> infirmaryLevel
+            GuildFacility.AccountantOffice -> accountantOfficeLevel
         }
 
     fun facilityUpgradeState(facility: GuildFacility): GuildFacilityUpgradeState =
@@ -615,6 +673,10 @@ data class PlaySessionState(
 
     fun tavernKitchenUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.TavernKitchen)
 
+    fun infirmaryUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.Infirmary)
+
+    fun accountantOfficeUpgradeCost(): Int = facilityUpgradeCost(GuildFacility.AccountantOffice)
+
     fun upgradeNoticeBoard(): PlaySessionState = upgradeFacility(GuildFacility.NoticeBoard)
 
     fun upgradeTrainingYard(): PlaySessionState = upgradeFacility(GuildFacility.TrainingYard)
@@ -626,6 +688,10 @@ data class PlaySessionState(
     fun upgradeArmoryForge(): PlaySessionState = upgradeFacility(GuildFacility.ArmoryForge)
 
     fun upgradeTavernKitchen(): PlaySessionState = upgradeFacility(GuildFacility.TavernKitchen)
+
+    fun upgradeInfirmary(): PlaySessionState = upgradeFacility(GuildFacility.Infirmary)
+
+    fun upgradeAccountantOffice(): PlaySessionState = upgradeFacility(GuildFacility.AccountantOffice)
 
     fun upgradeFacility(facility: GuildFacility): PlaySessionState {
         if (!canUpgradeFacility(facility)) return this
@@ -639,8 +705,8 @@ data class PlaySessionState(
             GuildFacility.ScoutTable -> copy(gold = gold - cost, scoutTableLevel = nextLevel)
             GuildFacility.ArmoryForge -> copy(gold = gold - cost, armoryForgeLevel = nextLevel)
             GuildFacility.TavernKitchen -> copy(gold = gold - cost, tavernKitchenLevel = nextLevel)
-            GuildFacility.Infirmary,
-            GuildFacility.AccountantOffice -> return this
+            GuildFacility.Infirmary -> copy(gold = gold - cost, infirmaryLevel = nextLevel)
+            GuildFacility.AccountantOffice -> copy(gold = gold - cost, accountantOfficeLevel = nextLevel)
         }
         return AchievementTracker.applyEvent(
             state = upgraded,
@@ -752,6 +818,28 @@ data class PlaySessionState(
         )
     }
 
+    fun lootRerollCost(item: LootItem): Int =
+        LootEconomy.rerollCost(item, armoryForgeLevel)
+
+    fun canRerollLoot(item: LootItem): Boolean =
+        armoryForgeLevel > 0 && item in lootItems && gold >= lootRerollCost(item)
+
+    fun rerollLoot(item: LootItem, seed: Int = 0): PlaySessionState {
+        if (!canRerollLoot(item)) return this
+        val itemIndex = lootItems.indexOf(item)
+        if (itemIndex < 0) return this
+        val cost = lootRerollCost(item)
+        val rerolled = LootGenerator.rerollItem(
+            item = item,
+            seed = seed + itemIndex * 101 + gold * 31 + armoryForgeLevel * 997,
+        )
+        val nextInventory = lootItems.toMutableList().also { it[itemIndex] = rerolled }
+        return copy(
+            gold = gold - cost,
+            lootItems = nextInventory,
+        )
+    }
+
     fun unequipLoot(heroId: String, slot: LootSlot): PlaySessionState {
         val equipped = equippedLoot.firstOrNull { it.heroId == heroId && it.item.slot == slot } ?: return this
         return copy(
@@ -807,7 +895,7 @@ data class PlaySessionState(
             recruitmentProfile = recruitmentProfile,
         ).single()
         val duplicate = heroes.any { it.id == hero.id }
-        val reputationReward = if (duplicate) HeroGacha.DUPLICATE_REPUTATION_REWARD else 0
+        val reputationReward = if (duplicate) duplicateReputationReward() else 0
         val duplicateBlankContractReward = if (duplicate) 1 else 0
         val recruited = copy(
             gold = gold - HeroGacha.RECRUIT_COST,
@@ -854,7 +942,7 @@ data class PlaySessionState(
         )
         val recruited = copy(
             recruitmentTickets = rewardedTickets,
-            reputation = reputation + result.reputationReward,
+            reputation = reputation + if (result.duplicate) duplicateReputationReward() else result.reputationReward,
             heroes = if (result.duplicate) heroes else heroes + hero,
         )
         val tracked = AchievementTracker.applyEvent(
@@ -866,13 +954,20 @@ data class PlaySessionState(
             hero = hero,
             cost = 0,
             duplicate = result.duplicate,
-            reputationReward = result.reputationReward,
+            reputationReward = if (result.duplicate) duplicateReputationReward() else result.reputationReward,
             duplicateBlankContractReward = duplicateBlankContractReward,
         )
     }
     companion object {
         private const val TRAINING_YARD_POWER_PER_LEVEL = 8
         private const val TRAINING_YARD_XP_BONUS_PERCENT_PER_LEVEL = 10
+        private const val INFIRMARY_SAFE_PLAN_POWER_PER_LEVEL = 5
+        private const val INFIRMARY_FAILURE_RECOVERY_PERCENT_PER_LEVEL = 15
+        private const val TAVERN_KITCHEN_XP_BONUS_PERCENT_PER_LEVEL = 5
+        private const val TAVERN_KITCHEN_LONG_QUEST_XP_BONUS_PERCENT_PER_LEVEL = 5
+        private const val ACCOUNTANT_PAPERWORK_GOLD_BONUS_PERCENT_PER_LEVEL = 6
+        private const val ACCOUNTANT_DUPLICATE_REPUTATION_PER_LEVEL = 2
+        private const val LONG_EXPEDITION_SECONDS = 240
         private const val ACHIEVEMENT_TRAINING_POWER_BONUS = 12
         private const val ACHIEVEMENT_INSURANCE_PITY_GOLD_BONUS_PERCENT = 30
         private const val ACHIEVEMENT_CHARTER_QUEST_GOLD_BONUS_PERCENT = 10
@@ -999,7 +1094,7 @@ data class PlaySessionState(
         return LootGenerator.generate(
             rolls = finds,
             random = random,
-            lootProfile = LootGenerator.lootProfileForProgress(completedQuestCount),
+            lootProfile = rewardLootProfile(),
         )
     }
 
@@ -1015,6 +1110,8 @@ data class PlaySessionState(
         seed = seed * 31 + scoutTableLevel
         seed = seed * 31 + armoryForgeLevel
         seed = seed * 31 + tavernKitchenLevel
+        seed = seed * 31 + infirmaryLevel
+        seed = seed * 31 + accountantOfficeLevel
         seed = seed * 31 + normalizedCoreCrewHeroIds().hashCode()
         return seed
     }
@@ -1181,6 +1278,12 @@ sealed interface PlayPhase {
 
 private fun ExpeditionResult.isFirstClearSuccess(): Boolean =
     outcome == ExpeditionOutcome.GreatSuccess || outcome == ExpeditionOutcome.Success
+
+private fun ExpeditionOutcome.isAtLeastSuccess(): Boolean =
+    this == ExpeditionOutcome.GreatSuccess || this == ExpeditionOutcome.Success
+
+private fun ExpeditionOutcome.isFailure(): Boolean =
+    this == ExpeditionOutcome.Failure || this == ExpeditionOutcome.RidiculousFailure
 
 private fun specialContractsLootedFrom(result: ExpeditionResult, quest: Quest): Int = when {
     !result.isFirstClearSuccess() -> 0

@@ -14,6 +14,8 @@ data class PlaySessionSnapshot(
     val scoutTableLevel: Int = 0,
     val armoryForgeLevel: Int = 0,
     val tavernKitchenLevel: Int = 0,
+    val infirmaryLevel: Int = 0,
+    val accountantOfficeLevel: Int = 0,
     val lootRolls: Int,
     val heroIds: List<String> = HeroCatalog.starterHeroes.map { it.id },
     val heroProgress: List<HeroProgressSnapshot> = emptyList(),
@@ -48,6 +50,8 @@ data class PlaySessionSnapshot(
         val migratedScoutTableLevel = migratedOptionalFacilityLevel(GuildFacility.ScoutTable, scoutTableLevel)
         val migratedArmoryForgeLevel = migratedOptionalFacilityLevel(GuildFacility.ArmoryForge, armoryForgeLevel)
         val migratedTavernKitchenLevel = migratedOptionalFacilityLevel(GuildFacility.TavernKitchen, tavernKitchenLevel)
+        val migratedInfirmaryLevel = migratedOptionalFacilityLevel(GuildFacility.Infirmary, infirmaryLevel)
+        val migratedAccountantOfficeLevel = migratedOptionalFacilityLevel(GuildFacility.AccountantOffice, accountantOfficeLevel)
         val restoredPendingLootItems = pendingLootItems.map { it.toItem() }
         val restoredPendingLootKeepLimit = if (restoredPendingLootItems.isEmpty()) {
             0
@@ -73,6 +77,8 @@ data class PlaySessionSnapshot(
             scoutTableLevel = migratedScoutTableLevel,
             armoryForgeLevel = migratedArmoryForgeLevel,
             tavernKitchenLevel = migratedTavernKitchenLevel,
+            infirmaryLevel = migratedInfirmaryLevel,
+            accountantOfficeLevel = migratedAccountantOfficeLevel,
             heroes = restoredHeroes,
             coreCrewHeroIds = coreCrewHeroIds,
             lootRolls = lootRolls,
@@ -94,7 +100,7 @@ data class PlaySessionSnapshot(
     }
 
     companion object {
-        const val CURRENT_VERSION = 20
+        const val CURRENT_VERSION = 21
 
         fun initial(): PlaySessionSnapshot {
             return fromState(PlaySessionState.initial())
@@ -115,6 +121,8 @@ data class PlaySessionSnapshot(
                 scoutTableLevel = state.scoutTableLevel,
                 armoryForgeLevel = state.armoryForgeLevel,
                 tavernKitchenLevel = state.tavernKitchenLevel,
+                infirmaryLevel = state.infirmaryLevel,
+                accountantOfficeLevel = state.accountantOfficeLevel,
                 lootRolls = state.lootRolls,
                 heroIds = state.heroes.map { it.id },
                 heroProgress = state.heroes.map { HeroProgressSnapshot.fromHero(it) },
