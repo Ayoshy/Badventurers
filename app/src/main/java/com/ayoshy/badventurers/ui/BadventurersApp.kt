@@ -204,13 +204,7 @@ fun BadventurersApp(
         ) {
             if (selectedTab != GameTab.Guild) {
                 Image(
-                    painter = painterResource(
-                        if (selectedTab == GameTab.Achievements) {
-                            R.drawable.achievement_hall_concept
-                        } else {
-                            R.drawable.guild_home_background
-                        },
-                    ),
+                    painter = painterResource(R.drawable.guild_hub_interactive_v3),
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,

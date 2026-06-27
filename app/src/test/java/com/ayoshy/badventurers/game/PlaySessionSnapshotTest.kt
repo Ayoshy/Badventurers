@@ -99,12 +99,12 @@ class PlaySessionSnapshotTest {
         val running = PlaySessionState.initial().startQuest(
             nowMillis = 1_000L,
             quest = SeedGame.firstQuest,
-            planId = ExpeditionPlanCatalog.lootPriorityId,
+            planId = ExpeditionPlanCatalog.rushTheJobId,
         )
 
         val restored = PlaySessionSnapshot.fromState(running).toState()
 
-        assertEquals(ExpeditionPlanCatalog.lootPriorityId, restored.expedition?.planId)
+        assertEquals(ExpeditionPlanCatalog.rushTheJobId, restored.expedition?.planId)
         assertEquals(running.expedition?.endsAtMillis, restored.expedition?.endsAtMillis)
     }
     @Test

@@ -731,7 +731,7 @@
     {
       "id": "BV-017",
       "title": "Beautify the Gachapon pull",
-      "status": "ready",
+      "status": "done",
       "priority": "P3",
       "area": "polish",
       "track": "Refinement",
@@ -739,15 +739,21 @@
       "acceptance": [
         {
           "text": "Rework the animations : We need animation level depending on rarity tiers.",
-          "done": false
+          "done": true
         },
         {
           "text": "The before pull screen should show the list of heroes that can be pulled. The after pull screen is showing the full card art + some stats",
-          "done": false
+          "done": true
         }
       ],
-      "refs": [],
-      "notes": []
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/HeroesScreen.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml"
+      ],
+      "notes": [
+        "2026-06-27: Gacha panel now shows the pullable hero pool before recruitment, reveals pulled heroes with rarity-scaled animation timing/charge, full art, and compact card stats. .\\gradlew.bat test is currently blocked by concurrent UpgradesAchievementsScreens.kt resource/helper references outside BV-017."
+      ]
     },
     {
       "id": "BV-018",
@@ -781,26 +787,79 @@
     {
       "id": "BV-019",
       "title": "Beautify the Achievements.",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "polish",
       "track": "Backlog",
-      "summary": "We have a strong separation between artworks included and possible actions (claim/upgrades). Letsw merge.",
-      "acceptance": [],
-      "refs": [],
-      "notes": []
+      "summary": "Merge the Trophy Ledger artwork, claim actions, charter milestones, and achievement rows into a polished game-loop surface instead of a plain list.",
+      "acceptance": [
+        {
+          "text": "Add a visual Trophy Ledger header that uses the existing achievement artwork with readable completion, claimable, and seal stats.",
+          "done": true
+        },
+        {
+          "text": "Surface claimable rewards as an explicit queue with claim-all/back actions and a useful no-claims state.",
+          "done": true
+        },
+        {
+          "text": "Group achievements by category with section progress, claimable badges, clearer progress bars, reward summaries, and claimed states.",
+          "done": true
+        },
+        {
+          "text": "Show charter milestones as an active progression group with locked, next, and active states.",
+          "done": true
+        },
+        {
+          "text": "Keep new visible ledger copy localized in English and French resources.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/UpgradesAchievementsScreens.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml"
+      ],
+      "notes": [
+        "2026-06-27: Beautified the Trophy Ledger with an art-backed charter header, explicit claim queue, charter milestone group, category sections, clearer reward/progress rows, and localized EN/FR UI copy. Verified assembleDebug after an ACL-safe rerun. Full .\\gradlew.bat test currently fails in unrelated expedition-plan/snapshot tests from concurrent non-BV-019 edits."
+      ]
     },
     {
       "id": "BV-020",
       "title": "Quests update",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "area": "quests",
       "track": "Backlog",
       "summary": "The Contracts should be exclusive maps. Not reuse of old ones from local/hard jobs\nLocal/Hard number of jobs balance is bad (2 vs 12+)",
-      "acceptance": [],
-      "refs": [],
-      "notes": []
+      "acceptance": [
+        {
+          "text": "Activity Board regions are mutually exclusive, with contract-tagged maps in Contracts, non-contract High risk maps in Hard Jobs, and the remaining non-contract maps in Local Jobs.",
+          "done": true
+        },
+        {
+          "text": "Prep plan availability exposes one free map hook plus one paid quest-specific contract clause per quest instead of all generic plans everywhere.",
+          "done": true
+        },
+        {
+          "text": "Quest/plan docs and CSV mirrors describe the free-map-hook and contract-clause rules.",
+          "done": true
+        },
+        {
+          "text": "Regression tests cover region exclusivity, visible distribution, map-specific plan hooks, and off-map plan fallback.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionPlans.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/QuestActivityCardLogic.kt",
+        "app/src/test/java/com/ayoshy/badventurers/game/QuestCatalogueBalanceTest.kt",
+        "app/src/test/java/com/ayoshy/badventurers/ui/QuestActivityCardLogicTest.kt",
+        "docs/content/quest-catalog.md",
+        "docs/data/expedition-plans.csv"
+      ],
+      "notes": [
+        "2026-06-27: Contracts now surface contract-tagged maps only; Local/Hard are exclusive non-contract buckets. Prep plan rows now show one free map hook and one paid quest-specific clause per quest, with off-map generic plan ids falling back to Standard modifiers. Verified focused quest/activity tests, .\\gradlew.bat test, and .\\gradlew.bat assembleDebug."
+      ]
     },
     {
       "id": "BV-021",

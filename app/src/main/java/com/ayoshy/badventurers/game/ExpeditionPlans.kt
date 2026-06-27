@@ -348,6 +348,24 @@ object ExpeditionPlanCatalog {
         crownReceiptSubpoena,
         sidewaysTowerBrace,
     )
+    private val freePlanIdsByQuestId = mapOf(
+        "cave_minor_regrets" to listOf(rushTheJobId),
+        "forest_of_wrong_turns" to listOf(safetyFirstId),
+        "bandit_tax_office" to listOf(auditEverythingId),
+        "salted_swamp_chapel" to listOf(safetyFirstId),
+        "moonlit_smuggler_run" to listOf(lootPriorityId),
+        "the_hungry_siege" to listOf(safetyFirstId),
+        "the_last_locked_door" to listOf(lootPriorityId),
+        "crypt_of_unpaid_debts" to listOf(auditEverythingId),
+        "paperwork_toll_of_chaos" to listOf(auditEverythingId),
+        "licensed_guild_caravan_haunt" to listOf(lootPriorityId),
+        "notary_night_patrol" to listOf(safetyFirstId),
+        "inspectorate_cove_banquet" to listOf(auditEverythingId),
+        "wedding_with_too_many_oaths" to listOf(auditEverythingId),
+        "the_sunken_toll_booth" to listOf(lootPriorityId),
+        "the_crowns_missing_receipt" to listOf(auditEverythingId),
+        "the_tower_built_sideways" to listOf(safetyFirstId),
+    )
     private val visiblePlans = genericPlans + questSpecificPlans
     val all: List<ExpeditionPlan> = listOf(standard) + visiblePlans
     private val byId = all.associateBy { it.id }
@@ -362,13 +380,17 @@ object ExpeditionPlanCatalog {
 
     fun planForQuest(planId: String?, quest: Quest): ExpeditionPlan = validPlanForQuest(planId, quest)
 
-    fun availableFor(quest: Quest): List<ExpeditionPlan> =
-        genericPlans + questSpecificPlans.filter { quest.id in it.questIds }
+    fun availableFor(quest: Quest): List<ExpeditionPlan> {
+        val freePlanIds = freePlanIdsByQuestId[quest.id] ?: listOf(defaultPlayerPlanId)
+        val freePlans = freePlanIds.map { planId -> byId(planId) }
+        val clausePlans = questSpecificPlans.filter { quest.id in it.questIds }
+        return (freePlans + clausePlans).distinctBy { it.id }
+    }
 
     fun selectedPlanForUi(planId: String?, quest: Quest): ExpeditionPlan {
         val available = availableFor(quest)
         return available.firstOrNull { it.id == planId }
-            ?: available.firstOrNull { it.id == defaultPlayerPlanId }
+            ?: available.firstOrNull { !it.requiresSpecialContract }
             ?: standard
     }
 
@@ -386,7 +408,7 @@ object ExpeditionPlanCatalog {
 
     private fun validPlanForQuest(planId: String?, quest: Quest): ExpeditionPlan {
         val plan = byId(planId)
-        return if (plan.questIds.isNotEmpty() && quest.id !in plan.questIds) standard else plan
+        return if (availableFor(quest).any { it.id == plan.id }) plan else standard
     }
 
     fun durationSeconds(quest: Quest, planId: String?): Int {

@@ -1,9 +1,9 @@
 id;title;summary;scope;quest_ids;duration_percent_delta;score_bonus;risk_penalty_delta;gold_bonus_percent;success_loot_bonus;great_success_margin_delta
 standard_contract;Standard Contract;No clever clause, no heroic accounting, no obvious lawsuit.;standard;;0;0;0;0;0;0
-rush_the_job;Rush the Job;Return faster and squeeze a little more gold out of the panic, at the cost of risk.;generic;;-30;-5;12;5;0;0
-safety_first;Safety First;Reduce risk for important attempts, but make spectacular victories harder to justify.;generic;;0;0;-10;0;0;25
-loot_priority;Loot Priority;Ask the party to check every suspicious crate. The job gets harder, but success pays in items.;generic;;0;-12;6;0;1;0
-audit_everything;Audit Everything;Take longer and weaponize paperwork for better gold on properly documented trouble.;generic;;25;0;4;20;0;0
+rush_the_job;Rush the Job;Return faster and squeeze a little more gold out of the panic, at the cost of risk.;free_map_hook;cave_minor_regrets;-30;-5;12;5;0;0
+safety_first;Safety First;Reduce risk for important attempts, but make spectacular victories harder to justify.;free_map_hook;forest_of_wrong_turns,salted_swamp_chapel,the_hungry_siege,notary_night_patrol,the_tower_built_sideways;0;0;-10;0;0;25
+loot_priority;Loot Priority;Ask the party to check every suspicious crate. The job gets harder, but success pays in items.;free_map_hook;moonlit_smuggler_run,the_last_locked_door,licensed_guild_caravan_haunt,the_sunken_toll_booth;0;-12;6;0;1;0
+audit_everything;Audit Everything;Take longer and weaponize paperwork for better gold on properly documented trouble.;free_map_hook;bandit_tax_office,crypt_of_unpaid_debts,paperwork_toll_of_chaos,inspectorate_cove_banquet,wedding_with_too_many_oaths,the_crowns_missing_receipt;25;0;4;20;0;0
 seal_side_tunnel;Seal the Side Tunnel;Spend time closing the suspicious route before it becomes the main route.;quest_specific;cave_minor_regrets;15;10;-8;0;0;0
 follow_worst_map;Follow the Worst Map;Trust the map everyone hates. It is faster, stranger, and occasionally full of loot.;quest_specific;forest_of_wrong_turns;-15;-4;8;0;1;0
 demand_receipts;Demand Receipts;Fight bandit bureaucracy with better bureaucracy and a very sharp stamp.;quest_specific;bandit_tax_office;20;6;4;30;0;10

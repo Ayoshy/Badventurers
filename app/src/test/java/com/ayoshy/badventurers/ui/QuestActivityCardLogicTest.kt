@@ -10,15 +10,53 @@ import org.junit.Test
 
 class QuestActivityCardLogicTest {
     @Test
-    fun activityRegionsSeparateLocalDangerousAndContractWork() {
-        val local = SeedGame.firstQuest
-        val dangerous = SeedGame.questById.getValue("the_last_locked_door")
+    fun activityRegionsAreExclusiveAndBalancedAcrossQuestMaps() {
+        val localIds = SeedGame.quests
+            .filter { quest -> quest.matchesActivityRegion(QuestActivityRegion.LocalJobs) }
+            .map { it.id }
+        val dangerousIds = SeedGame.quests
+            .filter { quest -> quest.matchesActivityRegion(QuestActivityRegion.DangerousWork) }
+            .map { it.id }
+        val contractIds = SeedGame.quests
+            .filter { quest -> quest.matchesActivityRegion(QuestActivityRegion.SpecialContracts) }
+            .map { it.id }
 
-        assertTrue(local.matchesActivityRegion(QuestActivityRegion.LocalJobs))
-        assertFalse(local.matchesActivityRegion(QuestActivityRegion.DangerousWork))
-        assertTrue(dangerous.matchesActivityRegion(QuestActivityRegion.DangerousWork))
-        assertFalse(dangerous.matchesActivityRegion(QuestActivityRegion.LocalJobs))
-        assertTrue(SeedGame.quests.all { quest -> quest.matchesActivityRegion(QuestActivityRegion.SpecialContracts) })
+        assertEquals(
+            listOf(
+                "cave_minor_regrets",
+                "forest_of_wrong_turns",
+                "salted_swamp_chapel",
+                "moonlit_smuggler_run",
+                "the_hungry_siege",
+            ),
+            localIds,
+        )
+        assertEquals(
+            listOf(
+                "the_last_locked_door",
+                "crypt_of_unpaid_debts",
+                "the_tower_built_sideways",
+            ),
+            dangerousIds,
+        )
+        assertEquals(
+            listOf(
+                "bandit_tax_office",
+                "paperwork_toll_of_chaos",
+                "licensed_guild_caravan_haunt",
+                "notary_night_patrol",
+                "inspectorate_cove_banquet",
+                "wedding_with_too_many_oaths",
+                "the_sunken_toll_booth",
+                "the_crowns_missing_receipt",
+            ),
+            contractIds,
+        )
+
+        SeedGame.quests.forEach { quest ->
+            val visibleRegions = QuestActivityRegion.values().count { region -> quest.matchesActivityRegion(region) }
+            assertEquals("${quest.id} should appear in exactly one activity region", 1, visibleRegions)
+        }
     }
 
     @Test

@@ -343,28 +343,70 @@ class QuestCatalogueBalanceTest {
         )
     }
     @Test
-    fun everyCurrentQuestOffersAQuestSpecificContractClause() {
+    fun everyCurrentQuestOffersOneFreeMapHookAndOneContractClause() {
+        val expectedFreePlanByQuestId = mapOf(
+            "cave_minor_regrets" to ExpeditionPlanCatalog.rushTheJobId,
+            "forest_of_wrong_turns" to ExpeditionPlanCatalog.safetyFirstId,
+            "bandit_tax_office" to ExpeditionPlanCatalog.auditEverythingId,
+            "salted_swamp_chapel" to ExpeditionPlanCatalog.safetyFirstId,
+            "moonlit_smuggler_run" to ExpeditionPlanCatalog.lootPriorityId,
+            "the_hungry_siege" to ExpeditionPlanCatalog.safetyFirstId,
+            "the_last_locked_door" to ExpeditionPlanCatalog.lootPriorityId,
+            "crypt_of_unpaid_debts" to ExpeditionPlanCatalog.auditEverythingId,
+            "paperwork_toll_of_chaos" to ExpeditionPlanCatalog.auditEverythingId,
+            "licensed_guild_caravan_haunt" to ExpeditionPlanCatalog.lootPriorityId,
+            "notary_night_patrol" to ExpeditionPlanCatalog.safetyFirstId,
+            "inspectorate_cove_banquet" to ExpeditionPlanCatalog.auditEverythingId,
+            "wedding_with_too_many_oaths" to ExpeditionPlanCatalog.auditEverythingId,
+            "the_sunken_toll_booth" to ExpeditionPlanCatalog.lootPriorityId,
+            "the_crowns_missing_receipt" to ExpeditionPlanCatalog.auditEverythingId,
+            "the_tower_built_sideways" to ExpeditionPlanCatalog.safetyFirstId,
+        )
+
         SeedGame.quests.forEach { quest ->
             val available = ExpeditionPlanCatalog.availableFor(quest)
+            val freePlans = available.filter { !it.requiresSpecialContract }
             val questSpecificPlans = available.filter { quest.id in it.questIds }
 
-            assertTrue("${quest.id} should keep generic plans", available.any { it.id == ExpeditionPlanCatalog.rushTheJobId })
-            assertTrue("${quest.id} should expose one or two quest clauses", questSpecificPlans.size in 1..2)
+            assertEquals("${quest.id} should expose one free map hook", listOf(expectedFreePlanByQuestId.getValue(quest.id)), freePlans.map { it.id })
+            assertEquals("${quest.id} should expose one paid quest clause", 1, questSpecificPlans.size)
+            assertTrue("${quest.id} clause should cost a Special Contract", questSpecificPlans.single().specialContractCost == 1)
         }
     }
 
     @Test
-    fun questSpecificPlansRequireSpecialContractsButGenericPlansStayFree() {
-        SeedGame.quests.forEach { quest ->
-            val available = ExpeditionPlanCatalog.availableFor(quest)
-            val genericPlans = available.filter { it.questIds.isEmpty() }
-            val questSpecificPlans = available.filter { quest.id in it.questIds }
+    fun unavailableGenericPlanHooksFallBackToStandardModifiers() {
+        val cave = SeedGame.firstQuest
+        val crypt = SeedGame.questById.getValue("crypt_of_unpaid_debts")
 
-            assertTrue("${quest.id} should keep free generic plans", genericPlans.isNotEmpty())
-            assertTrue("${quest.id} generic plans should be free", genericPlans.all { !it.requiresSpecialContract })
-            assertTrue("${quest.id} clauses should cost a Special Contract", questSpecificPlans.all { it.specialContractCost == 1 })
-        }
+        assertEquals(ExpeditionPlanModifiers(), ExpeditionPlanCatalog.modifiersFor(ExpeditionPlanCatalog.auditEverythingId, cave))
+        assertTrue(ExpeditionPlanCatalog.availableFor(crypt).any { it.id == ExpeditionPlanCatalog.auditEverythingId })
+        assertTrue(ExpeditionPlanCatalog.modifiersFor(ExpeditionPlanCatalog.auditEverythingId, crypt).goldBonusPercent > 0)
     }
+    @Test
+    fun unknownQuestMapsFallBackToDefaultFreeHookWithoutCrashing() {
+        val customQuest = Quest(
+            id = "future_map",
+            durationSeconds = 90,
+            difficulty = 120,
+            risk = QuestRisk.Medium,
+            baseGold = 100,
+            pityGold = 20,
+            partySlots = 3,
+        )
+
+        val available = ExpeditionPlanCatalog.availableFor(customQuest)
+
+        assertEquals(
+            listOf(ExpeditionPlanCatalog.defaultPlayerPlanId),
+            available.filter { !it.requiresSpecialContract }.map { it.id },
+        )
+        assertEquals(
+            ExpeditionPlanModifiers(),
+            ExpeditionPlanCatalog.modifiersFor(ExpeditionPlanCatalog.auditEverythingId, customQuest),
+        )
+    }
+
     @Test
     fun questSpecificPlansDoNotApplyToOtherQuests() {
         val cave = SeedGame.firstQuest

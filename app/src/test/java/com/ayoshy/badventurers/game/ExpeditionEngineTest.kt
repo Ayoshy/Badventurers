@@ -113,7 +113,12 @@ class ExpeditionEngineTest {
 
     @Test
     fun lootPriorityAddsLootOnSuccessButCostsMargin() {
-        val quest = SeedGame.firstQuest.copy(difficulty = 60, risk = QuestRisk.Low, tags = emptyList(), recommendedHeroIds = emptyList())
+        val quest = SeedGame.questById.getValue("moonlit_smuggler_run").copy(
+            difficulty = 60,
+            risk = QuestRisk.Low,
+            tags = emptyList(),
+            recommendedHeroIds = emptyList(),
+        )
         val standard = engine.resolve(party = SeedGame.heroes, quest = quest, roll = 100)
         val greedy = engine.resolve(
             party = SeedGame.heroes,

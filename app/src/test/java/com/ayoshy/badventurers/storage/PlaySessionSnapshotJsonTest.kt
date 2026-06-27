@@ -238,14 +238,14 @@ class PlaySessionSnapshotJsonTest {
         val running = PlaySessionState.initial().startQuest(
             nowMillis = 1_000L,
             quest = com.ayoshy.badventurers.game.SeedGame.firstQuest,
-            planId = ExpeditionPlanCatalog.auditEverythingId,
+            planId = ExpeditionPlanCatalog.rushTheJobId,
         )
         val decoded = PlaySessionSnapshotJson.decode(
             PlaySessionSnapshotJson.encode(PlaySessionSnapshot.fromState(running)),
         )
         val restored = decoded?.toState()
 
-        assertEquals(ExpeditionPlanCatalog.auditEverythingId, restored?.expedition?.planId)
+        assertEquals(ExpeditionPlanCatalog.rushTheJobId, restored?.expedition?.planId)
         assertEquals(running.expedition?.endsAtMillis, restored?.expedition?.endsAtMillis)
     }
     @Test

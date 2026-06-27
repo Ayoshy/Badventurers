@@ -77,19 +77,20 @@ class GuildFacilityCatalogTest {
 
     @Test
     fun scoutTableWarningsChangeThePlanDecisionSurface() {
-        val quest = SeedGame.firstQuest
+        val rushQuest = SeedGame.firstQuest
+        val lootQuest = SeedGame.questById.getValue("moonlit_smuggler_run")
         val rushPlan = ExpeditionPlanCatalog.byId(ExpeditionPlanCatalog.rushTheJobId)
         val lootPlan = ExpeditionPlanCatalog.byId(ExpeditionPlanCatalog.lootPriorityId)
 
-        assertEquals(emptyList<ScoutPlanWarning>(), ScoutTableIntel.planWarningsFor(0, rushPlan, quest))
+        assertEquals(emptyList<ScoutPlanWarning>(), ScoutTableIntel.planWarningsFor(0, rushPlan, rushQuest))
         assertFalse(ScoutTableIntel.behavior(1).revealsUnlockPreviews)
         assertTrue(ScoutTableIntel.behavior(2).revealsUnlockPreviews)
 
-        val firstWarning = ScoutTableIntel.planWarningsFor(1, rushPlan, quest).single()
+        val firstWarning = ScoutTableIntel.planWarningsFor(1, rushPlan, rushQuest).single()
         assertEquals(ScoutPlanWarningType.HigherRisk, firstWarning.type)
         assertEquals(12, firstWarning.amount)
 
-        val deeperWarnings = ScoutTableIntel.planWarningsFor(2, lootPlan, quest)
+        val deeperWarnings = ScoutTableIntel.planWarningsFor(2, lootPlan, lootQuest)
         assertEquals(
             listOf(ScoutPlanWarningType.HigherRisk, ScoutPlanWarningType.LowerPower),
             deeperWarnings.map { it.type },

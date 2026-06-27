@@ -27,6 +27,8 @@ Keep new quest work aligned across these files:
 - Palier 1: Local Disasters, 8 quests.
 - Palier 2: Licensed Trouble, quests 9 to 12.
 - Palier 3: Regional Liability, quests 13 to 16.
+- Activity Board regions are exclusive: non-contract Low/Medium risk maps are Local Jobs, non-contract High risk maps are Hard Jobs, and `Contract`-tagged maps are Contracts.
+- Every implemented quest exposes one free map hook plus one paid quest-specific contract clause in `ExpeditionPlans.kt`, mirrored in `../data/expedition-plans.csv` and `../data/quests.csv`.
 - Every implemented quest must have UI localization coverage in `BadventurersUiText.kt` and test coverage through `BadventurersUiLocalizationTest`.
 - Quests 1 to 8 have explicit banner mappings in `BadventurersUiArt.kt`; quests 9 to 16 currently use the fallback banner with temporary art briefs tracked in `BadventurersUiArt.kt` and `../data/quests.csv`.
 
@@ -46,7 +48,7 @@ Every Activity Board card should show the first-clear jackpot separately from re
 - Add runtime quest data in `SeedGame.kt`.
 - Fill every required runtime field: `id`, `title`, `summary`, `durationSeconds`, `difficulty`, `risk`, `baseGold`, `pityGold`, `partySlots`, `tags`, `recommendedHeroIds`, and `unlockRequirement`.
 - Record the reward focus in `../data/quests.csv`: repeat reward intent, first-clear reward intent, and whether this quest introduces gold, loot quality, ticket progress, reward choice, XP catch-up, or facility pressure.
-- Add at least two plan hooks per quest. A hook can be a quest-specific contract clause, a generic plan that becomes especially interesting on that quest, or a deliberately bad plan choice that teaches risk. Quest-specific clauses live in `ExpeditionPlans.kt` and `../data/expedition-plans.csv`.
+- Add at least two plan hooks per quest: one free map hook and one paid quest-specific contract clause. Free hooks can reuse a familiar plan template only when that plan is explicitly assigned to the quest in `ExpeditionPlans.kt` and `../data/expedition-plans.csv`.
 - Add at least two hero spotlight interactions per quest. Prefer heroes whose specials activate through the quest tags, then list those heroes in `recommendedHeroIds` and `../data/quests.csv`.
 - Add one passive incident hook that can appear after first clear or once the quest's region/theme is unlocked. If the runtime still uses generic incidents, record the intended dedicated hook as `TBD` in `../data/quests.csv` instead of leaving the design implicit.
 - Add first-clear and repeat reward notes. If first-clear rewards are not implemented yet, state the planned reward in `../data/quests.csv` and link the follow-up ticket.

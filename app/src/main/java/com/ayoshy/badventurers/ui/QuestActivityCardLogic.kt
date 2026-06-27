@@ -91,13 +91,9 @@ internal fun firstClearRewardPreview(session: PlaySessionState, quest: Quest): F
 
 internal fun Quest.matchesActivityRegion(region: QuestActivityRegion): Boolean =
     when (region) {
-        QuestActivityRegion.LocalJobs -> risk != QuestRisk.High &&
-            difficultyTier != QuestDifficultyTier.Disaster &&
-            difficultyTier != QuestDifficultyTier.LegendaryMess
-        QuestActivityRegion.DangerousWork -> risk == QuestRisk.High ||
-            difficultyTier == QuestDifficultyTier.Disaster ||
-            difficultyTier == QuestDifficultyTier.LegendaryMess
-        QuestActivityRegion.SpecialContracts -> specialContractPlan() != null
+        QuestActivityRegion.LocalJobs -> !hasAny(QuestTag.Contract) && risk != QuestRisk.High
+        QuestActivityRegion.DangerousWork -> !hasAny(QuestTag.Contract) && risk == QuestRisk.High
+        QuestActivityRegion.SpecialContracts -> hasAny(QuestTag.Contract) && specialContractPlan() != null
     }
 
 internal fun Quest.specialContractPlan(): ExpeditionPlan? =

@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -331,13 +332,14 @@ internal fun HeroGachaPanel(
             Text(recruitButtonLabel, fontWeight = FontWeight.Black)
         }
     }
+    if (lastRecruitment != null) {
+        RecruitReveal(recruitment = lastRecruitment)
+    }
+    RecruitCandidatePoolPreview(session = session)
     RecruitmentTicketsPanel(
         session = session,
         onRecruitWithTicket = onRecruitWithTicket,
     )
-    if (lastRecruitment != null) {
-        RecruitReveal(recruitment = lastRecruitment)
-    }
     Text(
         text = stringResource(R.string.recruit_odds_title),
         color = Color(0xFFFFF0BD),
@@ -354,6 +356,105 @@ internal fun HeroGachaPanel(
     }
 }
 
+@Composable
+internal fun RecruitCandidatePoolPreview(session: PlaySessionState) {
+    val recruitmentProfile = HeroGacha.recruitmentProfileForProgress(session.completedQuestCount)
+    val pullableRarities = recruitmentProfile.rarityWeights
+        .filter { (_, weight) -> weight > 0 }
+        .map { (rarity, _) -> rarity }
+        .toSet()
+    val candidates = HeroCatalog.heroes
+        .map { it.toHero() }
+        .filter { it.rarity in pullableRarities }
+        .sortedWith(heroRosterComparator(HeroRosterSort.Rarity))
+
+    DarkPanel(
+        title = stringResource(R.string.recruit_pool_title),
+        body = stringResource(R.string.recruit_pool_summary, candidates.size),
+    ) {
+        candidates.chunked(2).forEach { rowHeroes ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                rowHeroes.forEach { hero ->
+                    RecruitCandidateCard(hero = hero, modifier = Modifier.weight(1f))
+                }
+                repeat(2 - rowHeroes.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun RecruitCandidateCard(hero: Hero, modifier: Modifier = Modifier) {
+    val borderStyle = heroBorderStyle(hero.rarity)
+    val shape = RoundedCornerShape(8.dp)
+
+    Box(
+        modifier = modifier
+            .height(92.dp)
+            .clip(shape)
+            .background(Color(0xF4FFF1BF))
+            .border(1.dp, borderStyle.innerColor, shape),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(7.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(shape)
+                    .background(Color(0xFF171813))
+                    .border(borderStyle.strokeWidth, borderStyle.borderColor, shape),
+            ) {
+                Image(
+                    painter = painterResource(heroPortraitResource(hero)),
+                    contentDescription = hero.name,
+                    modifier = Modifier.matchParentSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = hero.name,
+                    color = Color(0xFF211F1A),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = stringResource(
+                        R.string.recruit_candidate_detail,
+                        heroRarityLabel(hero.rarity),
+                        heroClassLabel(hero.heroClass),
+                    ),
+                    color = Color(0xFF756B54),
+                    fontSize = 10.sp,
+                    lineHeight = 13.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = stringResource(R.string.hero_power_value, PartyPowerCalculator.basePower(hero)),
+                    color = borderStyle.borderColor,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
 @Composable
 internal fun RecruitmentTicketsPanel(
     session: PlaySessionState,
@@ -1437,6 +1538,7 @@ internal fun EquipmentSlotPicker(
 @Composable
 internal fun RecruitReveal(recruitment: HeroRecruitmentResult) {
     val hero = recruitment.hero
+    val revealStyle = recruitRevealAnimationStyle(hero.rarity)
     val body = if (recruitment.duplicate) {
         stringResource(
             R.string.recruit_duplicate_summary,
@@ -1458,12 +1560,18 @@ internal fun RecruitReveal(recruitment: HeroRecruitmentResult) {
             targetState = true
         }
     }
+    var chargeStarted by remember(recruitment) { mutableStateOf(false) }
+    LaunchedEffect(recruitment) { chargeStarted = true }
+    val chargeProgress by animateFloatAsState(
+        targetValue = if (chargeStarted) 1f else 0f,
+        animationSpec = tween(revealStyle.chargeDurationMillis),
+    )
 
     AnimatedVisibility(
         visibleState = visibleState,
-        enter = fadeIn(animationSpec = tween(220)) + scaleIn(
-            initialScale = 0.95f,
-            animationSpec = tween(220),
+        enter = fadeIn(animationSpec = tween(revealStyle.enterDurationMillis)) + scaleIn(
+            initialScale = revealStyle.initialScale,
+            animationSpec = tween(revealStyle.enterDurationMillis),
         ),
         exit = fadeOut(animationSpec = tween(120)) + scaleOut(
             targetScale = 0.98f,
@@ -1471,17 +1579,23 @@ internal fun RecruitReveal(recruitment: HeroRecruitmentResult) {
         ),
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
+            RecruitRevealCharge(
+                hero = hero,
+                style = revealStyle,
+                chargeProgress = chargeProgress,
+            )
             HeroArtworkPanel(
                 hero = hero,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(240.dp)
+                    .height(revealStyle.artHeight)
                     .padding(bottom = 10.dp),
             )
             PaperPanel(
                 title = stringResource(R.string.recruit_result_title),
                 body = body,
             ) {
+                RecruitRevealStats(hero = hero)
                 if (recruitment.duplicate) {
                     Spacer(Modifier.height(8.dp))
                     Text(
@@ -1496,6 +1610,204 @@ internal fun RecruitReveal(recruitment: HeroRecruitmentResult) {
                     )
                 }
             }
+        }
+    }
+}
+
+internal data class RecruitRevealAnimationStyle(
+    val enterDurationMillis: Int,
+    val chargeDurationMillis: Int,
+    val initialScale: Float,
+    val artHeight: Dp,
+    val chargeColor: Color,
+    val burstBars: Int,
+)
+
+internal fun recruitRevealAnimationStyle(rarity: HeroRarity): RecruitRevealAnimationStyle =
+    when (rarity) {
+        HeroRarity.Common -> RecruitRevealAnimationStyle(
+            enterDurationMillis = 180,
+            chargeDurationMillis = 240,
+            initialScale = 0.97f,
+            artHeight = 240.dp,
+            chargeColor = Color(0xFFE1C37A),
+            burstBars = 2,
+        )
+        HeroRarity.Uncommon -> RecruitRevealAnimationStyle(
+            enterDurationMillis = 240,
+            chargeDurationMillis = 360,
+            initialScale = 0.94f,
+            artHeight = 252.dp,
+            chargeColor = Color(0xFF98D17B),
+            burstBars = 3,
+        )
+        HeroRarity.Rare -> RecruitRevealAnimationStyle(
+            enterDurationMillis = 320,
+            chargeDurationMillis = 520,
+            initialScale = 0.9f,
+            artHeight = 268.dp,
+            chargeColor = Color(0xFF8BC6EA),
+            burstBars = 4,
+        )
+        HeroRarity.Epic -> RecruitRevealAnimationStyle(
+            enterDurationMillis = 420,
+            chargeDurationMillis = 700,
+            initialScale = 0.86f,
+            artHeight = 286.dp,
+            chargeColor = Color(0xFFDFA7F0),
+            burstBars = 5,
+        )
+        HeroRarity.Legendary -> RecruitRevealAnimationStyle(
+            enterDurationMillis = 540,
+            chargeDurationMillis = 900,
+            initialScale = 0.8f,
+            artHeight = 304.dp,
+            chargeColor = Color(0xFFFFE08A),
+            burstBars = 6,
+        )
+    }
+
+@Composable
+internal fun RecruitRevealCharge(
+    hero: Hero,
+    style: RecruitRevealAnimationStyle,
+    chargeProgress: Float,
+) {
+    val borderStyle = heroBorderStyle(hero.rarity)
+    val clampedProgress = chargeProgress.coerceIn(0.08f, 1f)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.recruit_reveal_charge, heroRarityLabel(hero.rarity)),
+                color = Color(0xFFFFF0BD),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                repeat(style.burstBars) {
+                    Box(
+                        modifier = Modifier
+                            .width(18.dp)
+                            .height(5.dp)
+                            .clip(RoundedCornerShape(99.dp))
+                            .background(style.chargeColor),
+                    )
+                }
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .padding(top = 5.dp)
+                .clip(RoundedCornerShape(99.dp))
+                .background(Color(0x6624251F)),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(clampedProgress)
+                    .background(Brush.horizontalGradient(listOf(borderStyle.innerColor, style.chargeColor))),
+            )
+        }
+    }
+}
+
+@Composable
+internal fun RecruitRevealStats(hero: Hero) {
+    val topStats = remember(hero.id, hero.level, hero.stats) {
+        hero.stats.entries().sortedByDescending { it.value }.take(4)
+    }
+
+    Spacer(Modifier.height(10.dp))
+    Text(
+        text = stringResource(R.string.recruit_card_stats_title),
+        color = Color(0xFF211F1A),
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Black,
+        modifier = Modifier.padding(bottom = 8.dp),
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        RecruitRevealStatChip(
+            label = stringResource(R.string.hero_level_value, hero.level),
+            value = stringResource(R.string.hero_power_value, PartyPowerCalculator.basePower(hero)),
+            modifier = Modifier.weight(1f),
+        )
+        RecruitRevealStatChip(
+            label = heroRarityLabel(hero.rarity),
+            value = heroClassLabel(hero.heroClass),
+            modifier = Modifier.weight(1f),
+        )
+    }
+    topStats.chunked(2).forEach { rowStats ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            rowStats.forEach { stat ->
+                RecruitRevealStatChip(
+                    label = statTypeLabel(stat.type),
+                    value = stat.value.toString(),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            repeat(2 - rowStats.size) {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+internal fun RecruitRevealStatChip(label: String, value: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .height(40.dp)
+            .padding(bottom = 8.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xF2F8E7B6)),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = label,
+                color = Color(0xFF756B54),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = value,
+                color = Color(0xFF211F1A),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
