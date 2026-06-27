@@ -1,6 +1,6 @@
 # Spreadsheet Data
 
-Last updated: 2026-06-25
+Last updated: 2026-06-27
 
 These CSV files are spreadsheet-friendly mirrors of current runtime content. They are meant for sorting, filtering, and balance review in Excel or another spreadsheet tool.
 
@@ -8,7 +8,7 @@ These CSV files are spreadsheet-friendly mirrors of current runtime content. The
 
 | File | Mirrors | Runtime source |
 | --- | --- | --- |
-| `heroes.csv` | Hero catalog, stats, rarity, trait, special | `HeroGacha.kt`, `HeroSpecialCatalog.kt` |
+| `heroes.csv` | Hero catalog, stats, rarity, trait, special, animation coverage | `HeroGacha.kt`, `HeroSpecialCatalog.kt` |
 | `items.csv` | Loot definitions | `Loot.kt` |
 | `quests.csv` | Quest tuning, tags, unlocks | `SeedGame.kt` |
 | `expedition-plans.csv` | Generic and quest-specific contract clauses | `ExpeditionPlans.kt` |

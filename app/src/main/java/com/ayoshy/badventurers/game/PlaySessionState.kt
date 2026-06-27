@@ -489,7 +489,7 @@ data class PlaySessionState(
         val activeIds = activeExpeditionHeroIds.toSet()
         val crewGold = crew.sumOf { hero -> coreCrewContribution(hero, activeIds).goldPerHour }
         return PASSIVE_BASE_GOLD_PER_HOUR +
-            guildLevel * PASSIVE_GUILD_LEVEL_GOLD_PER_HOUR +
+            guildReputationRank() * PASSIVE_GUILD_LEVEL_GOLD_PER_HOUR +
             noticeBoardPassiveGoldPerHour() +
             accountantOfficePassiveGoldPerHour() +
             crewGold

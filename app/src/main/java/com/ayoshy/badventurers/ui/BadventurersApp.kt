@@ -80,6 +80,7 @@ import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.ExpeditionResult
 import com.ayoshy.badventurers.game.FakeRewardedAdService
 import com.ayoshy.badventurers.game.GuildFacility
+import com.ayoshy.badventurers.game.guildReputationProgress
 import com.ayoshy.badventurers.game.Hero
 import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroClass
@@ -142,6 +143,7 @@ private enum class GameTab {
     Guild,
     Quests,
     ExpeditionPrep,
+    WatchExpedition,
     OfflineSummary,
     QuestResult,
     RewardLoot,
@@ -245,6 +247,7 @@ fun BadventurersApp(
                             nowMillis = nowMillis,
                             onViewResult = { selectedTab = GameTab.QuestResult },
                             onNextQuest = { selectedTab = GameTab.Quests },
+                            onWatchExpedition = { selectedTab = GameTab.WatchExpedition },
                             onAchievements = { selectedTab = GameTab.Achievements },
                             onLoot = { selectedTab = GameTab.Loot },
                             onFacilities = { selectedTab = GameTab.Upgrades },
@@ -289,6 +292,12 @@ fun BadventurersApp(
                                 updateSession(session.startQuest(currentTime, selectedQuest, selectedQuestParty, selectedPlan.id))
                                 selectedTab = GameTab.Guild
                             },
+                        )
+                        GameTab.WatchExpedition -> LiveLiteWatchScreen(
+                            session = session,
+                            nowMillis = nowMillis,
+                            onBack = { selectedTab = GameTab.Guild },
+                            onViewReport = { selectedTab = GameTab.QuestResult },
                         )
                         GameTab.OfflineSummary -> OfflineSummaryScreen(
                             session = session,
@@ -386,6 +395,7 @@ fun BadventurersApp(
 
 @Composable
 private fun TopBar(session: PlaySessionState) {
+    val guildRank = session.guildReputationProgress()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -401,17 +411,17 @@ private fun TopBar(session: PlaySessionState) {
         ResourceChip(
             label = stringResource(R.string.gold_label),
             value = formatCount(session.gold),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(0.9f),
         )
         ResourceChip(
-            label = stringResource(R.string.reputation_label),
-            value = session.reputation.toString(),
-            modifier = Modifier.weight(1f),
+            label = stringResource(R.string.guild_rank_label),
+            value = guildReputationChipValue(guildRank),
+            modifier = Modifier.weight(1.25f),
         )
         ResourceChip(
-            label = stringResource(R.string.guild_level_label),
-            value = stringResource(R.string.guild_level_value, session.guildLevel),
-            modifier = Modifier.weight(1f),
+            label = stringResource(R.string.guild_xp_label),
+            value = guildReputationProgressValue(guildRank),
+            modifier = Modifier.weight(0.95f),
         )
     }
 }
@@ -471,6 +481,7 @@ private fun BottomBar(selectedTab: GameTab, onTabSelected: (GameTab) -> Unit) {
 
 private fun GameTab.bottomNavigationTab(): GameTab = when (this) {
     GameTab.ExpeditionPrep -> GameTab.Quests
+    GameTab.WatchExpedition,
     GameTab.OfflineSummary,
     GameTab.QuestResult -> GameTab.Guild
     GameTab.RewardLoot -> GameTab.Loot
@@ -541,6 +552,7 @@ private fun BottomTabIcon(tab: GameTab, selected: Boolean) {
             GameTab.Guild -> drawGuildTabIcon(iconColor, shadowColor)
             GameTab.Quests,
             GameTab.ExpeditionPrep,
+            GameTab.WatchExpedition,
             GameTab.OfflineSummary,
             GameTab.QuestResult -> drawQuestTabIcon(iconColor, shadowColor)
             GameTab.Heroes -> drawHeroTabIcon(iconColor, shadowColor)

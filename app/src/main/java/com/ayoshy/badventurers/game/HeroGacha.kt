@@ -63,7 +63,7 @@ object HeroCatalog {
         HeroDefinition(
             id = "quill",
             name = "Quill",
-            heroClass = HeroClass.BardAccountant,
+            heroClass = HeroClass.Bard,
             rarity = HeroRarity.Rare,
             level = 2,
             stats = HeroStats(force = 28, magic = 42, luck = 55, ego = 64, hygiene = 70, badFaith = 52, orientation = 58, paperwork = 96, endurance = 44, charisma = 82),
@@ -153,7 +153,7 @@ object HeroCatalog {
         HeroDefinition(
             id = "comptable",
             name = "Tally Noakes",
-            heroClass = HeroClass.Accountant,
+            heroClass = HeroClass.Quartermaster,
             rarity = HeroRarity.Rare,
             level = 2,
             stats = HeroStats(force = 18, magic = 32, luck = 60, ego = 64, hygiene = 78, badFaith = 30, orientation = 86, paperwork = 104, endurance = 40, charisma = 54),

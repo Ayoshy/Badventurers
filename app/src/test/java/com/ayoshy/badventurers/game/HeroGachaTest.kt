@@ -60,8 +60,9 @@ class HeroGachaTest {
         assertTrue(
             classes.containsAll(
                 setOf(
+                    HeroClass.Bard,
                     HeroClass.Paladin,
-                    HeroClass.Accountant,
+                    HeroClass.Quartermaster,
                     HeroClass.Gardener,
                     HeroClass.DeathKnight,
                     HeroClass.Chef,
@@ -76,6 +77,13 @@ class HeroGachaTest {
     @Test
     fun paladinUsesMasculineNameForCurrentPortrait() {
         assertEquals("Sir Brindle", HeroCatalog.byId.getValue("paladin").name)
+    }
+
+    @Test
+    fun catalogUsesPortraitMatchingClassesForQuillLedgerAndTally() {
+        assertEquals(HeroClass.Bard, HeroCatalog.byId.getValue("quill").heroClass)
+        assertEquals(HeroClass.BardAccountant, HeroCatalog.byId.getValue("ledger").heroClass)
+        assertEquals(HeroClass.Quartermaster, HeroCatalog.byId.getValue("comptable").heroClass)
     }
 
     @Test

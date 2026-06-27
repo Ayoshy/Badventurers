@@ -282,13 +282,15 @@ internal fun heroPortraitResource(hero: Hero): Int =
             HeroClass.Bruiser -> R.drawable.hero_portrait_brugg
             HeroClass.ApprenticeMage -> R.drawable.hero_portrait_mira
             HeroClass.Rogueish -> R.drawable.hero_portrait_nell
-            HeroClass.BardAccountant -> R.drawable.hero_portrait_quill
+            HeroClass.Bard -> R.drawable.hero_portrait_quill
+            HeroClass.BardAccountant -> R.drawable.hero_portrait_comptable
             HeroClass.Ninja -> R.drawable.hero_portrait_ninja
             HeroClass.Hunter -> R.drawable.hero_portrait_hunter
             HeroClass.Priest -> R.drawable.hero_portrait_priest
             HeroClass.Necromancer -> R.drawable.hero_portrait_necromancer
             HeroClass.Paladin -> R.drawable.hero_portrait_paladin
-            HeroClass.Accountant -> R.drawable.hero_portrait_tally_noakes
+            HeroClass.Accountant -> R.drawable.hero_portrait_comptable
+            HeroClass.Quartermaster -> R.drawable.hero_portrait_tally_noakes
             HeroClass.Gardener -> R.drawable.hero_portrait_jardinier
             HeroClass.DeathKnight -> R.drawable.hero_portrait_chevalier_de_la_mort
             HeroClass.Chef -> R.drawable.hero_portrait_chef_cuistot

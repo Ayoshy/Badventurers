@@ -90,6 +90,7 @@ import com.ayoshy.badventurers.game.ExpeditionResult
 import com.ayoshy.badventurers.game.FakeRewardedAdService
 import com.ayoshy.badventurers.game.GuildFacility
 import com.ayoshy.badventurers.game.GuildFacilityUpgradeState
+import com.ayoshy.badventurers.game.guildReputationProgress
 import com.ayoshy.badventurers.game.ScoutTableIntel
 import com.ayoshy.badventurers.game.Hero
 import com.ayoshy.badventurers.game.HeroCatalog
@@ -171,6 +172,7 @@ internal fun UpgradesScreen(
             detail = stringResource(R.string.upgrade_treasury_detail),
             value = stringResource(R.string.gold_value, session.gold),
         )
+        GuildReputationPanel(session = session)
         UpgradeRow(
             title = stringResource(R.string.notice_board_upgrade_title, session.noticeBoardLevel),
             detail = stringResource(R.string.notice_board_upgrade_detail),
@@ -262,6 +264,17 @@ internal fun UpgradesScreen(
         )
         DarkPanel(title = stringResource(R.string.next_unlock_title), body = stringResource(R.string.next_unlock_summary))
         AchievementLedgerPanel(session = session, onOpen = onAchievements)
+    }
+}
+
+@Composable
+private fun GuildReputationPanel(session: PlaySessionState) {
+    val guildRank = session.guildReputationProgress()
+    DarkPanel(
+        title = stringResource(R.string.guild_rank_panel_title),
+        body = guildReputationPanelBody(guildRank),
+    ) {
+        ProgressBar(progress = guildRank.progressFraction)
     }
 }
 

@@ -146,6 +146,7 @@ internal fun GuildScreen(
     nowMillis: Long,
     onViewResult: () -> Unit,
     onNextQuest: () -> Unit,
+    onWatchExpedition: () -> Unit,
     onAchievements: () -> Unit,
     onLoot: () -> Unit,
     onFacilities: () -> Unit,
@@ -211,6 +212,7 @@ internal fun GuildScreen(
             selectedHotspot = selectedHotspot,
             onViewResult = onViewResult,
             onNextQuest = onNextQuest,
+            onWatchExpedition = onWatchExpedition,
             onAchievements = onAchievements,
             onLoot = onLoot,
             onFacilities = onFacilities,
@@ -626,6 +628,7 @@ private fun GuildHubSelectionDrawer(
     selectedHotspot: GuildHubHotspot,
     onViewResult: () -> Unit,
     onNextQuest: () -> Unit,
+    onWatchExpedition: () -> Unit,
     onAchievements: () -> Unit,
     onLoot: () -> Unit,
     onFacilities: () -> Unit,
@@ -640,10 +643,10 @@ private fun GuildHubSelectionDrawer(
     val primaryLabel = when (selectedHotspot) {
         GuildHubHotspot.Charter -> stringResource(R.string.guild_hub_open_achievements_action)
         GuildHubHotspot.CoreCrew -> stringResource(R.string.guild_hub_manage_core_crew_action)
-        GuildHubHotspot.QuestTable -> if (session.phase == PlayPhase.ResultReady) {
-            stringResource(R.string.view_report_action)
-        } else {
-            stringResource(R.string.guild_hub_open_quests_action)
+        GuildHubHotspot.QuestTable -> when (session.phase) {
+            PlayPhase.ResultReady -> stringResource(R.string.view_report_action)
+            PlayPhase.Running -> stringResource(R.string.watch_expedition_action)
+            PlayPhase.Idle -> stringResource(R.string.guild_hub_open_quests_action)
         }
         GuildHubHotspot.LootCache -> stringResource(R.string.guild_hub_open_loot_action)
         GuildHubHotspot.Facilities -> stringResource(R.string.guild_hub_open_facilities_action)
@@ -651,7 +654,11 @@ private fun GuildHubSelectionDrawer(
     val primaryAction: () -> Unit = when (selectedHotspot) {
         GuildHubHotspot.Charter -> onAchievements
         GuildHubHotspot.CoreCrew -> onManageCoreCrew
-        GuildHubHotspot.QuestTable -> if (session.phase == PlayPhase.ResultReady) onViewResult else onNextQuest
+        GuildHubHotspot.QuestTable -> when (session.phase) {
+            PlayPhase.ResultReady -> onViewResult
+            PlayPhase.Running -> onWatchExpedition
+            PlayPhase.Idle -> onNextQuest
+        }
         GuildHubHotspot.LootCache -> onLoot
         GuildHubHotspot.Facilities -> onFacilities
     }

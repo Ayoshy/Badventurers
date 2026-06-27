@@ -1,6 +1,6 @@
 # Progression
 
-Last updated: 2026-06-25
+Last updated: 2026-06-27
 
 This page is the compact active progression map. Older exploration notes live in `../archive/progression-planning/`.
 
@@ -9,6 +9,7 @@ This page is the compact active progression map. Older exploration notes live in
 | Layer | Current source | Notes |
 | --- | --- | --- |
 | Quest ladder | `SeedGame.kt` | 16 quests are live: Palier 1, Palier 2 Licensed Trouble, and Palier 3 Regional Liability. |
+| Guild rank / Guild XP | `GuildReputation.kt`, `PlaySessionState.kt` | Reputation is now presented as Guild XP feeding named guild ranks. Existing quest/facility gates still use the same stored value; passive gold scales from the derived rank. |
 | Hero XP and levels | `HeroProgression.kt`, `PlaySessionState.kt` | Expedition participants gain XP; level-ups increase stats and can unlock recovery bonuses. |
 | Loot | `Loot.kt` | Generated items roll rarity, slot, stats, and sell value; Rare unlocks after 8 completed quests and Epic enters the Palier 3 profile after 13. |
 | Facilities | `GuildFacilities.kt`, `PlaySessionState.kt` | Notice Board, Training Yard, and Bunk Room have real effects. Later facilities are cataloged but not fully implemented. |
@@ -29,4 +30,5 @@ This page is the compact active progression map. Older exploration notes live in
 - Expedition XP remains the main hero-power path.
 - Paid or ad-adjacent rewards must not become the best route to power.
 - New progression currencies need a clear sink and a visible reason to care.
+- Guild XP should stay readable as rank progress first; raw thresholds are only supporting detail.
 - Snapshot changes need compatibility tests.

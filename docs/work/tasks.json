@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-06-26",
+  "updated": "2026-06-27",
   "source": "docs/product/kanban.md",
   "columns": [
     {
@@ -493,7 +493,7 @@
     {
       "id": "BV-011",
       "title": "Live-Lite expedition prototype",
-      "status": "later",
+      "status": "done",
       "priority": "P3",
       "area": "mode",
       "track": "Live-Lite",
@@ -501,37 +501,41 @@
       "acceptance": [
         {
           "text": "Prototype a Watch Expedition screen for active expeditions.",
-          "done": false
+          "done": true
         },
         {
           "text": "Show heroes auto-acting in a short side-view or card-view sequence.",
-          "done": false
+          "done": true
         },
         {
           "text": "Support light interventions: spend supply, safer route, push for loot, encourage hero, hero-specific trick.",
-          "done": false
+          "done": true
         },
         {
           "text": "Keep intervention bonuses small and optional.",
-          "done": false
+          "done": true
         },
         {
           "text": "Feed the existing ExpeditionEngine rather than creating a separate combat simulator.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
         "app/src/main/java/com/ayoshy/badventurers/game/ExpeditionEngine.kt",
-        "app/src/main/java/com/ayoshy/badventurers/ui/QuestsPrepScreens.kt"
+        "app/src/main/java/com/ayoshy/badventurers/ui/QuestsPrepScreens.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/LiveLiteExpedition.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/LiveLiteWatchScreen.kt",
+        "app/src/test/java/com/ayoshy/badventurers/game/LiveLiteExpeditionTest.kt"
       ],
       "notes": [
-        "Medium-term bet if prep/result still needs more energy."
+        "Medium-term bet if prep/result still needs more energy.",
+        "2026-06-27: Implemented Live-Lite watch prototype with a Watch Expedition screen for active runs, deterministic auto-action beats, code-native stage/card visuals, and small optional intervention previews backed by ExpeditionEstimator/ExpeditionEngine data rather than a separate simulator. Focused LiveLiteExpeditionTest passed."
       ]
     },
     {
       "id": "BV-012",
       "title": "Asset pack for Live-Lite and passive reports",
-      "status": "later",
+      "status": "done",
       "priority": "P3",
       "area": "art",
       "track": "Live-Lite",
@@ -539,36 +543,39 @@
       "acceptance": [
         {
           "text": "Create small quest stage backgrounds by biome/theme.",
-          "done": false
+          "done": true
         },
         {
           "text": "Create hero action pose sheet: idle, effort, success, mistake, loot.",
-          "done": false
+          "done": true
         },
         {
           "text": "Create hazard/event card illustrations.",
-          "done": false
+          "done": true
         },
         {
           "text": "Create plan/clause card icons.",
-          "done": false
+          "done": true
         },
         {
           "text": "Create result cause card icons.",
-          "done": false
+          "done": true
         },
         {
           "text": "Create passive income report illustration for Guild Home or Offline Summary.",
-          "done": false
+          "done": true
         }
       ],
       "refs": [
         "docs/design/art-direction.md",
         "app/src/main/res-quests/drawable-nodpi/",
-        "app/src/main/res-heroes/drawable-nodpi/"
+        "app/src/main/res-heroes/drawable-nodpi/",
+        "app/src/main/java/com/ayoshy/badventurers/ui/LiveLiteArt.kt",
+        "docs/design/live-lite-assets.md"
       ],
       "notes": [
-        "Migrated from Live-Lite Asset Needs."
+        "Migrated from Live-Lite Asset Needs.",
+        "2026-06-27: Added the Live-Lite asset contract and code-native placeholder pack: biome stage backgrounds, shared hero pose frames, hazard/event glyphs, plan/cause icons, and passive report vignette keys. Final polished PNG/WebP production can replace the same keys later without changing domain code."
       ]
     },
     {
@@ -1316,15 +1323,52 @@
     },
     {
       "id": "BV-031",
-      "title": "Move Reputaion score  to reputation levels",
-      "status": "ready",
+      "title": "Move Reputation score to guild ranks",
+      "status": "done",
       "priority": "P2",
       "area": "design",
       "track": "Backlog",
-      "summary": "Install a new progression system that represents the guilds envergure. Instead of gaining rep points that are pretty meaningless, the idea is to climb towards ranks, each unlocking some perks/features/gold/tickets (TBD). \n\nThis would also improve the existing artwork of the guild hub, from trash tier to fucking palace.\n\neach tier needs to have a name/icon/guild xp.",
-      "acceptance": [],
-      "refs": [],
-      "notes": []
+      "summary": "Present reputation as Guild XP feeding named guild ranks, so progression reads as guild stature instead of a raw score while preserving existing quest and facility gates.",
+      "acceptance": [
+        {
+          "text": "Define a named guild-rank ladder with badges and Guild XP thresholds aligned to current progression gates.",
+          "done": true
+        },
+        {
+          "text": "Show current rank and next-rank Guild XP progress in the player-facing Guild HUD.",
+          "done": true
+        },
+        {
+          "text": "Add a dynamic Upgrades screen panel explaining current rank, next rank, and current rank perk.",
+          "done": true
+        },
+        {
+          "text": "Make passive guild gold scale from the derived guild rank instead of the old manually displayed guild level.",
+          "done": true
+        },
+        {
+          "text": "Localize visible rank and Guild XP copy in English and French.",
+          "done": true
+        },
+        {
+          "text": "Add focused tests for rank thresholds, progress, max-rank behavior, and passive-gold scaling.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/GuildReputation.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/PlaySessionState.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersApp.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/UpgradesAchievementsScreens.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiText.kt",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-fr/strings.xml",
+        "app/src/test/java/com/ayoshy/badventurers/game/GuildReputationLadderTest.kt",
+        "docs/design/progression.md"
+      ],
+      "notes": [
+        "2026-06-27: Added GuildReputationLadder tiers, changed player-facing reputation copy to Guild XP, surfaced current/next rank in the Guild HUD and Upgrades screen, made passive guild income scale from the derived rank, and added focused rank/progression tests."
+      ]
     },
     {
       "id": "BV-032",
@@ -1731,6 +1775,245 @@
       "notes": [
         "2026-06-27: Git audit found main aligned with origin/main at 2a31df8, with 23 tracked modified files and 2 untracked guild-home layout files. The dirty tree corresponds to completed Workboard items BV-010, BV-036, BV-037, BV-038, BV-039, and BV-040. Latest verification in this checkout: focused GuildHomeLayoutTest, test, assembleDebug, lintDebug, and git diff --check passed with only LF/CRLF warnings.",
         "2026-06-27: Published as one tranche because the completed facility, guild-home, and hero-UX changes overlap in GuildScreen.kt, resources, and Workboard metadata. Refreshed verification before staging: git fetch origin, git diff --check, .\\gradlew.bat test, .\\gradlew.bat assembleDebug, and .\\gradlew.bat lintDebug all passed; diff-check only reported LF/CRLF warnings."
+      ]
+    },
+    {
+      "id": "BV-042",
+      "title": "Hero animation creation rule and spec",
+      "status": "ready",
+      "priority": "P1",
+      "area": "art",
+      "track": "Hero Animation",
+      "summary": "Make hero animation coverage a first-class content requirement before expanding Live-Lite. A hero is no longer complete with only a portrait; each hero needs a planned animation pack for live expedition use.",
+      "acceptance": [
+        {
+          "text": "Update the hero creation/content rule so new heroes and major hero artwork replacements require animation coverage.",
+          "done": true
+        },
+        {
+          "text": "Define the minimum accepted animation states: idle, walk, fight, hurt/dead, celebrate, and loot/interact.",
+          "done": true
+        },
+        {
+          "text": "Define naming, frame-size, loop, export, and phone-readability standards for hero animation sheets.",
+          "done": false
+        },
+        {
+          "text": "Document how animation status is tracked per hero until final assets are accepted.",
+          "done": true
+        }
+      ],
+      "refs": [
+        "docs/content/hero-item-catalog.md",
+        "docs/design/art-direction.md",
+        "docs/design/live-lite-assets.md"
+      ],
+      "notes": [
+        "2026-06-27: Created from Live-Lite screenshot review. The top vignette placeholder made it clear that Live-Lite needs real hero animation packs before more watch-mode implementation. Hero creation rule now requires animation coverage.",
+        "2026-06-27: Added an Animation Pack status column to the hero catalog and animation_pack_status to docs/data/heroes.csv. Starter heroes are planned for BV-044; the rest of the current roster is marked missing for BV-045."
+      ]
+    },
+    {
+      "id": "BV-043",
+      "title": "Hero animation manifest and validator pipeline",
+      "status": "ready",
+      "priority": "P1",
+      "area": "art-tech",
+      "track": "Hero Animation",
+      "summary": "Create a lightweight manifest and validation flow so hero animation sheets can be produced, sliced, checked, and mapped consistently before runtime integration.",
+      "acceptance": [
+        {
+          "text": "Add a hero animation manifest keyed by hero id and animation state.",
+          "done": false
+        },
+        {
+          "text": "Define expected source/export locations for accepted animation sheets under Android resources.",
+          "done": false
+        },
+        {
+          "text": "Add a validator that catches missing states, bad dimensions, non-integer scaling, and unknown hero ids.",
+          "done": false
+        },
+        {
+          "text": "Generate a contact sheet or audit output so animation batches can be reviewed quickly.",
+          "done": false
+        },
+        {
+          "text": "Add focused tests or script checks that fail when accepted hero animation coverage is incomplete.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/res-heroes/drawable-nodpi/",
+        "docs/content/hero-item-catalog.md",
+        "docs/data/heroes.csv",
+        "tools/"
+      ],
+      "notes": [
+        "Do this before producing many hero animation assets; otherwise every batch will invent its own naming and verification rules."
+      ]
+    },
+    {
+      "id": "BV-044",
+      "title": "Starter hero animation pack",
+      "status": "later",
+      "priority": "P1",
+      "area": "art",
+      "track": "Hero Animation",
+      "summary": "Produce and integrate the first accepted animation pack for Brugg, Mira, and Nell so Live-Lite can prove the real visual loop with the starting party.",
+      "acceptance": [
+        {
+          "text": "Create accepted animation sheets for Brugg, Mira, and Nell covering idle, walk, fight, hurt/dead, celebrate, and loot/interact.",
+          "done": false
+        },
+        {
+          "text": "Keep silhouettes, props, and personality consistent with current hero portraits.",
+          "done": false
+        },
+        {
+          "text": "Run the hero animation validator and generate review contact sheets.",
+          "done": false
+        },
+        {
+          "text": "Wire accepted starter animation resources through the manifest without changing gameplay rules.",
+          "done": false
+        },
+        {
+          "text": "Capture emulator evidence that the starter animations render legibly on a phone-sized Live-Lite surface.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_brugg.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_mira.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_nell.png",
+        "docs/content/hero-item-catalog.md"
+      ],
+      "notes": [
+        "Starter trio first because they are guaranteed to appear in early Live-Lite runs and reveal whether the animation direction works."
+      ]
+    },
+    {
+      "id": "BV-045",
+      "title": "Full current roster animation backlog",
+      "status": "later",
+      "priority": "P2",
+      "area": "art",
+      "track": "Hero Animation",
+      "summary": "Plan and produce animation coverage for the full current HeroCatalog after the starter pack proves the format and quality bar.",
+      "acceptance": [
+        {
+          "text": "Add animation status tracking for every current HeroCatalog hero.",
+          "done": true
+        },
+        {
+          "text": "Batch remaining heroes by visual reuse risk, rarity, and Live-Lite visibility priority.",
+          "done": false
+        },
+        {
+          "text": "Produce accepted animation sheets for each current hero using the shared state set.",
+          "done": false
+        },
+        {
+          "text": "Keep one hero = one recognizable animated identity; no duplicated silhouettes that collapse at phone size.",
+          "done": false
+        },
+        {
+          "text": "Run validator, contact sheets, and runtime smoke captures for each accepted batch.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/HeroGacha.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/BadventurersUiArt.kt",
+        "docs/content/hero-item-catalog.md",
+        "docs/data/heroes.csv"
+      ],
+      "notes": [
+        "Depends on BV-043 and should follow at least one accepted starter batch from BV-044.",
+        "2026-06-27: Per-hero animation status tracking now exists in docs/content/hero-item-catalog.md and docs/data/heroes.csv; production coverage remains open."
+      ]
+    },
+    {
+      "id": "BV-046",
+      "title": "Live-Lite hero animation lane",
+      "status": "later",
+      "priority": "P1",
+      "area": "mode",
+      "track": "Live-Lite",
+      "summary": "Replace the abstract top-stage placeholder with real hero artwork moving through the expedition lane, using accepted animation states from the hero animation manifest.",
+      "acceptance": [
+        {
+          "text": "Render active party heroes from their animation packs instead of abstract dots/blocks.",
+          "done": false
+        },
+        {
+          "text": "Use walk loops for route progress and switch to fight, hurt/dead, celebrate, or loot/interact on matching Live-Lite beats.",
+          "done": false
+        },
+        {
+          "text": "Keep motion readable and non-overlapping on portrait phone screens for 1-4 heroes.",
+          "done": false
+        },
+        {
+          "text": "Fallback gracefully to portrait/idle placeholders only when animation coverage is missing.",
+          "done": false
+        },
+        {
+          "text": "Capture emulator video or screenshot evidence for at least one running expedition with animated heroes.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/ui/LiveLiteWatchScreen.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/LiveLiteArt.kt",
+        "app/src/main/java/com/ayoshy/badventurers/game/LiveLiteExpedition.kt"
+      ],
+      "notes": [
+        "Do not deepen Live-Lite combat before this visual lane works; the mode goal is to watch recognizable heroes move and act."
+      ]
+    },
+    {
+      "id": "BV-047",
+      "title": "Live-Lite interventions with real tradeoffs",
+      "status": "ready",
+      "priority": "P1",
+      "area": "mode",
+      "track": "Live-Lite",
+      "summary": "Redesign manual Live-Lite boosts so they are choices with costs, not a stack of free bonus buttons. Each intervention should have a readable upside and downside.",
+      "acceptance": [
+        {
+          "text": "Replace free stacked nudges with intervention choices that include explicit tradeoffs.",
+          "done": false
+        },
+        {
+          "text": "Examples: +1 loot can add time, increase target difficulty, increase risk, or reduce success odds; safer route can lower risk but reduce loot/gold or add duration.",
+          "done": false
+        },
+        {
+          "text": "Limit stacking so the player cannot simply press every button for a net-positive bundle.",
+          "done": false
+        },
+        {
+          "text": "Preview both upside and downside clearly in the Watch Expedition UI before selection.",
+          "done": false
+        },
+        {
+          "text": "Keep offline/non-watch players unpunished relative to the base expedition result.",
+          "done": false
+        },
+        {
+          "text": "Add unit tests proving tradeoff math, selection limits, and non-watch baseline behavior.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/java/com/ayoshy/badventurers/game/LiveLiteExpedition.kt",
+        "app/src/main/java/com/ayoshy/badventurers/ui/LiveLiteWatchScreen.kt",
+        "app/src/test/java/com/ayoshy/badventurers/game/LiveLiteExpeditionTest.kt"
+      ],
+      "notes": [
+        "2026-06-27: Created from screenshot review. Current prototype communicates optional nudges but still reads like free buttons; this needs game-design cleanup before deeper Live-Lite work."
       ]
     }
   ]

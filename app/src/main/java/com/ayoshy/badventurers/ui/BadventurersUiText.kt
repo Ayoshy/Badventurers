@@ -80,6 +80,8 @@ import com.ayoshy.badventurers.game.ExpeditionPlanCatalog
 import com.ayoshy.badventurers.game.ExpeditionResult
 import com.ayoshy.badventurers.game.FakeRewardedAdService
 import com.ayoshy.badventurers.game.GuildFacility
+import com.ayoshy.badventurers.game.GuildReputationProgress
+import com.ayoshy.badventurers.game.GuildReputationTier
 import com.ayoshy.badventurers.game.Hero
 import com.ayoshy.badventurers.game.HeroCatalog
 import com.ayoshy.badventurers.game.HeroClass
@@ -151,6 +153,96 @@ internal fun riskLabel(risk: QuestRisk): String =
         QuestRisk.Low -> stringResource(R.string.risk_low)
         QuestRisk.Medium -> stringResource(R.string.risk_medium)
         QuestRisk.High -> stringResource(R.string.risk_high)
+    }
+
+@Composable
+internal fun guildReputationTierName(tier: GuildReputationTier): String =
+    stringResource(guildReputationTierNameRes(tier))
+
+@Composable
+internal fun guildReputationTierShortName(tier: GuildReputationTier): String =
+    stringResource(guildReputationTierShortNameRes(tier))
+
+@Composable
+internal fun guildReputationTierPerk(tier: GuildReputationTier): String =
+    stringResource(guildReputationTierPerkRes(tier))
+
+@Composable
+internal fun guildReputationChipValue(progress: GuildReputationProgress): String =
+    stringResource(
+        R.string.guild_rank_chip_value,
+        progress.currentTier.badge,
+        guildReputationTierShortName(progress.currentTier),
+    )
+
+@Composable
+internal fun guildReputationProgressValue(progress: GuildReputationProgress): String =
+    progress.nextTier?.let { next ->
+        stringResource(R.string.guild_rank_progress_value, progress.reputation, next.minReputation)
+    } ?: stringResource(R.string.guild_rank_progress_max_value, progress.reputation)
+
+@Composable
+internal fun guildReputationPanelBody(progress: GuildReputationProgress): String {
+    val currentName = guildReputationTierName(progress.currentTier)
+    val currentPerk = guildReputationTierPerk(progress.currentTier)
+    val next = progress.nextTier
+    return if (next == null) {
+        stringResource(
+            R.string.guild_rank_panel_max_body,
+            progress.currentTier.badge,
+            currentName,
+            progress.reputation,
+            currentPerk,
+        )
+    } else {
+        stringResource(
+            R.string.guild_rank_panel_body,
+            progress.currentTier.badge,
+            currentName,
+            progress.reputation,
+            next.minReputation,
+            next.badge,
+            guildReputationTierName(next),
+            progress.pointsToNextTier,
+            currentPerk,
+        )
+    }
+}
+
+internal fun guildReputationTierNameRes(tier: GuildReputationTier): Int =
+    when (tier.id) {
+        "folding_table_charter" -> R.string.guild_rank_folding_table_name
+        "back_room_permit" -> R.string.guild_rank_back_room_name
+        "notice_board_office" -> R.string.guild_rank_notice_office_name
+        "licensed_guild_desk" -> R.string.guild_rank_licensed_desk_name
+        "regional_liability_hall" -> R.string.guild_rank_liability_hall_name
+        "crown_adjacent_franchise" -> R.string.guild_rank_crown_franchise_name
+        "sideways_tower_chapter" -> R.string.guild_rank_sideways_chapter_name
+        else -> R.string.guild_rank_unknown_name
+    }
+
+internal fun guildReputationTierShortNameRes(tier: GuildReputationTier): Int =
+    when (tier.id) {
+        "folding_table_charter" -> R.string.guild_rank_folding_table_short
+        "back_room_permit" -> R.string.guild_rank_back_room_short
+        "notice_board_office" -> R.string.guild_rank_notice_office_short
+        "licensed_guild_desk" -> R.string.guild_rank_licensed_desk_short
+        "regional_liability_hall" -> R.string.guild_rank_liability_hall_short
+        "crown_adjacent_franchise" -> R.string.guild_rank_crown_franchise_short
+        "sideways_tower_chapter" -> R.string.guild_rank_sideways_chapter_short
+        else -> R.string.guild_rank_unknown_name
+    }
+
+internal fun guildReputationTierPerkRes(tier: GuildReputationTier): Int =
+    when (tier.id) {
+        "folding_table_charter" -> R.string.guild_rank_folding_table_perk
+        "back_room_permit" -> R.string.guild_rank_back_room_perk
+        "notice_board_office" -> R.string.guild_rank_notice_office_perk
+        "licensed_guild_desk" -> R.string.guild_rank_licensed_desk_perk
+        "regional_liability_hall" -> R.string.guild_rank_liability_hall_perk
+        "crown_adjacent_franchise" -> R.string.guild_rank_crown_franchise_perk
+        "sideways_tower_chapter" -> R.string.guild_rank_sideways_chapter_perk
+        else -> R.string.guild_rank_unknown_perk
     }
 
 @Composable
@@ -288,6 +380,7 @@ internal fun heroClassLabel(heroClass: HeroClass): String =
         HeroClass.Bruiser -> stringResource(R.string.class_bruiser)
         HeroClass.ApprenticeMage -> stringResource(R.string.class_apprentice_mage)
         HeroClass.Rogueish -> stringResource(R.string.class_rogueish)
+        HeroClass.Bard -> stringResource(R.string.class_bard)
         HeroClass.BardAccountant -> stringResource(R.string.class_bard_accountant)
         HeroClass.Ninja -> stringResource(R.string.class_ninja)
         HeroClass.Hunter -> stringResource(R.string.class_hunter)
@@ -295,6 +388,7 @@ internal fun heroClassLabel(heroClass: HeroClass): String =
         HeroClass.Necromancer -> stringResource(R.string.class_necromancer)
         HeroClass.Paladin -> stringResource(R.string.class_paladin)
         HeroClass.Accountant -> stringResource(R.string.class_accountant)
+        HeroClass.Quartermaster -> stringResource(R.string.class_quartermaster)
         HeroClass.Gardener -> stringResource(R.string.class_gardener)
         HeroClass.DeathKnight -> stringResource(R.string.class_death_knight)
         HeroClass.Chef -> stringResource(R.string.class_chef)
@@ -482,6 +576,7 @@ internal fun journalHeroText(id: String): String? {
         HeroClass.Bruiser -> stringResource(R.string.journal_hero_bruiser, hero.name)
         HeroClass.ApprenticeMage -> stringResource(R.string.journal_hero_apprentice_mage, hero.name)
         HeroClass.Rogueish -> stringResource(R.string.journal_hero_rogueish, hero.name)
+        HeroClass.Bard -> stringResource(R.string.journal_hero_bard, hero.name)
         HeroClass.BardAccountant -> stringResource(R.string.journal_hero_bard_accountant, hero.name)
         HeroClass.Ninja -> stringResource(R.string.journal_hero_ninja, hero.name)
         HeroClass.Hunter -> stringResource(R.string.journal_hero_hunter, hero.name)
@@ -489,6 +584,7 @@ internal fun journalHeroText(id: String): String? {
         HeroClass.Necromancer -> stringResource(R.string.journal_hero_necromancer, hero.name)
         HeroClass.Paladin -> stringResource(R.string.journal_hero_paladin, hero.name)
         HeroClass.Accountant -> stringResource(R.string.journal_hero_accountant, hero.name)
+        HeroClass.Quartermaster -> stringResource(R.string.journal_hero_quartermaster, hero.name)
         HeroClass.Gardener -> stringResource(R.string.journal_hero_gardener, hero.name)
         HeroClass.DeathKnight -> stringResource(R.string.journal_hero_death_knight, hero.name)
         HeroClass.Chef -> stringResource(R.string.journal_hero_chef, hero.name)
