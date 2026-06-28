@@ -4,7 +4,7 @@ Last updated: 2026-06-27
 
 This spec defines the minimum accepted animation pack for every new hero, hero skin, or major hero artwork replacement. It keeps Live-Lite readable while preserving the polished 16-bit-inspired Badventurers art direction.
 
-This is the production rule behind the `Animation Pack` column in `docs/content/hero-item-catalog.md` and `animation_pack_status` in `docs/data/heroes.csv`. Placeholder `pose.*` assets from `docs/design/live-lite-assets.md` may keep the prototype visible, but they do not count as accepted per-hero animation coverage.
+This is the production rule behind the `Animation Pack` column in `docs/content/hero-item-catalog.md` and `animation_pack_status` in `docs/data/heroes.csv`. Only `accepted` counts as production per-hero animation coverage. `candidate_bv048` is review/runtime-test art, and `prototype_rejected_bv048` is retained plumbing art that must not count as final coverage. Placeholder `pose.*` assets from `docs/design/live-lite-assets.md` may keep the prototype visible, but they do not count as accepted per-hero animation coverage.
 
 ## Required State Set
 
@@ -76,4 +76,4 @@ Before marking a hero pack accepted, capture lightweight evidence with the asset
 - A short note listing any accepted aliases, such as using `dead` instead of `hurt` or `interact` instead of `loot`.
 - Emulator or rendered Live-Lite evidence once runtime wiring exists. Until then, contact sheets and phone-size previews are enough for art acceptance.
 
-Update `docs/content/hero-item-catalog.md` and `docs/data/heroes.csv` when a hero moves between `Missing`, `Planned`, and `Accepted` animation coverage.
+Update `docs/content/hero-item-catalog.md` and `docs/data/heroes.csv` when a hero moves between missing, planned, candidate, prototype/rejected, and accepted animation coverage.

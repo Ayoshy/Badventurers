@@ -18,7 +18,9 @@
   "validStatuses": {
     "accepted": "Accepted for runtime use; exported asset must exist.",
     "planned_bv044": "Starter hero animation pack planned for BV-044.",
-    "missing_bv045": "Current roster animation backlog planned for BV-045."
+    "missing_bv045": "Current roster animation backlog planned for BV-045.",
+    "candidate_bv048": "Runtime candidate for BV-048 visual review; exported asset must exist but is not final accepted roster coverage.",
+    "prototype_rejected_bv048": "Portrait-shake prototype retained for BV-044/BV-046 runtime plumbing, but rejected for final BV-048 character-animation coverage."
   },
   "requiredStates": {
     "idle": {
@@ -57,30 +59,30 @@
       "name": "Brugg",
       "class": "Bruiser",
       "rarity": "Common",
-      "packStatus": "accepted",
+      "packStatus": "prototype_rejected_bv048",
       "states": {
         "idle": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_idle.png"
         },
         "walk": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_walk.png"
         },
         "fight": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_fight.png"
         },
         "hurt_dead": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_hurt_dead.png"
         },
         "celebrate": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_celebrate.png"
         },
         "loot_interact": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_loot_interact.png"
         }
       }
@@ -409,30 +411,30 @@
       "name": "Mira",
       "class": "ApprenticeMage",
       "rarity": "Uncommon",
-      "packStatus": "accepted",
+      "packStatus": "prototype_rejected_bv048",
       "states": {
         "idle": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_idle.png"
         },
         "walk": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_walk.png"
         },
         "fight": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_fight.png"
         },
         "hurt_dead": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_hurt_dead.png"
         },
         "celebrate": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_celebrate.png"
         },
         "loot_interact": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_loot_interact.png"
         }
       }
@@ -569,30 +571,30 @@
       "name": "Nell",
       "class": "Rogueish",
       "rarity": "Uncommon",
-      "packStatus": "accepted",
+      "packStatus": "prototype_rejected_bv048",
       "states": {
         "idle": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_idle.png"
         },
         "walk": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_walk.png"
         },
         "fight": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_fight.png"
         },
         "hurt_dead": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_hurt_dead.png"
         },
         "celebrate": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_celebrate.png"
         },
         "loot_interact": {
-          "status": "accepted",
+          "status": "prototype_rejected_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_loot_interact.png"
         }
       }
@@ -665,30 +667,30 @@
       "name": "Sable",
       "class": "Ninja",
       "rarity": "Rare",
-      "packStatus": "missing_bv045",
+      "packStatus": "candidate_bv048",
       "states": {
         "idle": {
-          "status": "missing_bv045",
+          "status": "candidate_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_idle.png"
         },
         "walk": {
-          "status": "missing_bv045",
+          "status": "candidate_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_walk.png"
         },
         "fight": {
-          "status": "missing_bv045",
+          "status": "candidate_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_fight.png"
         },
         "hurt_dead": {
-          "status": "missing_bv045",
+          "status": "candidate_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_hurt_dead.png"
         },
         "celebrate": {
-          "status": "missing_bv045",
+          "status": "candidate_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_celebrate.png"
         },
         "loot_interact": {
-          "status": "missing_bv045",
+          "status": "candidate_bv048",
           "asset": "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_loot_interact.png"
         }
       }

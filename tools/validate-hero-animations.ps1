@@ -7,8 +7,10 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+Add-Type -AssemblyName System.Drawing
+
 $RequiredStateIds = @("idle", "walk", "fight", "hurt_dead", "celebrate", "loot_interact")
-$AllowedStatuses = @("accepted", "planned_bv044", "missing_bv045")
+$AllowedStatuses = @("accepted", "candidate_bv048", "prototype_rejected_bv048", "planned_bv044", "missing_bv045")
 
 function Resolve-RepoPath {
     param([string] $Path)
@@ -315,12 +317,214 @@ function Get-StatusCode {
 
     switch ($Status) {
         "accepted" { return "OK" }
+        "candidate_bv048" { return "CAND" }
+        "prototype_rejected_bv048" { return "PROTO" }
         "planned_bv044" { return "PLAN" }
         "missing_bv045" { return "MISS" }
         default { return "BAD" }
     }
 }
 
+function Should-CheckRuntimeAsset {
+    param([string] $Status)
+
+    return @("accepted", "candidate_bv048", "prototype_rejected_bv048") -contains $Status
+}
+
+function Add-AnimationQualityIssue {
+    param(
+        [System.Collections.Generic.List[string]] $Failures,
+        [System.Collections.Generic.List[string]] $Warnings,
+        [string] $Status,
+        [string] $Message
+    )
+
+    if ($Status -eq "accepted") {
+        Add-Failure $Failures $Message
+    } else {
+        Add-WarningMessage $Warnings $Message
+    }
+}
+
+function Get-MetricRange {
+    param($Values)
+
+    $items = @($Values | Where-Object { $null -ne $_ })
+    if ($items.Count -eq 0) {
+        return 0
+    }
+
+    $measure = $items | Measure-Object -Minimum -Maximum
+    return [double] $measure.Maximum - [double] $measure.Minimum
+}
+
+function Get-RuntimeStripFrameMetrics {
+    param(
+        [System.Drawing.Bitmap] $Bitmap,
+        [int] $FrameWidth = 128
+    )
+
+    $frameCount = [int] ($Bitmap.Width / $FrameWidth)
+    $metrics = [System.Collections.Generic.List[object]]::new()
+    $dx = @(1, -1, 0, 0)
+    $dy = @(0, 0, 1, -1)
+
+    for ($frame = 0; $frame -lt $frameCount; $frame++) {
+        $mask = New-Object 'bool[,]' $FrameWidth, $Bitmap.Height
+        $seen = New-Object 'bool[,]' $FrameWidth, $Bitmap.Height
+        $minX = $FrameWidth
+        $minY = $Bitmap.Height
+        $maxX = -1
+        $maxY = -1
+        $alphaPixels = 0
+        $magentaPixels = 0
+
+        for ($x = 0; $x -lt $FrameWidth; $x++) {
+            for ($y = 0; $y -lt $Bitmap.Height; $y++) {
+                $color = $Bitmap.GetPixel(($frame * $FrameWidth) + $x, $y)
+                $isMagentaLike = $color.A -gt 24 -and ((
+                    $color.R -gt 145 -and $color.B -gt 130 -and $color.G -lt 120 -and $color.R -gt ($color.G * 1.35) -and $color.B -gt ($color.G * 1.35)
+                ) -or (
+                    $color.R -gt 190 -and $color.B -gt 170 -and $color.G -lt 145 -and [Math]::Abs($color.R - $color.B) -lt 95
+                ) -or (
+                    $color.R -gt 85 -and $color.B -gt 85 -and $color.G -lt 95 -and $color.R -gt ($color.G * 1.35) -and $color.B -gt ($color.G * 1.35) -and [Math]::Abs($color.R - $color.B) -lt 90
+                ) -or (
+                    $color.R -gt 55 -and $color.B -gt 70 -and $color.G -lt 60 -and ($color.R + $color.B) -gt ($color.G * 3.0) -and [Math]::Abs($color.R - $color.B) -lt 85
+                ))
+                if ($isMagentaLike) {
+                    $magentaPixels++
+                }
+                if ($color.A -le 24) {
+                    continue
+                }
+
+                $mask[$x, $y] = $true
+                $alphaPixels++
+                if ($x -lt $minX) { $minX = $x }
+                if ($x -gt $maxX) { $maxX = $x }
+                if ($y -lt $minY) { $minY = $y }
+                if ($y -gt $maxY) { $maxY = $y }
+            }
+        }
+
+        $componentSizes = [System.Collections.Generic.List[int]]::new()
+        for ($startX = 0; $startX -lt $FrameWidth; $startX++) {
+            for ($startY = 0; $startY -lt $Bitmap.Height; $startY++) {
+                if (-not $mask[$startX, $startY] -or $seen[$startX, $startY]) {
+                    continue
+                }
+
+                $queue = [System.Collections.Generic.Queue[object]]::new()
+                $queue.Enqueue(@($startX, $startY))
+                $seen[$startX, $startY] = $true
+                $componentSize = 0
+
+                while ($queue.Count -gt 0) {
+                    $point = $queue.Dequeue()
+                    $px = [int] $point[0]
+                    $py = [int] $point[1]
+                    $componentSize++
+
+                    for ($direction = 0; $direction -lt 4; $direction++) {
+                        $nx = $px + $dx[$direction]
+                        $ny = $py + $dy[$direction]
+                        if ($nx -lt 0 -or $nx -ge $FrameWidth -or $ny -lt 0 -or $ny -ge $Bitmap.Height) {
+                            continue
+                        }
+                        if ($mask[$nx, $ny] -and -not $seen[$nx, $ny]) {
+                            $seen[$nx, $ny] = $true
+                            $queue.Enqueue(@($nx, $ny))
+                        }
+                    }
+                }
+
+                [void] $componentSizes.Add($componentSize)
+            }
+        }
+
+        $sortedComponents = @($componentSizes | Sort-Object -Descending)
+        $largestComponent = 0
+        $significantSecondaryComponents = 0
+        if ($sortedComponents.Count -gt 0) {
+            $largestComponent = [int] $sortedComponents[0]
+            if ($sortedComponents.Count -gt 1) {
+                $significantSecondaryComponents = @($sortedComponents[1..($sortedComponents.Count - 1)] | Where-Object { $_ -gt 40 }).Count
+            }
+        }
+
+        $largestComponentRatio = 0
+        if ($alphaPixels -gt 0) {
+            $largestComponentRatio = [double] $largestComponent / [double] $alphaPixels
+        }
+
+        [void] $metrics.Add([pscustomobject]@{
+            Frame = $frame
+            AlphaPixelCount = $alphaPixels
+            MagentaPixelCount = $magentaPixels
+            CenterX = if ($alphaPixels -gt 0) { ($minX + $maxX) / 2.0 } else { $null }
+            Bottom = if ($alphaPixels -gt 0) { $maxY } else { $null }
+            Width = if ($alphaPixels -gt 0) { $maxX - $minX + 1 } else { 0 }
+            Height = if ($alphaPixels -gt 0) { $maxY - $minY + 1 } else { 0 }
+            SignificantSecondaryComponents = $significantSecondaryComponents
+            LargestComponentRatio = $largestComponentRatio
+        })
+    }
+
+    return $metrics
+}
+
+function Test-RuntimeAnimationStripQuality {
+    param(
+        [System.Drawing.Bitmap] $Bitmap,
+        [string] $HeroId,
+        [string] $StateId,
+        [string] $StateStatus,
+        [string] $Asset,
+        [System.Collections.Generic.List[string]] $Failures,
+        [System.Collections.Generic.List[string]] $Warnings
+    )
+
+    $metrics = @(Get-RuntimeStripFrameMetrics -Bitmap $Bitmap)
+    $magentaPixels = ($metrics | Measure-Object -Property MagentaPixelCount -Sum).Sum
+    if ($magentaPixels -gt 0) {
+        Add-AnimationQualityIssue -Failures $Failures -Warnings $Warnings -Status $StateStatus -Message "${HeroId}/${StateId}: runtime asset has $magentaPixels magenta-like chroma-key residue pixel(s): $Asset"
+    }
+
+    $emptyFrames = @($metrics | Where-Object { $_.AlphaPixelCount -eq 0 })
+    if ($emptyFrames.Count -gt 0) {
+        Add-AnimationQualityIssue -Failures $Failures -Warnings $Warnings -Status $StateStatus -Message "${HeroId}/${StateId}: runtime asset has $($emptyFrames.Count) empty frame(s): $Asset"
+    }
+
+    if ($StateStatus -eq "prototype_rejected_bv048") {
+        return
+    }
+
+    $nonEmptyMetrics = @($metrics | Where-Object { $_.AlphaPixelCount -gt 0 })
+    if ($nonEmptyMetrics.Count -eq 0) {
+        return
+    }
+
+    $maxAlphaPixels = ($nonEmptyMetrics | Measure-Object -Property AlphaPixelCount -Maximum).Maximum
+    if ($maxAlphaPixels -gt 9000) {
+        Add-AnimationQualityIssue -Failures $Failures -Warnings $Warnings -Status $StateStatus -Message "${HeroId}/${StateId}: frame coverage is $maxAlphaPixels pixels, which looks like a full portrait/card instead of a character-only sprite: $Asset"
+    }
+
+    $centerRange = Get-MetricRange @($nonEmptyMetrics | ForEach-Object { $_.CenterX })
+    $bottomRange = Get-MetricRange @($nonEmptyMetrics | ForEach-Object { $_.Bottom })
+    $widthRange = Get-MetricRange @($nonEmptyMetrics | ForEach-Object { $_.Width })
+    $heightRange = Get-MetricRange @($nonEmptyMetrics | ForEach-Object { $_.Height })
+    $maxCenterRange = if ($StateId -eq "walk") { 32 } else { 56 }
+    $maxBottomRange = if ($StateId -eq "walk") { 12 } else { 18 }
+
+    if ($centerRange -gt $maxCenterRange -or $bottomRange -gt $maxBottomRange -or $widthRange -gt 72 -or $heightRange -gt 40) {
+        Add-AnimationQualityIssue -Failures $Failures -Warnings $Warnings -Status $StateStatus -Message "${HeroId}/${StateId}: frame bounds vary too much for a stable character sprite (centerX=$([Math]::Round($centerRange, 1)), bottom=$([Math]::Round($bottomRange, 1)), width=$([Math]::Round($widthRange, 1)), height=$([Math]::Round($heightRange, 1))): $Asset"
+    }
+
+    $detachedFrames = @($nonEmptyMetrics | Where-Object { $_.SignificantSecondaryComponents -gt 1 -and $_.LargestComponentRatio -lt 0.75 })
+    if ($detachedFrames.Count -gt 0) {
+        Add-AnimationQualityIssue -Failures $Failures -Warnings $Warnings -Status $StateStatus -Message "${HeroId}/${StateId}: $($detachedFrames.Count) frame(s) have suspicious detached components; check for cell bleed or duplicate characters: $Asset"
+    }
+}
 function Format-AuditCell {
     param(
         [string] $Text,
@@ -384,7 +588,7 @@ $statusCounts = @{}
 foreach ($status in $AllowedStatuses) {
     $statusCounts[$status] = 0
 }
-$acceptedCount = 0
+$checkedAssetCount = 0
 
 if (-not (Test-Path -LiteralPath $manifestFullPath -PathType Leaf)) {
     Add-Failure $failures "Missing hero animation manifest: $ManifestPath"
@@ -590,11 +794,29 @@ if ($null -ne $manifest) {
                 Add-Failure $failures "${heroId}/${stateId}: asset '$actualAsset' should be '$expectedAsset'."
             }
 
-            if ($stateStatus -eq "accepted") {
-                $acceptedCount++
+            if (Should-CheckRuntimeAsset -Status $stateStatus) {
+                $checkedAssetCount++
                 $assetFullPath = Resolve-RepoPath $actualAsset
                 if (-not (Test-Path -LiteralPath $assetFullPath -PathType Leaf)) {
-                    Add-Failure $failures "${heroId}/${stateId}: accepted asset is missing: $actualAsset"
+                    Add-Failure $failures "${heroId}/${stateId}: runtime asset is missing for status '$stateStatus': $actualAsset"
+                } else {
+                    try {
+                        $bitmap = [System.Drawing.Bitmap]::FromFile($assetFullPath)
+                        try {
+                            if ($bitmap.Height -ne 128) {
+                                Add-Failure $failures "${heroId}/${stateId}: runtime asset height $($bitmap.Height) should be 128 px: $actualAsset"
+                            }
+                            if (($bitmap.Width % 128) -ne 0) {
+                                Add-Failure $failures "${heroId}/${stateId}: runtime asset width $($bitmap.Width) is not a multiple of 128 px: $actualAsset"
+                            } else {
+                                Test-RuntimeAnimationStripQuality -Bitmap $bitmap -HeroId $heroId -StateId $stateId -StateStatus $stateStatus -Asset $actualAsset -Failures $failures -Warnings $warnings
+                            }
+                        } finally {
+                            $bitmap.Dispose()
+                        }
+                    } catch {
+                        Add-Failure $failures "${heroId}/${stateId}: could not inspect runtime asset '$actualAsset': $($_.Exception.Message)"
+                    }
                 }
             }
 
@@ -619,10 +841,10 @@ foreach ($status in $AllowedStatuses) {
     Write-Host ("  {0}: {1}" -f $status, $statusCounts[$status])
 }
 
-if ($acceptedCount -eq 0) {
-    Write-Host "Accepted asset check: 0 accepted states; no PNG files required yet."
+if ($checkedAssetCount -eq 0) {
+    Write-Host "Runtime asset check: 0 accepted/candidate/prototype states; no PNG files required yet."
 } else {
-    Write-Host "Accepted asset check: checked $acceptedCount accepted state asset(s)."
+    Write-Host "Runtime asset check: checked $checkedAssetCount accepted/candidate/prototype state asset(s)."
 }
 
 Write-AuditGrid -Rows $auditRows -StateIds $RequiredStateIds

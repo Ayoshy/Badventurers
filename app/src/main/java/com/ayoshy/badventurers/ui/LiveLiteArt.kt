@@ -121,7 +121,7 @@ internal fun LiveLiteStageScene(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 780, easing = LinearEasing),
+            animation = tween(durationMillis = 960, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
         label = "live-lite-hero-frame",
@@ -174,9 +174,7 @@ internal fun LiveLiteStageScene(
             }
             drawPath(path, palette.accent.copy(alpha = 0.22f))
             val clampedProgress = progress.coerceIn(0f, 1f)
-            val markerX = size.width * (0.12f + 0.76f * clampedProgress)
-            drawCircle(palette.accent, radius = 7.dp.toPx(), center = Offset(markerX, size.height * 0.58f))
-            drawCircle(palette.warning, radius = 3.dp.toPx(), center = Offset(markerX, size.height * 0.58f))
+
             val visibleHeroes = heroDrawSpecs.ifEmpty {
                 List(1) {
                     LiveLiteHeroDrawSpec(
@@ -187,8 +185,8 @@ internal fun LiveLiteStageScene(
                 }
             }
             visibleHeroes.forEachIndexed { index, hero ->
-                val spreadBehindMarker = ((visibleHeroes.size - index - 1) * 0.055f)
-                val heroProgress = (clampedProgress - spreadBehindMarker).coerceIn(0.08f, 0.92f)
+                val spreadBehindRouteLead = ((visibleHeroes.size - index - 1) * 0.055f)
+                val heroProgress = (clampedProgress - spreadBehindRouteLead).coerceIn(0.08f, 0.92f)
                 val x = size.width * (0.12f + 0.76f * heroProgress)
                 val y = size.height * (0.82f + ((index % 2) * 0.035f))
                 val heroSize = 64.dp.toPx()
@@ -351,6 +349,14 @@ private fun heroAnimationResources(heroId: String): LiveLiteHeroAnimationResourc
         hurtDead = R.drawable.hero_anim_nell_hurt_dead,
         celebrate = R.drawable.hero_anim_nell_celebrate,
         lootInteract = R.drawable.hero_anim_nell_loot_interact,
+    )
+    "sable" -> LiveLiteHeroAnimationResources(
+        idle = R.drawable.hero_anim_sable_idle,
+        walk = R.drawable.hero_anim_sable_walk,
+        fight = R.drawable.hero_anim_sable_fight,
+        hurtDead = R.drawable.hero_anim_sable_hurt_dead,
+        celebrate = R.drawable.hero_anim_sable_celebrate,
+        lootInteract = R.drawable.hero_anim_sable_loot_interact,
     )
     else -> null
 }

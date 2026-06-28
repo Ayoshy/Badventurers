@@ -1,5 +1,5 @@
 id;animation_pack_status;name;class;rarity;start_level;trait;special;force;magic;luck;ego;hygiene;bad_faith;orientation;paperwork;endurance;charisma
-brugg;accepted;Brugg;Bruiser;Common;3;Overconfident;RamshackleCharge;95;8;36;92;20;64;38;10;88;45
+brugg;prototype_rejected_bv048;Brugg;Bruiser;Common;3;Overconfident;RamshackleCharge;95;8;36;92;20;64;38;10;88;45
 darrik;missing_bv045;Darrik;Bruiser;Common;1;Overconfident;HumanWall;80;10;30;78;26;58;35;12;72;40
 morrow;missing_bv045;Morrow;Necromancer;Epic;3;Overconfident;NecroLever;18;110;52;86;30;70;60;88;46;42
 chevalier_de_la_mort;missing_bv045;Grave Odo;DeathKnight;Epic;3;Overconfident;DeathDiscount;74;84;40;70;16;82;50;62;76;36
@@ -10,13 +10,13 @@ pax;missing_bv045;Pax;Priest;Uncommon;2;PainfullyOrganized;CleanBlessing;24;78;7
 ledger;missing_bv045;Sir Ledger;BardAccountant;Legendary;4;PainfullyOrganized;HostileAudit;52;82;74;90;86;64;76;120;70;92
 comptable;missing_bv045;Tally Noakes;Quartermaster;Rare;2;PainfullyOrganized;BalancedBooks;18;32;60;64;78;30;86;104;40;54
 chef_cuistot;missing_bv045;Basil Bouillon;Chef;Uncommon;2;PainfullyOrganized;MoraleRations;40;26;58;48;94;22;64;72;60;84
-mira;accepted;Mira;ApprenticeMage;Uncommon;2;ReadsManual;GlyphReader;16;90;48;54;72;38;44;76;32;52
+mira;prototype_rejected_bv048;Mira;ApprenticeMage;Uncommon;2;ReadsManual;GlyphReader;16;90;48;54;72;38;44;76;32;52
 orla;missing_bv045;Orla;Bruiser;Rare;2;ReadsManual;TerrainManual;92;22;45;66;50;48;52;35;86;48
 bramble;missing_bv045;Bramble;Hunter;Common;1;ReadsManual;FreshTrail;64;24;58;34;48;36;94;28;76;40
 paladin;missing_bv045;Sir Brindle;Paladin;Legendary;4;ReadsManual;UnbreakableOath;88;54;42;66;70;18;60;84;92;78
 jardinier;missing_bv045;Moss Fenlow;Gardener;Common;1;ReadsManual;GreenThumb;46;20;70;36;88;24;92;26;68;44
-nell;accepted;Nell;Rogueish;Uncommon;2;SuspiciouslyLucky;LightFingers;34;28;88;58;46;74;84;26;48;62
+nell;prototype_rejected_bv048;Nell;Rogueish;Uncommon;2;SuspiciouslyLucky;LightFingers;34;28;88;58;46;74;84;26;48;62
 pippa;missing_bv045;Pippa;ApprenticeMage;Epic;3;SuspiciouslyLucky;UnstableLuck;18;104;74;62;78;42;64;72;42;70
 vex;missing_bv045;Vex;Rogueish;Epic;3;SuspiciouslyLucky;DirtyJackpot;42;44;96;68;54;86;98;24;60;64
-sable;missing_bv045;Sable;Ninja;Rare;2;SuspiciouslyLucky;NoTrace;48;48;82;74;64;78;106;32;66;58
+sable;candidate_bv048;Sable;Ninja;Rare;2;SuspiciouslyLucky;NoTrace;48;48;82;74;64;78;106;32;66;58
 elementaire_de_sel;missing_bv045;Salina Brine;SaltElemental;Uncommon;3;SuspiciouslyLucky;PreservationSalt;18;84;74;38;92;28;76;46;54;40

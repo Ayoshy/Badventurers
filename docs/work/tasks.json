@@ -1857,31 +1857,31 @@
     },
     {
       "id": "BV-044",
-      "title": "Starter hero animation pack",
+      "title": "Starter hero animation prototype pipeline",
       "status": "done",
       "priority": "P1",
       "area": "art",
       "track": "Hero Animation",
-      "summary": "Produce and integrate the first accepted animation pack for Brugg, Mira, and Nell so Live-Lite can prove the real visual loop with the starting party.",
+      "summary": "Generate and wire temporary Brugg, Mira, and Nell animation strips to prove resource naming, manifest validation, contact sheets, and Live-Lite rendering before real character-sprite art.",
       "acceptance": [
         {
-          "text": "Create accepted animation sheets for Brugg, Mira, and Nell covering idle, walk, fight, hurt/dead, celebrate, and loot/interact.",
+          "text": "Generate prototype strips for Brugg, Mira, and Nell covering idle, walk, fight, hurt/dead, celebrate, and loot/interact.",
           "done": true
         },
         {
-          "text": "Keep silhouettes, props, and personality consistent with current hero portraits.",
+          "text": "Wire the prototype resources through the manifest and Android resources so runtime animation states can be exercised.",
           "done": true
         },
         {
-          "text": "Run the hero animation validator and generate review contact sheets.",
+          "text": "Run the hero animation validator and generate review contact sheets or phone previews for the prototype batch.",
           "done": true
         },
         {
-          "text": "Wire accepted starter animation resources through the manifest without changing gameplay rules.",
+          "text": "Capture emulator evidence that the Live-Lite lane can animate and advance the starter party on a phone-sized surface.",
           "done": true
         },
         {
-          "text": "Capture emulator evidence that the starter animations render legibly on a phone-sized Live-Lite surface.",
+          "text": "Record that the current portrait-derived strips are pipeline prototypes only and are not accepted production animation art.",
           "done": true
         }
       ],
@@ -1889,6 +1889,7 @@
         "app/src/main/res-heroes/drawable-nodpi/hero_portrait_brugg.png",
         "app/src/main/res-heroes/drawable-nodpi/hero_portrait_mira.png",
         "app/src/main/res-heroes/drawable-nodpi/hero_portrait_nell.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_celebrate.png",
         "docs/content/hero-item-catalog.md",
         "docs/design/hero-animation-spec.md",
         "docs/data/hero-animation-manifest.json",
@@ -1900,7 +1901,9 @@
       "notes": [
         "Starter trio first because they are guaranteed to appear in early Live-Lite runs and reveal whether the animation direction works.",
         "2026-06-27: Promoted from later as the next Workboard item after BV-042/BV-043/BV-047 completed.",
-        "2026-06-27: Generated accepted starter animation sheets for Brugg, Mira, and Nell, marked starter states accepted in the animation manifest/catalog/CSV, generated contact-sheet and phone-preview review images, and captured emulator Watch Expedition evidence at artifacts/screenshots/emulator-20260627-163546.png and artifacts/screenshots/emulator-20260627-163609.png. Sampled top-stage pixels changed 413/6375 between captures."
+        "2026-06-27: Prototype pass generated portrait-derived animation strips for Brugg, Mira, and Nell, wired them through manifest/catalog/CSV/runtime, generated contact-sheet and phone-preview review images, and captured emulator Watch Expedition evidence at artifacts/screenshots/emulator-20260627-163546.png and artifacts/screenshots/emulator-20260627-163609.png. Sampled top-stage pixels changed 413/6375 between captures.",
+        "2026-06-27: User rejected these strips as final art because they shake the whole framed portrait/background. They prove pipeline plumbing only; they must not count as accepted animation packs.",
+        "2026-06-27: Next production pass must animate the characters inside the portraits as clean character sprites/cutouts, with no portrait frame or background motion. Tracked by BV-048."
       ]
     },
     {
@@ -1940,7 +1943,7 @@
         "docs/data/heroes.csv"
       ],
       "notes": [
-        "Depends on BV-043 and should follow at least one accepted starter batch from BV-044.",
+        "Depends on BV-043 and should follow at least one accepted starter character-sprite batch from BV-048.",
         "2026-06-27: Per-hero animation status tracking now exists in docs/content/hero-item-catalog.md and docs/data/heroes.csv; production coverage remains open."
       ]
     },
@@ -1951,10 +1954,10 @@
       "priority": "P1",
       "area": "mode",
       "track": "Live-Lite",
-      "summary": "Replace the abstract top-stage placeholder with real hero artwork moving through the expedition lane, using accepted animation states from the hero animation manifest.",
+      "summary": "Replace the abstract top-stage placeholder with hero animation resources moving through the expedition lane; current implementation proves runtime plumbing with prototype art, while accepted character sprites are tracked by BV-048.",
       "acceptance": [
         {
-          "text": "Render active party heroes from their animation packs instead of abstract dots/blocks.",
+          "text": "Render active party heroes from animation resources instead of abstract dots/blocks.",
           "done": true
         },
         {
@@ -1970,7 +1973,7 @@
           "done": true
         },
         {
-          "text": "Capture emulator video or screenshot evidence for at least one running expedition with animated heroes.",
+          "text": "Capture emulator video or screenshot evidence for at least one running expedition with animated prototype heroes.",
           "done": true
         }
       ],
@@ -1985,7 +1988,8 @@
       "notes": [
         "Do not deepen Live-Lite combat before this visual lane works; the mode goal is to watch recognizable heroes move and act.",
         "2026-06-27: Promoted alongside BV-044 because starter animation acceptance needs a Live-Lite stage render path for phone/emulator evidence.",
-        "2026-06-27: Live-Lite stage now renders accepted starter hero animation sheets, advances the party along the route, maps active hero beats to fight/hurt-dead/celebrate/loot-interact states, keeps abstract fallback for uncovered heroes, and has emulator evidence at artifacts/screenshots/emulator-20260627-163546.png and artifacts/screenshots/emulator-20260627-163609.png."
+        "2026-06-27: Live-Lite stage now advances the party along the route, maps active hero beats to fight/hurt-dead/celebrate/loot-interact states, keeps abstract fallback for uncovered heroes, and has emulator evidence at artifacts/screenshots/emulator-20260627-163546.png and artifacts/screenshots/emulator-20260627-163609.png.",
+        "2026-06-27: Current visible sheets are prototype portrait-derived strips, not accepted final animation art. Keep the runtime lane, but replace the art with BV-048 character-only sprites before treating the Live-Lite visual loop as production-ready."
       ]
     },
     {
@@ -2030,6 +2034,149 @@
       "notes": [
         "2026-06-27: Created from screenshot review. Current prototype communicates optional nudges but still reads like free buttons; this needs game-design cleanup before deeper Live-Lite work.",
         "2026-06-27: Live-Lite interventions now use explicit upside/cost effects, allow one selected intervention at a time, preview time/power/target/success changes, preserve no-watch baseline behavior, and have focused LiveLiteExpeditionTest coverage."
+      ]
+    },
+    {
+      "id": "BV-048",
+      "title": "Replace portrait-shake animation prototypes",
+      "status": "doing",
+      "priority": "P1",
+      "area": "art",
+      "track": "Hero Animation",
+      "summary": "Replace the temporary Brugg, Mira, and Nell portrait-shake strips with real character-only sprite animation sheets, then mark the starter pack accepted only after visual review and runtime evidence.",
+      "acceptance": [
+        {
+          "text": "Style-test one single hero (Sable) to validate the character-sprite method before starter-trio production.",
+          "done": true
+        },
+        {
+          "text": "Produce a Sable full-animation-sheet candidate using the approved character-sprite method before starter-trio production.",
+          "done": true
+        },
+        {
+          "text": "Wire the Sable candidate animation pack into Live-Lite runtime for emulator review.",
+          "done": true
+        },
+        {
+          "text": "Reclassify the existing generated Brugg, Mira, and Nell strips as prototype/rejected-for-final in the manifest, catalog, CSV, and validator status language.",
+          "done": true
+        },
+        {
+          "text": "Produce character-only sheets for Brugg, Mira, and Nell covering idle, walk, fight, hurt/dead, celebrate, and loot/interact.",
+          "done": false
+        },
+        {
+          "text": "Use the characters inside the portraits as the source; do not animate the portrait frame, border, or background as the subject.",
+          "done": false
+        },
+        {
+          "text": "Make each state read as actual pose/silhouette/prop animation at Live-Lite phone size, not just translation, wobble, tilt, or crop movement.",
+          "done": false
+        },
+        {
+          "text": "Generate contact sheets and a phone-preview image, then get visual review before changing status to accepted.",
+          "done": false
+        },
+        {
+          "text": "Capture fresh emulator evidence that the accepted character sprites render legibly in the Live-Lite expedition lane.",
+          "done": false
+        }
+      ],
+      "refs": [
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_brugg.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_mira.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_portrait_nell.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_brugg_celebrate.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_mira_celebrate.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_nell_celebrate.png",
+        "docs/design/hero-animation-spec.md",
+        "docs/data/hero-animation-manifest.json",
+        "docs/content/hero-item-catalog.md",
+        "docs/data/heroes.csv",
+        "tools/generate-starter-hero-animations.ps1",
+        "tools/validate-hero-animations.ps1",
+        "app/src/main/java/com/ayoshy/badventurers/ui/LiveLiteArt.kt",
+        "docs/art/hero-animations/sable/sable-method.md",
+        "docs/art/hero-animations/sable/sable-keypose-source.png",
+        "docs/art/hero-animations/sable/sable-keypose-cutout.png",
+        "docs/art/hero-animations/sable/sable-keypose-phone-preview.png",
+        "docs/art/hero-animations/sable/sable-animation-sheet-candidate-v1-source.png",
+        "docs/art/hero-animations/sable/sable-animation-sheet-candidate-v1-cutout.png",
+        "docs/art/hero-animations/sable/sable-animation-v1-idle.png",
+        "docs/art/hero-animations/sable/sable-animation-v1-walk.png",
+        "docs/art/hero-animations/sable/sable-animation-v1-fight.png",
+        "docs/art/hero-animations/sable/sable-animation-v1-hurt_dead.png",
+        "docs/art/hero-animations/sable/sable-animation-v1-celebrate.png",
+        "docs/art/hero-animations/sable/sable-animation-v1-loot_interact.png",
+        "docs/art/hero-animations/sable/sable-animation-v1-phone-preview.png",
+        "docs/art/hero-animations/sable/sable-runtime-normalized-preview.png",
+        "tools/normalize-hero-animation-sheet.ps1",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_idle.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_walk.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_fight.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_hurt_dead.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_celebrate.png",
+        "app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_loot_interact.png",
+        "artifacts/screenshots/sable-live-watch.png",
+        "artifacts/screenshots/sable-live-watch-2.png",
+        "artifacts/screenshots/sable-live-watch-cleaned.png",
+        "artifacts/screenshots/sable-live-watch-cleaned-2.png",
+        "docs/art/hero-animations/sable/sable-runtime-walk-before-cleanup.png",
+        "docs/art/hero-animations/sable/sable-runtime-walk-cleaned.png",
+        "docs/art/hero-animations/sable/sable-runtime-cleaned-preview.png",
+        "tools/clean-hero-animation-strip.ps1",
+        "docs/art/hero-animations/sable/sable-runtime-walk-before-stabilize.png",
+        "docs/art/hero-animations/sable/sable-runtime-walk-stabilized.png",
+        "docs/art/hero-animations/sable/sable-runtime-stabilized-preview.png",
+        "docs/art/hero-animations/sable/sable-runtime-idle-before-anchorfix.png",
+        "docs/art/hero-animations/sable/sable-runtime-idle-anchored.png",
+        "docs/art/hero-animations/sable/sable-runtime-walk-before-anchorfix.png",
+        "docs/art/hero-animations/sable/sable-runtime-walk-anchored.png",
+        "docs/art/hero-animations/sable/sable-runtime-fight-before-anchorfix.png",
+        "docs/art/hero-animations/sable/sable-runtime-fight-anchored.png",
+        "docs/art/hero-animations/sable/sable-runtime-hurt_dead-before-anchorfix.png",
+        "docs/art/hero-animations/sable/sable-runtime-hurt_dead-anchored.png",
+        "docs/art/hero-animations/sable/sable-runtime-celebrate-before-anchorfix.png",
+        "docs/art/hero-animations/sable/sable-runtime-celebrate-anchored.png",
+        "docs/art/hero-animations/sable/sable-runtime-loot_interact-before-anchorfix.png",
+        "docs/art/hero-animations/sable/sable-runtime-loot_interact-anchored.png",
+        "docs/art/hero-animations/sable/sable-runtime-anchorfix-preview.png",
+        "artifacts/screenshots/sable-live-stabilized.png",
+        "artifacts/screenshots/sable-live-stabilized.mp4",
+        "artifacts/screenshots/badventurers_session_sable_live_anchorfix.xml",
+        "artifacts/screenshots/sable-live-anchorfix-watch2.png",
+        "artifacts/screenshots/sable-live-anchorfix-watch2.mp4",
+        "artifacts/screenshots/sable-live-anchorfix-watch2-window.xml",
+        "tools/build-sable-animation-from-stills.ps1",
+        "docs/art/hero-animations/sable/sable-runtime-stills-preview.png",
+        "docs/art/hero-animations/sable/sable-runtime-stills-metrics.csv",
+        "docs/art/hero-animations/sable/sable-runtime-ghostfix-preview.png",
+        "artifacts/screenshots/badventurers_session_sable_live_stills.xml",
+        "artifacts/screenshots/sable-stills-live.mp4",
+        "artifacts/screenshots/sable-stills-frame-0.png",
+        "artifacts/screenshots/sable-stills-watch-window.xml",
+        "artifacts/screenshots/badventurers_session_sable_live_5frame.xml",
+        "artifacts/screenshots/sable-5frame-window.xml",
+        "artifacts/screenshots/sable-5frame-live.mp4",
+        "docs/art/hero-animations/sable/sable-bv048-handoff-2026-06-27.md"
+      ],
+      "notes": [
+        "2026-06-27: Created from user review of hero_anim_brugg_celebrate.png. The current result is not final because it shakes the full portrait strip instead of animating the hero.",
+        "BV-044/BV-046 delivered useful plumbing: resource names, manifest/validator path, contact sheets, and Live-Lite stage timing. Reuse that plumbing, but replace the art before any acceptance.",
+        "Production requirement: animation must use the character inside each portrait as a sprite/cutout or repainted clean frame. Portrait borders, card frames, and tavern/background pixels must not move with the character.",
+        "Do not proceed to the full roster animation backlog in BV-045 until at least this starter trio passes the character-only quality bar.",
+        "2026-06-27: Sable single-hero style test accepted as the target direction for BV-048 exploration: FF6-like split between detailed portrait and simpler chibi Live-Lite sprite is OK, and class readability as Ninja is acceptable if head/costume/palette/scarf/clasp/daggers stay consistent across poses. Method documented in docs/art/hero-animations/sable/sable-method.md using built-in image_gen, one horizontal key-pose sheet, flat #ff00ff chroma key, PowerShell/System.Drawing background removal, pose crops, and 64/48 px preview. This validates method only; no runtime accepted pack or manifest acceptance yet.",
+        "2026-06-27: Advanced the accepted Sable method into a full six-row by six-column animation-sheet candidate v1, then chroma-keyed it to alpha, split state strips, and generated a 64/48 px phone-preview. This remains review art only; next step is visual approval, then normalization to manifest cell size and runtime export.",
+        "2026-06-27: Wired Sable candidate_bv048 into LiveLiteArt, exported six 128 px Android strips with tools/normalize-hero-animation-sheet.ps1, installed the debug APK, injected a Sable-only Moonlit Smuggler Run save, and captured Live-Lite Watch evidence at artifacts/screenshots/sable-live-watch.png and artifacts/screenshots/sable-live-watch-2.png. Fresh Watch UI verification showed ui_watch=True, ui_report_ready=False, ui_moonlit=True, ui_sable=True; full Live-Lite stage pixels changed 319/408040 between captures. This is live candidate evidence only, not accepted starter-trio coverage.",
+        "2026-06-27: Follow-up live review rejected the first Sable walk strip: the source/export preserved horizontal drift and cell bleed, making one Sable slide left and exposing a second partial Sable. Preserved the bad strip at docs/art/hero-animations/sable/sable-runtime-walk-before-cleanup.png, added tools/clean-hero-animation-strip.ps1, cleaned/recentered the runtime walk into docs/art/hero-animations/sable/sable-runtime-walk-cleaned.png, replaced app/src/main/res-heroes/drawable-nodpi/hero_anim_sable_walk.png, rebuilt/reinstalled, and captured corrected Watch evidence at artifacts/screenshots/sable-live-watch-cleaned.png and artifacts/screenshots/sable-live-watch-cleaned-2.png. Fresh Watch verification showed ui_watch=True, ui_report_ready=False, ui_moonlit=True, ui_sable=True; full Live-Lite stage pixels changed 5185/408040 between captures. Sable remains candidate_bv048, not final acceptance.",
+        "2026-06-27: Second live review screenshot/video showed the walk still looked too jittery, plus the Live-Lite progress marker read as a dot above Sable and chroma-key residue left magenta pixels. Removed the progress marker from LiveLiteArt, slowed the loop from 780 ms to 960 ms, stripped bright magenta residue from all six Sable runtime PNGs, replaced walk with a stabilized centered six-frame strip from a single canonical frame plus tiny bob/lower-body shift, rebuilt/reinstalled, and captured artifacts/screenshots/sable-live-stabilized.png plus artifacts/screenshots/sable-live-stabilized.mp4. Fresh Watch verification showed ui_watch=True, ui_report_ready=False, ui_moonlit=True, ui_sable=True. Sable remains candidate_bv048, not final acceptance.",
+        "2026-06-27: Added durable handoff at docs/art/hero-animations/sable/sable-bv048-handoff-2026-06-27.md so a fresh thread can resume BV-048 without chat context. It records accepted/rejected Sable direction, generated assets, runtime wiring, visual bugs found, fixes applied, verification, working-tree caveats, and the next recommended step: author a real stable Sable walk before scaling to starter trio.",
+        "2026-06-27: Reclassified Brugg, Mira, and Nell from accepted to prototype_rejected_bv048 in the manifest, hero catalog, and CSV. Validator status language now separates PROTO from CAND/OK, still checks prototype runtime assets for shape/existence, and warns/fails candidate/accepted strips for chroma-key residue, full-card coverage, empty frames, unstable frame bounds, and suspicious detached components. Validator passes with expected Sable candidate drift warnings.",
+        "2026-06-27: User video feedback still read as a left-slide during the loop. Re-anchored all six Sable runtime strips with tools/clean-hero-animation-strip.ps1, preserving before-anchorfix copies and anchored review outputs under docs/art/hero-animations/sable. Post-fix measured centerX drift is now 0.5-1 px on every state, magenta residue remains 0, and validate-hero-animations passes with no Sable warnings.",
+        "2026-06-27: Rebuilt and installed debug APK, refreshed the Sable-only Moonlit Smuggler Run save so the expedition stayed active, tapped Watch, and captured final local evidence at artifacts/screenshots/sable-live-anchorfix-watch2.png and artifacts/screenshots/sable-live-anchorfix-watch2.mp4. UI dump confirmed Watch=True, Moonlit=True, Sable=True, Smuggler=True, Report ready=False.",
+        "2026-06-27: Rebuilt Sable runtime strips directly from the six-row still source sheet with tools/build-sable-animation-from-stills.ps1 instead of salvaging old strip offsets. The export uses broad magenta chroma removal, stable upper-body anchoring, one global scale, and a fixed baseline. Output preview/metrics are docs/art/hero-animations/sable/sable-runtime-stills-preview.png and docs/art/hero-animations/sable/sable-runtime-stills-metrics.csv; all Sable strips report magentaPixels=0 and foot drift <=1 px. validate-hero-animations, gradlew test assembleDebug lintDebug, and installDebug passed; fresh Watch evidence is artifacts/screenshots/sable-stills-live.mp4 plus sable-stills-frame-0..5.png, with stage capture analysis magentaLike=0. Sable remains candidate_bv048 pending visual approval and starter-trio production.",
+        "2026-06-27: User review of Screen_recording_20260627_211159.webm caught remaining sprite-owned artefacts: two bars above Sable, a half-body ghost trailing left, and faint magenta fringe. Updated tools/build-sable-animation-from-stills.ps1 with per-frame component cleanup and stricter chroma removal, regenerated all six Sable runtime strips, and copied the review sheet to docs/art/hero-animations/sable/sable-runtime-ghostfix-preview.png. Probe after export: walk has comps=1 and magentaStrict=0 for all six frames; all Sable states have magentaStrict=0. tools/validate-hero-animations.ps1 now uses the stricter scan and passes with warnings only on prototype_rejected_bv048 Mira/Nell, not Sable. gradlew test assembleDebug lintDebug passed. Fresh ADB install/capture for this ghostfix is pending because Codex escalation hit the usage limit.",
+        "2026-06-28: User review of sable-runtime-ghostfix-preview.png showed the last frame of every Sable state was cut in half. Updated tools/build-sable-animation-from-stills.ps1 with OutputColumns=5 so runtime strips skip the bad 6th source column while still analyzing the 6-column source sheet. Regenerated Sable runtime strips at 640x128 (5 frames each) and updated docs/art/hero-animations/sable/sable-runtime-ghostfix-preview.png to 640x768. validate-hero-animations, gradlew test assembleDebug lintDebug, and installDebug passed. Fresh Watch evidence captured at artifacts/screenshots/sable-5frame-live.mp4 using artifacts/screenshots/badventurers_session_sable_live_5frame.xml. Sable remains candidate_bv048 pending visual approval."
       ]
     }
   ]
